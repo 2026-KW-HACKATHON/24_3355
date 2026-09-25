@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-06 생활 팁 목록</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<link rel="stylesheet" href="../src/building.css" />
+<style>
+  .scope { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 10px; background: var(--gray-50); font-size: 13.5px; color: var(--gray-600); }
+  .scope svg { width: 16px; height: 16px; color: var(--gray-500); flex: none; }
+  .tip-list > * + * { margin-top: 10px; }
+  .toast { position: absolute; left: var(--gutter); right: var(--gutter); bottom: calc(var(--safari-h) + 92px); z-index: 31; display: flex; align-items: center; gap: 10px; background: var(--gray-800); color: #fff; border-radius: 14px; padding: 12px 14px; font-size: 14.5px; }
+  .toast img { width: 40px; margin: -4px 0; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="content">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="뒤로"><i data-lucide="chevron-left"></i></button>
+      <span class="title">생활 팁</span>
+      <span style="width:44px"></span>
+    </div>
+    <div class="pad">
+      <h1 class="h-title mt-8">햇살빌라에서 살아 본<br />사람들이 남긴 요령</h1>
+      <div class="scope mt-12"><i data-lucide="lock-keyhole"></i>연결된 거주자만 읽어요 · 작성자는 보이지 않아요</div>
+
+      <div class="tip-list mt-20">
+        <div class="tip mine">
+          <div class="meta"><span class="row gap-6"><span class="badge gray">분리수거</span><span class="badge navy">내가 남긴 팁</span></span><span class="caption">2026년 9월</span></div>
+          <p>음식물 쓰레기는 목요일 밤에 내놓으면 금요일 아침에 수거돼요.</p>
+        </div>
+        <div class="tip">
+          <div class="meta"><span class="badge gray">택배</span><span class="caption">2026년 5월</span></div>
+          <p>비 오는 날 택배는 현관 안쪽 선반에 올려 두면 젖지 않아요.</p>
+        </div>
+        <div class="tip">
+          <div class="meta"><span class="badge gray">겨울</span><span class="caption">2025년 12월</span></div>
+          <p>겨울엔 보일러를 외출 모드로 두면 배관이 얼지 않아요.</p>
+        </div>
+        <div class="tip">
+          <div class="meta"><span class="badge gray">공용공간</span><span class="caption">2025년 10월</span></div>
+          <p>3층 복도 창문은 바람이 불면 덜컹거려요. 걸쇠를 끝까지 걸어주세요.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" role="status" aria-live="polite">
+    <img src="../assets/hami/hami-mini.png" alt="" />
+    <span>생활 팁을 건물에 남겼어요</span>
+  </div>
+
+  <div class="cta-dock">
+    <button class="btn btn-secondary"><i data-lucide="pencil-line"></i>생활 팁 남기기</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

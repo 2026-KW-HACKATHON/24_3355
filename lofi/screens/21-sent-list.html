@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-08 보낸 내용 목록</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .item { padding: 16px var(--gutter); border-bottom: 1px solid var(--gray-100); display: flex; gap: 12px; align-items: flex-start; }
+  .item .txt { flex: 1; min-width: 0; }
+  .item .cat { font-size: 13px; color: var(--gray-500); }
+  .item .body { font-size: 15.5px; line-height: 1.45; color: var(--gray-900); margin-top: 4px; font-weight: 500; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .item .date { font-size: 13px; color: var(--gray-500); margin-top: 6px; }
+  .item .chev { color: var(--gray-400); width: 20px; margin-top: 14px; }
+  .info { display: flex; gap: 8px; margin: 4px var(--gutter) 8px; padding: 10px 12px; border-radius: 10px; background: var(--gray-50); font-size: 13px; line-height: 1.5; color: var(--gray-600); }
+  .info svg { width: 15px; height: 15px; flex: none; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="phone" data-tabs="resident:sent">
+  <div class="content">
+    <div class="topbar"><span style="padding-left:12px;font-size:20px;font-weight:700">보낸 내용</span></div>
+    <div class="info"><i data-lucide="info"></i><span>이 계정으로 보낸 내용만 보여요. 로그인하지 않고 보낸 내용은 확인 링크로 볼 수 있어요.</span></div>
+
+    <div class="item">
+      <div class="txt">
+        <div class="row between"><span class="cat">쓰레기·분리수거 · 햇살빌라</span><span class="badge checked">확인함</span></div>
+        <div class="body">분리수거함 뚜껑이 부서져서 비가 오면 안으로 물이 들어가요.</div>
+        <div class="date">9월 24일 보냄 · 9월 24일 확인</div>
+      </div>
+    </div>
+    <div class="item">
+      <div class="txt">
+        <div class="row between"><span class="cat">누수·설비 · 햇살빌라</span><span class="badge done"><i data-lucide="circle-check"></i>처리 완료</span></div>
+        <div class="body">3층 복도 천장에서 물이 떨어져요.</div>
+        <div class="date">9월 12일 보냄 · 9월 15일 처리 완료로 표시</div>
+      </div>
+    </div>
+    <div class="item">
+      <div class="txt">
+        <div class="row between"><span class="cat">소음 · 햇살빌라</span><span class="badge hard"><i data-lucide="circle-alert"></i>처리가 어려움</span></div>
+        <div class="body">밤마다 보일러실에서 웅웅거리는 소리가 나요.</div>
+        <div class="date">8월 30일 보냄 · 집주인 메모 있음</div>
+      </div>
+    </div>
+    <div class="item">
+      <div class="txt">
+        <div class="row between"><span class="cat">통행 방해 · 햇살빌라</span><span class="badge received">접수됨</span></div>
+        <div class="body">현관 앞에 자전거가 여러 대 세워져 있어서 지나가기 힘들어요.</div>
+        <div class="date">8월 28일 보냄</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

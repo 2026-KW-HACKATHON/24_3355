@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-10 보내기 전 확인 · 자주 쓰는 말</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .sheet h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  .rows { margin-top: 16px; }
+  .rows .r { display: flex; padding: 10px 0; border-bottom: 1px solid var(--gray-100); font-size: 15px; line-height: 1.5; }
+  .rows .r:last-child { border-bottom: 0; }
+  .rows .r span:first-child { width: 78px; color: var(--gray-500); flex: none; }
+  .rows .r span:last-child { color: var(--gray-900); }
+  .quote { margin-top: 4px; border-radius: 12px; background: var(--gray-50); padding: 12px 14px; font-size: 15px; line-height: 1.55; color: var(--gray-800); }
+  .add { display: flex; align-items: center; gap: 6px; margin-top: 10px; padding: 10px 2px; font-size: 14.5px; font-weight: 600; color: var(--navy-600); }
+  .add svg { width: 16px; height: 16px; }
+  .add span { font-weight: 500; color: var(--gray-500); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="phone" data-bare="on">
+  <iframe class="bg" src="01-public-entry.html" title="배경: 공개 건물 화면"></iframe>
+  <div class="dim"></div>
+  <div class="sheet" role="dialog" aria-labelledby="t">
+    <div class="grabber"></div>
+    <h2 id="t">이대로 보낼까요?</h2>
+    <div class="rows">
+      <div class="r"><span>받는 사람</span><span>햇살빌라 집주인</span></div>
+      <div class="r"><span>공개 범위</span><span>집주인만 봐요 · 게시되지 않아요</span></div>
+    </div>
+    <div class="quote" style="font-weight:600;color:var(--gray-900)">건물 앞 쓰레기가 넘쳤어요</div>
+    <div class="add"><i data-lucide="plus"></i>위치나 내용 덧붙이기 <span>선택</span></div>
+    <div class="btn-row mt-16">
+      <button class="btn btn-neutral">취소</button>
+      <button class="btn btn-primary grow"><i data-lucide="send"></i>집주인에게 보내기</button>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

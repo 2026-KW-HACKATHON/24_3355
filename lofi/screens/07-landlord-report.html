@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-16 받은 상황 상세 · 집주인</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .meta-list { margin-top: 14px; }
+  .meta-list .m { display: flex; font-size: 14.5px; line-height: 1.5; padding: 6px 0; }
+  .meta-list .m span:first-child { width: 76px; color: var(--gray-500); flex: none; }
+  .meta-list .m span:last-child { color: var(--gray-800); }
+  .quote { border-radius: 14px; background: var(--gray-50); padding: 16px; font-size: 16px; line-height: 1.6; color: var(--gray-900); }
+  .note { display: flex; gap: 8px; font-size: 13.5px; line-height: 1.5; color: var(--gray-600); }
+  .note svg { width: 16px; height: 16px; flex: none; margin-top: 2px; color: var(--gray-500); }
+  .result { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; opacity: .45; }
+  .result .opt { height: 52px; border-radius: 12px; border: 1px solid var(--gray-300); display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 15px; font-weight: 600; color: var(--gray-700); }
+  .result .opt svg { width: 17px; height: 17px; }
+</style>
+</head>
+<body>
+<div class="phone" data-tabs="landlord:inbox">
+  <div class="content">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="뒤로"><i data-lucide="chevron-left"></i></button>
+      <span class="title">받은 내용</span>
+      <span style="width:44px"></span>
+    </div>
+    <div class="pad">
+      <div class="row gap-6 mt-8"><span class="badge received">접수됨</span><span class="badge moon">새로 받음</span></div>
+      <h1 class="h-title mt-8">건물 앞 쓰레기가 넘쳤어요</h1>
+      <div class="meta-list">
+        <div class="m"><span>건물</span><span>햇살빌라</span></div>
+        <div class="m"><span>보낸 방식</span><span>현관 QR · 자주 쓰는 말</span></div>
+        <div class="m"><span>받은 시각</span><span>9월 25일 오후 3:12</span></div>
+        <div class="m"><span>보낸 사람</span><span>비회원 · 확인 링크로 상태만 봐요</span></div>
+      </div>
+      <div class="quote mt-12" style="color:var(--gray-500);font-size:14.5px">덧붙인 내용 없음</div>
+
+      <div class="field-label mt-24">처리 결과</div>
+      <div class="result">
+        <span class="opt"><i data-lucide="circle-check"></i>처리 완료</span>
+        <span class="opt"><i data-lucide="circle-alert"></i>처리가 어려움</span>
+      </div>
+      <p class="caption mt-8">확인했어요를 누른 뒤 선택할 수 있어요</p>
+
+      <div class="note mt-20"><i data-lucide="info"></i><span>열어보기만 해서는 ‘확인함’이 되지 않아요. 버튼을 눌러야 보낸 사람 화면이 바뀌어요.</span></div>
+    </div>
+  </div>
+
+  <div class="cta-dock">
+    <button class="btn btn-primary"><i data-lucide="check"></i>확인했어요</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

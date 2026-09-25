@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-10 집주인에게 알리기 · 직접 적기</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .to { border-radius: 16px; background: var(--gray-50); padding: 14px 16px; position: relative; }
+  .to .r { display: flex; gap: 10px; align-items: center; font-size: 14.5px; color: var(--gray-700); }
+  .to .r + .r { margin-top: 8px; }
+  .to .r svg { width: 17px; height: 17px; color: var(--gray-500); flex: none; }
+  .to .r b { color: var(--gray-900); font-weight: 600; }
+  .to img { position: absolute; right: 0; top: -30px; width: 80px; }
+  .assist { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+  .field-label .ghost { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--gray-200); font-size: 14px; font-weight: 600; color: var(--gray-700); }
+  .field-label .ghost svg { width: 16px; height: 16px; color: var(--navy-500); }
+  .textarea { min-height: 104px; }
+  .field-label .ghost { height: 30px; padding: 0 10px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="content">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="닫기"><i data-lucide="x"></i></button>
+      <span class="title">직접 적어서 알리기</span>
+      <span style="width:44px"></span>
+    </div>
+    <div class="pad">
+      <div class="to mt-16">
+        <img src="../assets/hami/envelope.png" alt="" />
+        <div class="r"><i data-lucide="building-2"></i><span><b>햇살빌라</b> 집주인에게 전달돼요</span></div>
+        <div class="r"><i data-lucide="eye-off"></i><span>게시판에 올라가지 않고 집주인만 봐요</span></div>
+      </div>
+
+      <h1 class="h-title mt-24">어떤 상황을 전할까요?</h1>
+
+      <div class="field-label mt-16">종류</div>
+      <div class="chips">
+        <span class="chip on"><i data-lucide="check"></i>쓰레기·분리수거</span>
+        <span class="chip">통행 방해</span>
+        <span class="chip">소음</span>
+        <span class="chip">누수·설비</span>
+        <span class="chip">기타</span>
+      </div>
+
+      <div class="field-label mt-20">어디에서 발견했나요 <span class="opt">선택</span></div>
+      <div class="chips">
+        <span class="chip on"><i data-lucide="check"></i>건물 앞 골목</span>
+        <span class="chip">분리수거함</span>
+        <span class="chip">계단·복도</span>
+        <span class="chip">주차장</span>
+      </div>
+
+      <div class="field-label mt-20" style="align-items:center">내용<span class="ghost"><i data-lucide="wand-sparkles"></i>한 문장으로 다듬기</span></div>
+      <div class="textarea focus">분리수거함 옆 쓰레기봉투가 골목까지 나와 있어서 지나가기 어려워요.<span class="caret"></span><span class="count">37 / 300</span></div>
+    </div>
+  </div>
+
+  <div class="cta-dock">
+    <button class="btn btn-primary">보낼 내용 확인</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

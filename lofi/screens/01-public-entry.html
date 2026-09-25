@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-01 공개 건물 진입</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<link rel="stylesheet" href="../src/building.css" />
+</head>
+<body>
+<div class="phone">
+  <div class="content">
+    <div class="topbar">
+      <div class="brand"><span class="stamp"><i data-lucide="moon"></i></span>월계함</div>
+      <div class="right">
+        <button class="pill-btn" aria-label="크게 보기"><i data-lucide="type"></i>크게 보기</button>
+        <button class="icon-btn" aria-label="공유"><i data-lucide="share"></i></button>
+      </div>
+    </div>
+
+    <div class="scene" data-city data-scale="10" data-oy="0.56" data-ox="-40" data-pin="off">
+      <div class="hami-wrap">
+        <div class="bubble tail-left" style="order:0">이 건물의 안내와 소식을 확인해요.</div>
+        <img src="../assets/hami/guide.png" alt="함이가 건물 안내를 펼쳐 보고 있어요" />
+      </div>
+    </div>
+
+    <div class="bld">
+      <div class="row between"><h1 class="h-display">햇살빌라</h1><span class="badge navy"><i data-lucide="qr-code"></i>현관 QR</span></div>
+      <p class="small mt-4">서울 노원구 월계동 · 집주인이 관리하는 건물</p>
+    </div>
+
+    <div class="notice">
+      <div class="ic"><i data-lucide="megaphone"></i></div>
+      <div style="flex:1">
+        <div class="t">9월 28일(일) 오전 단수 안내</div>
+        <div class="s">공지 · 9월 28일까지</div>
+      </div>
+      <i data-lucide="chevron-right" class="chev" style="color:#c7a86a;width:20px"></i>
+    </div>
+
+    <div class="section-head mt-20"><h3>건물 안내</h3><span class="more">전체 보기<i data-lucide="chevron-right"></i></span></div>
+    <div class="tiles">
+      <div class="tile"><span class="ic"><i data-lucide="recycle"></i></span>분리수거</div>
+      <div class="tile"><span class="ic"><i data-lucide="package"></i></span>택배</div>
+      <div class="tile"><span class="ic"><i data-lucide="flame"></i></span>보일러·설비</div>
+      <div class="tile"><span class="ic"><i data-lucide="door-open"></i></span>공용공간</div>
+    </div>
+
+    <div class="section-head mt-24"><h3>집주인에게 바로 알리기</h3><span class="more">직접 적기<i data-lucide="chevron-right"></i></span></div>
+    <div class="quick">
+      <div class="q"><span class="em"><i data-lucide="trash-2"></i></span>건물 앞 쓰레기가 넘쳤어요<span class="send">보내기<i data-lucide="chevron-right"></i></span></div>
+      <div class="q"><span class="em"><i data-lucide="ban"></i></span>통로를 막는 물건이 있어요<span class="send">보내기<i data-lucide="chevron-right"></i></span></div>
+      <div class="q"><span class="em"><i data-lucide="droplets"></i></span>물이 새거나 고장 났어요<span class="send">보내기<i data-lucide="chevron-right"></i></span></div>
+    </div>
+    <p class="quick-note"><i data-lucide="eye-off"></i>가입하지 않아도 보낼 수 있어요 · 집주인만 봐요</p>
+
+    <div class="connect" style="margin-bottom:24px">
+      <div class="ic"><i data-lucide="key-round"></i></div>
+      <div style="flex:1">
+        <div class="strong" style="font-size:15.5px">이 건물에 살고 있나요?</div>
+        <div class="caption mt-4" style="color:var(--gray-600)">생활 팁·공지 알림은 가입코드로 연결 후</div>
+      </div>
+      <span style="font-size:14px;font-weight:600;color:var(--navy-600);white-space:nowrap">연결하기</span>
+    </div>
+  </div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

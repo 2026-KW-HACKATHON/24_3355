@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-02 수정 메모 남긴 뒤</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .sheet .hami { display: flex; justify-content: center; }
+  .sheet .hami img { width: 150px; margin: -16px 0 -18px; }
+  .sheet h2 { font-size: 20px; font-weight: 700; text-align: center; letter-spacing: -0.02em; }
+  .sheet p { text-align: center; }
+  .memo { margin-top: 18px; border-radius: 14px; border: 1px solid var(--gray-200); padding: 12px 14px; }
+  .memo .meta { display: flex; justify-content: space-between; align-items: center; }
+  .memo p { text-align: left; font-size: 15px; line-height: 1.5; color: var(--gray-800); margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="phone" data-bare="on">
+  <iframe class="bg" src="11-guide-detail.html#quiet" title="배경: 기본 안내 상세"></iframe>
+  <div class="dim"></div>
+  <div class="sheet" role="dialog" aria-labelledby="t">
+    <div class="grabber"></div>
+    <div class="hami"><img src="../assets/hami/tip-saved.png" alt="함이가 메모를 보관함에 넣고 있어요" /></div>
+    <h2 id="t" class="mt-8">메모를 남겼어요</h2>
+    <p class="small mt-4">집주인이 확인하기 전까지 기본 안내는 그대로예요.</p>
+    <div class="memo">
+      <div class="meta"><span class="caption">내 메모 · 9월 20일</span><span class="badge received">집주인 확인 전</span></div>
+      <p>재활용 수거일이 이번 달부터 월·목으로 바뀌었어요.</p>
+    </div>
+    <button class="btn btn-primary mt-20">안내로 돌아가기</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

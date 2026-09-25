@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-07 생활 팁 작성 · 키보드</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .content { bottom: 0; }
+  .above-kb { position: absolute; left: 0; right: 0; bottom: var(--kb-h); padding: 10px var(--gutter); z-index: 46; background: #fff; display: flex; gap: 10px; align-items: center; }
+  .above-kb .scope { flex: 1; font-size: 13px; color: var(--gray-500); display: flex; gap: 6px; align-items: center; }
+  .above-kb .scope svg { width: 15px; height: 15px; }
+  .above-kb .btn { width: auto; padding: 0 20px; height: 48px; font-size: 16px; }
+  .chip { height: 34px; font-size: 14px; padding: 0 12px; }
+</style>
+</head>
+<body>
+<div class="phone" data-kb="ko">
+  <div class="content">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="닫기"><i data-lucide="x"></i></button>
+      <span class="title">생활 팁 남기기</span>
+      <span style="width:44px"></span>
+    </div>
+    <div class="pad">
+      <h1 class="h-sub mt-8" style="font-size:19px;font-weight:700">다음에 살 사람에게 알려주고 싶은 것이 있나요?</h1>
+      <div class="chips mt-12">
+        <span class="chip on">분리수거</span><span class="chip">택배</span><span class="chip">겨울</span><span class="chip">공용공간</span><span class="chip">기타</span>
+      </div>
+      <div class="textarea focus mt-12" style="min-height:96px">음식물 쓰레기는 목요일 밤에 내놓으면 금요일 아침에 수거돼요.<span class="caret"></span><span class="count">35 / 200</span></div>
+    </div>
+  </div>
+  <div class="above-kb">
+    <span class="scope"><i data-lucide="lock-keyhole"></i>거주자만 읽어요 · 이름은 안 보여요</span>
+    <button class="btn btn-primary">남기기</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

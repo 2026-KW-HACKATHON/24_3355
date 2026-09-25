@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-09 이사 처리 완료</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .hero { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 56px; }
+  .hero img { width: 172px; margin: -24px 0 -26px; }
+  .kept { border-radius: 16px; border: 1px solid var(--gray-200); padding: 6px 0; }
+  .kept .list-row { min-height: 56px; padding-top: 10px; padding-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="content">
+    <div class="pad">
+      <div class="hero">
+        <img src="../assets/hami/moving.png" alt="함이가 작은 이삿짐을 들고 있어요" />
+        <h1 class="h-title mt-16">햇살빌라와의 연결을 마쳤어요</h1>
+        <p class="body mt-8" style="color:var(--gray-600)">새 건물에서는 현관 QR이나<br />가입코드로 다시 연결할 수 있어요.</p>
+      </div>
+
+      <div class="field-label mt-32">햇살빌라에 남아 있는 정보</div>
+      <div class="kept">
+        <div class="list-row"><span class="lead"><i data-lucide="book-open"></i></span><div class="txt"><div class="t">기본 안내 4개</div><div class="s">다음 입주자도 같은 QR로 읽어요</div></div></div>
+        <div class="list-row"><span class="lead"><i data-lucide="sticky-note"></i></span><div class="txt"><div class="t">생활 팁 4개</div><div class="s">작성자 없이 건물에 남아요</div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="cta-dock">
+    <button class="btn btn-primary">확인</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

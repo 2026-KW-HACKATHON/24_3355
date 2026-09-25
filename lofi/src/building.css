@@ -1,0 +1,41 @@
+/* 건물 화면 공용: 공개 진입(LF-01)과 거주자 홈(LF-05)이 같은 정체성을 쓰도록 */
+.brand { display: flex; align-items: center; gap: 6px; padding-left: 12px; font-size: 17px; font-weight: 800; letter-spacing: -0.03em; }
+.brand .stamp { width: 20px; height: 22px; border-radius: 3px; background: var(--navy-600); display: grid; place-items: center; outline: 2px dashed #fff; outline-offset: -3px; }
+.brand .stamp svg { width: 11px; height: 11px; color: var(--moon); fill: var(--moon); stroke: none; }
+.scene { height: 150px; margin: 0 12px; border-radius: 20px; background: #f3f4f6; }
+.scene .hami-wrap { position: absolute; right: 10px; bottom: 6px; display: flex; align-items: flex-end; gap: 4px; }
+.scene .hami-wrap img { width: 104px; margin: -14px -12px -16px -8px; }
+.scene .bubble { max-width: 150px; font-size: 13px; padding: 9px 11px; margin-bottom: 30px; }
+.scene .loaded { position: absolute; left: 12px; top: 12px; }
+.bld { padding: 16px var(--gutter) 0; }
+.notice { display: flex; gap: 12px; align-items: center; margin: 16px var(--gutter) 0; padding: 14px 16px; border-radius: 14px; background: var(--moon-50); }
+.notice .ic { width: 36px; height: 36px; border-radius: 10px; background: #fff; display: grid; place-items: center; color: #8a6a24; flex: none; }
+.notice .ic svg { width: 19px; height: 19px; }
+.notice .t { font-size: 15.5px; font-weight: 600; line-height: 1.4; }
+.notice .s { font-size: 13px; color: #8a6a24; margin-top: 2px; }
+.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 0 var(--gutter); }
+.tile { border-radius: 14px; background: var(--gray-50); border: 1px solid var(--gray-100); height: 78px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: var(--gray-800); }
+.tile .ic { width: 32px; height: 32px; border-radius: 10px; background: #fff; display: grid; place-items: center; color: var(--navy-600); box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+.tile .ic svg { width: 18px; height: 18px; }
+.connect { margin: 14px var(--gutter) 0; padding: 16px; border-radius: 16px; border: 1px solid var(--gray-200); display: flex; gap: 12px; align-items: center; }
+.connect .ic { width: 40px; height: 40px; border-radius: 12px; background: var(--navy-50); display: grid; place-items: center; color: var(--navy-600); flex: none; }
+.connect .ic svg { width: 20px; height: 20px; }
+
+/* 생활 팁 카드 (냉장고 메모 느낌, 작성자·반응 없음) */
+.tip { border-radius: 14px; background: #fff; border: 1px solid var(--gray-200); padding: 14px 16px; }
+.tip .meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.tip p { font-size: 15.5px; line-height: 1.55; color: var(--gray-800); }
+.tip.mine { border-color: var(--navy-100); background: #fbfcfe; }
+.tips-scroll { display: flex; gap: 10px; padding: 0 var(--gutter); }
+.tips-scroll .tip { flex: 0 0 250px; }
+
+/* 자주 쓰는 말: 누르면 바로 보내기 전 확인 시트 (두 번 눌러 알리기) */
+.quick { margin: 0 var(--gutter); border-radius: 16px; border: 1px solid var(--gray-200); overflow: hidden; }
+.quick .q { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 14px 0 16px; font-size: 16px; font-weight: 600; color: var(--gray-900); }
+.quick .q + .q { border-top: 1px solid var(--gray-100); }
+.quick .q .send { margin-left: auto; font-size: 13.5px; font-weight: 600; color: var(--navy-600); display: flex; align-items: center; gap: 2px; }
+.quick .q .send svg { width: 16px; height: 16px; }
+.quick .q .em { width: 30px; height: 30px; border-radius: 9px; background: var(--gray-100); display: grid; place-items: center; color: var(--gray-700); flex: none; }
+.quick .q .em svg { width: 16px; height: 16px; }
+.quick-note { margin: 8px var(--gutter) 0; font-size: 13px; color: var(--gray-500); display: flex; gap: 6px; align-items: center; }
+.quick-note svg { width: 14px; height: 14px; }

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>예외 · QR의 건물을 찾을 수 없음</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<link rel="stylesheet" href="../src/building.css" />
+<style>
+  .tips { margin-top: 32px; border-radius: 14px; background: var(--gray-50); padding: 14px 16px; }
+  .tips .i { display: flex; gap: 10px; font-size: 14.5px; line-height: 1.5; color: var(--gray-700); padding: 4px 0; }
+  .tips .i svg { width: 17px; height: 17px; flex: none; margin-top: 2px; color: var(--gray-500); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="content">
+    <div class="topbar">
+      <div class="brand"><span class="stamp"><i data-lucide="moon"></i></span>월계함</div>
+    </div>
+    <div class="pad">
+      <div class="empty" style="margin-top:64px">
+        <img src="../assets/hami/lost.png" alt="함이가 고개를 갸웃하고 있어요" />
+        <div class="t">건물 정보를 찾을 수 없어요</div>
+        <div class="s">QR이 바뀌었거나 주소가 잘못 열렸을 수 있어요.</div>
+      </div>
+      <div class="tips">
+        <div class="i"><i data-lucide="scan-line"></i>현관의 QR을 다시 찍어 주세요</div>
+        <div class="i"><i data-lucide="wifi"></i>연결이 불안정하면 잠시 뒤 다시 시도해 주세요</div>
+      </div>
+    </div>
+  </div>
+  <div class="cta-dock">
+    <button class="btn btn-primary"><i data-lucide="rotate-cw"></i>다시 시도</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-18 현관 QR과 가입코드 · 집주인</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .block { border-radius: 18px; border: 1px solid var(--gray-200); padding: 16px; }
+  .block + .block { margin-top: 12px; }
+  .block .h { display: flex; align-items: center; justify-content: space-between; }
+  .block .h b { font-size: 16px; }
+  .qr-row { display: flex; gap: 14px; align-items: center; margin-top: 12px; }
+  .qr { width: 104px; height: 104px; padding: 8px; border-radius: 12px; background: #fff; border: 1px solid var(--gray-200); opacity: .9; flex: none; }
+  .qr-row .side { flex: 1; }
+  .qr-row .side p { font-size: 13.5px; line-height: 1.5; color: var(--gray-600); }
+  .qr-row .btn-sm { margin-top: 10px; }
+  .intro { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 8px; }
+  .intro img { width: 104px; margin: -14px -10px -10px 0; }
+  .otp .cell { height: 48px; font-size: 22px; background: var(--gray-50); }
+  .code-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .code-actions .btn { height: 44px; font-size: 15px; border-radius: 12px; }
+  .warn { display: flex; gap: 8px; margin-top: 16px; font-size: 13.5px; line-height: 1.5; color: var(--st-hard); }
+  .warn svg { width: 16px; height: 16px; flex: none; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="content">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="뒤로"><i data-lucide="chevron-left"></i></button>
+      <span class="title">QR과 가입코드</span>
+      <span style="width:44px"></span>
+    </div>
+    <div class="pad">
+      <div class="intro">
+        <p class="small">두 가지는 쓰임이 달라요.<br />따로 전해 주세요.</p>
+        <img src="../assets/hami/qr-sign.png" alt="함이가 QR 안내판을 들고 있어요" />
+      </div>
+
+      <div class="block">
+        <div class="h"><b>현관 QR</b><span class="badge gray">누구나</span></div>
+        <div class="qr-row">
+          <div class="qr" data-qr></div>
+          <div class="side">
+            <p>현관에 붙여 두면 누구나 안내를 읽고 집주인에게 알릴 수 있어요.</p>
+            <button class="btn btn-sm btn-secondary"><i data-lucide="download"></i>인쇄용 내려받기</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="h"><b>거주자 가입코드</b><span class="badge navy">입주자에게만</span></div>
+        <div class="otp mt-12" aria-label="현재 가입코드">
+          <div class="cell">W</div><div class="cell">K</div><div class="cell">7</div><div class="cell">2</div><div class="cell">P</div><div class="cell">4</div>
+        </div>
+        <div class="code-actions">
+          <button class="btn btn-neutral"><i data-lucide="copy"></i>복사</button>
+          <button class="btn btn-neutral"><i data-lucide="refresh-cw"></i>코드 바꾸기</button>
+        </div>
+        <p class="caption mt-8">바꿔도 이미 연결된 거주자는 그대로예요.</p>
+        <button class="btn btn-secondary mt-12" style="height:48px;font-size:15.5px"><i data-lucide="send"></i>입주 카드 카카오톡으로 보내기</button>
+        <p class="caption mt-8">QR과 가입코드가 함께 담긴 카드예요. 계약한 입주자에게만 보내 주세요.</p>
+      </div>
+
+      <div class="warn"><i data-lucide="triangle-alert"></i><span>가입코드를 현관 QR 옆에 함께 붙이지 마세요.</span></div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

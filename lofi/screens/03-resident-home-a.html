@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-05 거주자 홈 · A</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<link rel="stylesheet" href="../src/building.css" />
+<style>
+  .scene { height: 132px; }
+  .report-row { margin: 22px var(--gutter) 24px; }
+</style>
+</head>
+<body>
+<div class="phone" data-tabs="resident:building">
+  <div class="content">
+    <div class="topbar">
+      <div class="brand"><span class="stamp"><i data-lucide="moon"></i></span>월계함</div>
+      <div class="right">
+        <button class="pill-btn" aria-label="크게 보기"><i data-lucide="type"></i>크게 보기</button>
+        <button class="icon-btn" aria-label="알림"><i data-lucide="bell"></i></button>
+      </div>
+    </div>
+
+    <div class="scene" data-city data-scale="9" data-oy="0.55" data-ox="-10" data-pin="off"></div>
+
+    <div class="bld">
+      <div class="row between"><h1 class="h-display">햇살빌라</h1><span class="badge navy"><i data-lucide="house"></i>거주 중</span></div>
+      <p class="small mt-4">서울 노원구 월계동 · 2026년 3월부터 연결</p>
+    </div>
+
+    <div class="notice">
+      <div class="ic"><i data-lucide="megaphone"></i></div>
+      <div style="flex:1">
+        <div class="t">9월 28일(일) 오전 단수 안내</div>
+        <div class="s">공지 · 9월 28일까지</div>
+      </div>
+      <i data-lucide="chevron-right" style="color:#c7a86a;width:20px"></i>
+    </div>
+
+    <div class="section-head mt-20"><h3>건물 안내</h3><span class="more">전체 보기<i data-lucide="chevron-right"></i></span></div>
+    <div class="tiles">
+      <div class="tile"><span class="ic"><i data-lucide="recycle"></i></span>분리수거</div>
+      <div class="tile"><span class="ic"><i data-lucide="package"></i></span>택배</div>
+      <div class="tile"><span class="ic"><i data-lucide="flame"></i></span>보일러·설비</div>
+      <div class="tile"><span class="ic"><i data-lucide="door-open"></i></span>공용공간</div>
+    </div>
+
+    <div class="section-head mt-24"><h3>먼저 살던 분들의 생활 팁</h3><span class="more">4개<i data-lucide="chevron-right"></i></span></div>
+    <div class="tips-scroll">
+      <div class="tip">
+        <div class="meta"><span class="badge gray">택배</span><span class="caption">2026년 5월</span></div>
+        <p>비 오는 날 택배는 현관 안쪽 선반에 올려 두면 젖지 않아요.</p>
+      </div>
+      <div class="tip">
+        <div class="meta"><span class="badge gray">겨울</span><span class="caption">2025년 12월</span></div>
+        <p>겨울엔 보일러를 외출 모드로 두면 배관이 얼지 않아요.</p>
+      </div>
+    </div>
+
+    <div class="connect report-row">
+      <div class="ic"><i data-lucide="mail"></i></div>
+      <div style="flex:1"><div class="strong" style="font-size:15.5px">집주인에게 알리기</div><div class="caption mt-4" style="color:var(--gray-600)">공용공간에서 생긴 일을 전해요</div></div>
+      <i data-lucide="chevron-right" style="color:var(--gray-400)"></i>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

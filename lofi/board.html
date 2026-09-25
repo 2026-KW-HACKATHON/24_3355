@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>월계함 lofi 검토판</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+<style>
+  :root { --bg: #eceef1; --ink: #191f28; --ink2: #4e5968; --ink3: #8b95a1; --line: #d5d9df; --navy: #25355a; --navy50: #eef1f7; --moon: #c9a45c; --moon50: #faf4e6; --green: #1b7a4b; --green50: #e6f4ec; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: "Pretendard Variable", Pretendard, -apple-system, sans-serif; letter-spacing: -0.01em; word-break: keep-all; padding: 48px 56px 80px; }
+  .wrap { max-width: 1680px; margin: 0 auto; }
+  header { display: flex; justify-content: space-between; align-items: flex-end; gap: 32px; }
+  header h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.03em; }
+  header p { font-size: 16px; color: var(--ink2); margin-top: 8px; line-height: 1.6; }
+  .legend { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+  .legend .row { display: flex; gap: 8px; }
+  .legend span { font-size: 13px; font-weight: 600; padding: 6px 10px; border-radius: 8px; background: #fff; color: var(--ink2); display: inline-flex; align-items: center; gap: 6px; }
+
+  .story { margin-top: 28px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .beat { background: #fff; border-radius: 16px; padding: 14px 16px; }
+  .beat b { display: block; font-size: 15px; }
+  .beat span { font-size: 13px; color: var(--ink2); line-height: 1.5; display: block; margin-top: 4px; }
+  .beat i { font-style: normal; font-size: 12px; font-weight: 700; color: var(--navy); }
+
+  .chapter { margin-top: 44px; }
+  .chapter h2 { font-size: 20px; font-weight: 800; display: flex; gap: 10px; align-items: center; }
+  .chapter h2 .n { min-width: 28px; height: 28px; padding: 0 6px; border-radius: 8px; background: var(--navy); color: #fff; display: grid; place-items: center; font-size: 14px; }
+  .chapter h2 small { font-size: 14px; font-weight: 500; color: var(--ink3); }
+  .lane { display: flex; align-items: flex-start; flex-wrap: wrap; row-gap: 28px; margin-top: 16px; }
+  .arrow { width: 48px; align-self: center; margin-top: -170px; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--ink3); }
+  .arrow .ln { font-size: 22px; line-height: 1; }
+  .arrow .lb { font-size: 11.5px; font-weight: 700; padding: 3px 6px; border-radius: 6px; text-align: center; line-height: 1.3; }
+  .arrow.p .ln { color: var(--moon); }
+  .arrow.p .lb { background: var(--moon50); color: #8a6a24; }
+  .arrow.t .ln { color: var(--navy); }
+  .arrow.t .lb { background: var(--navy50); color: var(--navy); }
+  .arrow.alt .lb { background: #fff; color: var(--ink3); }
+  .card { width: 236px; }
+  .card img { width: 236px; border-radius: 26px; box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 12px 32px rgba(25,31,40,.10); background: #fff; display: block; }
+  .card .id { margin-top: 12px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .tag { font-size: 12px; font-weight: 700; padding: 3px 7px; border-radius: 6px; background: var(--navy50); color: var(--navy); }
+  .tag.role { background: #fff; color: var(--ink2); }
+  .tag.new { background: var(--green50); color: var(--green); }
+  .card h4 { font-size: 16px; font-weight: 700; margin-top: 6px; }
+  .card dl { margin-top: 4px; font-size: 13px; line-height: 1.5; color: var(--ink2); display: grid; grid-template-columns: 58px 1fr; column-gap: 8px; row-gap: 3px; }
+  .card dt { font-weight: 700; color: var(--ink); }
+  .card dd { margin: 0; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+  .panel { background: #fff; border-radius: 20px; padding: 24px 28px; margin-top: 20px; }
+  .grid2 .panel { margin-top: 0; }
+  .panel h2 { font-size: 19px; font-weight: 800; }
+  .panel p.sub { font-size: 14px; color: var(--ink3); margin-top: 4px; }
+  .panel ol, .panel ul { margin-top: 14px; padding-left: 20px; font-size: 14.5px; line-height: 1.6; color: var(--ink2); }
+  .panel li + li { margin-top: 6px; }
+  .panel li b { color: var(--ink); }
+  table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid #eef0f3; vertical-align: top; line-height: 1.5; }
+  th { font-size: 12.5px; color: var(--ink3); font-weight: 700; }
+  td:first-child { font-weight: 700; color: var(--ink); white-space: nowrap; }
+  .y { color: var(--green); font-weight: 600; }
+  .no { color: var(--ink3); }
+  .assume { display: inline-block; font-size: 12px; font-weight: 700; color: #8a6a24; background: var(--moon50); padding: 1px 6px; border-radius: 5px; margin-left: 4px; }
+  .ok, .todo { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 6px; border-radius: 5px; margin: 1px 2px 1px 0; }
+  .ok { color: var(--green); background: var(--green50); }
+  .todo { color: var(--ink2); background: #f2f4f6; }
+  .agrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 14px; margin-top: 18px; }
+  .a { text-align: center; }
+  .a .th { aspect-ratio: 1; border-radius: 16px; background: #f4f6f9; display: grid; place-items: center; }
+  .a .th img { width: 92%; }
+  .a b { display: block; font-size: 13px; margin-top: 8px; }
+  .a span { display: block; font-size: 12px; line-height: 1.45; color: var(--ink2); margin-top: 2px; }
+  footer { max-width: 1680px; margin: 40px auto 0; font-size: 13px; color: var(--ink3); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>월계함 lofi · 한 건물의 한 사이클</h1>
+      <p>가상 건물 ‘햇살빌라’의 같은 안내·공지·제보·팁이 모든 화면에 이어집니다. 집주인이 한 번 남긴 것이 A, 이웃, B에게 닿는 순서로 배치했습니다.<br />390×844pt(9:19.5), iOS Safari 하단 막대를 뺀 실제 가용 영역 기준. 하단 탭은 우리 건물 · 보낸 내용 · 내 정보 3개입니다.</p>
+    </div>
+    <div class="legend">
+      <div class="row"><span>→ 같은 사람의 다음 화면</span><span style="color:#8a6a24">⇢ 다른 사람에게 닿음</span><span style="color:var(--navy)">⏱ 시간이 지난 뒤</span></div>
+      <div class="row"><span>거주자 A · B</span><span>이웃(비회원)</span><span>집주인</span></div>
+    </div>
+  </header>
+
+  <div class="story">
+    <div class="beat"><i>① 집주인</i><b>한 번 옮긴다</b><span>카톡으로 보내던 안내를 붙여넣으면 건물에 남는다</span></div>
+    <div class="beat"><i>② 집주인 → A</i><b>한 번 건넨다</b><span>계약 때 입주 카드. A는 QR로 첫날을 시작한다</span></div>
+    <div class="beat"><i>③ 이웃 → 집주인</i><b>연락처 없이 닿는다</b><span>두 번 눌러 보내고, 집주인의 확인을 다시 본다</span></div>
+    <div class="beat"><i>④ A → 집주인</i><b>판단만 한다</b><span>메모를 반영하거나 유지한다. 고친 안내가 남는다</span></div>
+    <div class="beat"><i>⑤ A → B</i><b>다시 보내지 않는다</b><span>A가 떠나도 B가 같은 안내와 팁을 읽는다</span></div>
+  </div>
+
+  <div id="flow"></div>
+
+  <div class="grid2" style="margin-top:56px">
+    <div class="panel">
+      <h2>들어온 경로별 첫 화면</h2>
+      <p class="sub">현관 QR은 소개·역할 선택·가입을 거치지 않습니다</p>
+      <table>
+        <tr><th>들어온 경로</th><th>먼저 보여줄 것</th></tr>
+        <tr><td>현관 QR</td><td>그 건물의 이름·공지·안내·자주 쓰는 말 (01). 이 건물 거주자면 거주자 홈 (03)</td></tr>
+        <tr><td>같은 기기에서 다시 QR</td><td>01 위에 ‘내가 보낸 내용’ 배너 (30)</td></tr>
+        <tr><td>확인 링크</td><td>그 제보의 최신 상태 (06·31). 30일이 지나면 볼 수 없다는 안내</td></tr>
+        <tr><td>홈 화면 아이콘</td><td>스플래시 약 1초 (00) → 거주자 홈. 데이터가 준비되면 바로 넘어감</td></tr>
+        <tr><td>집주인 알림</td><td>해당 제보·메모 상세 (07·25). 이 건물 집주인이 아니면 접근 안내</td></tr>
+        <tr><td>3D</td><td>로딩 중·실패·‘동작 줄이기’에서는 정적 그림. 건물명·안내·알리기를 먼저 쓸 수 있고, 3D가 스크롤을 가로채지 않음</td></tr>
+      </table>
+    </div>
+    <div class="panel">
+      <h2>이 건물과의 관계별 권한</h2>
+      <p class="sub">로그인 여부가 아니라 ‘이 건물과의 관계’로 나눕니다</p>
+      <table>
+        <tr><th>상태</th><th>안내·공지</th><th>팁·수정 메모</th><th>알리기</th><th>보낸 내용 다시 보기</th></tr>
+        <tr><td>비회원</td><td class="y">읽기</td><td class="no">안 보임</td><td class="y">가능</td><td>기기 기억·링크</td></tr>
+        <tr><td>다른 건물 거주자</td><td class="y">읽기</td><td class="no">안 보임</td><td class="y">가능</td><td>내 목록</td></tr>
+        <tr><td>이 건물 거주자</td><td class="y">읽기</td><td class="y">읽기·쓰기</td><td class="y">가능</td><td>내 목록</td></tr>
+        <tr><td>재확인 필요</td><td class="y">읽기</td><td>읽기만 (쓰기 멈춤)</td><td class="y">가능</td><td>내 목록</td></tr>
+        <tr><td>이사한 사람</td><td class="y">읽기</td><td class="no">안 보임</td><td class="y">가능</td><td>내 목록<span class="assume">가정</span></td></tr>
+        <tr><td>이 건물 집주인</td><td>관리</td><td>메모 판단 · 팁 열람</td><td>받음</td><td>상태 변경</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h2>상태·예외 점검</h2>
+      <p class="sub">별도 페이지가 아니라 같은 화면의 상태·시트·문구로 다룹니다</p>
+      <table>
+        <tr><th>영역</th><th>그린 것</th><th>남은 것</th></tr>
+        <tr><td>진입</td><td><span class="ok">22 건물 없음</span><span class="ok">14 안내 없음</span></td><td><span class="todo">3D 실패</span><span class="todo">링크 만료</span></td></tr>
+        <tr><td>가입</td><td><span class="ok">02 키보드</span><span class="ok">16 동의</span><span class="ok">17 알림 선택</span></td><td><span class="todo">코드 오류·10분 대기</span><span class="todo">로그인 취소 복귀</span><span class="todo">건물 전환 확인</span></td></tr>
+        <tr><td>작성</td><td><span class="ok">12·19 키보드</span><span class="ok">18 팁 없음</span></td><td><span class="todo">저장 실패(입력 유지)</span><span class="todo">작성 중 닫기</span></td></tr>
+        <tr><td>제보</td><td><span class="ok">20 확인</span><span class="ok">06·31 상태</span><span class="ok">30 재방문</span></td><td><span class="todo">중복 전송</span><span class="todo">전송 결과 불명</span></td></tr>
+        <tr><td>판단</td><td><span class="ok">35 처리 결과</span><span class="ok">25 메모 검토</span></td><td><span class="todo">‘기존 유지’ 사유</span><span class="todo">안내 저장 실패 시 메모 상태 유지</span></td></tr>
+        <tr><td>관계</td><td><span class="ok">08·09 이사</span></td><td><span class="todo">재확인 배너(house)</span><span class="todo">신고 접수·가림</span></td></tr>
+        <tr><td>보기</td><td><span class="ok">28 크게 보기</span><span class="ok">11 읽어주기</span></td><td><span class="todo">긴 건물 이름·긴 본문</span></td></tr>
+      </table>
+    </div>
+    <div class="panel">
+      <h2>결정이 필요한 것</h2>
+      <p class="sub">lofi에서는 아래처럼 가정하고 그렸습니다</p>
+      <ol>
+        <li><b>이웃의 재조회</b> — 같은 기기는 QR로 다시 보고, 다른 기기는 카카오톡 보관·링크(30일)<span class="assume">가정</span></li>
+        <li><b>집주인의 한 줄</b> — 처리 결과와 함께 보낸 사람에게 보임<span class="assume">가정</span></li>
+        <li><b>집주인 알림 채널</b> — 시연은 앱 안 표시·웹 푸시, 상용화는 알림톡(건당 약 7~10원)<span class="assume">가정</span></li>
+        <li><b>이사 후 보낸 내용</b> — 로그인 사용자는 계속 조회<span class="assume">가정</span></li>
+        <li><b>가입코드 변경</b> — 바꿔도 이미 연결된 거주자는 유지<span class="assume">가정</span></li>
+        <li><b>재확인 예정월</b> — 가입 중에 묻지 않고 내 정보에서 정함<span class="assume">가정</span></li>
+        <li><b>가입코드 문자 규칙</b> — 영문 대문자+숫자 6자리. 0/O, 1/I 제외 여부</li>
+        <li><b>집주인 권한 부여</b> — 실제 관리 권한 확인 방식 (데모는 준비된 계정)</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>함이 에셋 배치</h2>
+    <p class="sub">원본은 design/characters/hami/images. 함이는 실제 상태를 설명할 때만 나오고, ‘확인함·처리 완료·처리가 어려움’ 같은 결과와 집주인 업무 화면에는 나오지 않습니다.</p>
+    <div class="agrid" id="assets"></div>
+  </div>
+</div>
+<footer>화면 원본: lofi/screens/*.html · PNG: lofi/out/ (1170×2532) · 다시 만들기: python3 lofi/scripts/export.py</footer>
+
+<script>
+// 카드: C(파일, 화면 ID, 역할, 제목, [[항목, 내용]...], {new})
+// 화살표: A("n" 같은 사람 | "p" 다른 사람에게 | "t" 시간 경과 | "alt" 또는, 라벨)
+const C = (f, id, r, t, d, extra) => Object.assign({ f, id, r, t, d }, extra || {});
+const A = (a, l) => ({ a, l });
+
+const CHAPTERS = [
+  ["집주인이 한 번 옮기고, 한 번 건넨다", "카톡으로 보내던 안내가 건물에 남는 순간", [
+    C("23-landlord-create", "LF-12", "집주인", "건물 만들기", [["진입", "집주인 첫 로그인"], ["누르면", "건물 생성 → 안내 쓰기로 이어짐"], ["실패", "같은 주소가 있으면 중복 안내"], ["함이", "clipboard"]]),
+    A("n"),
+    C("33-landlord-guide-write", "LF-14", "집주인", "기본 안내 쓰기 · 붙여넣기", [["진입", "건물 만든 직후 · 관리 홈 · 메모 반영"], ["누르면", "저장 → 현관 QR 공개 화면에 바로 반영"], ["실패", "저장 실패 시 입력 유지, 공개 안내는 이전 그대로"], ["메모 반영", "25에서 들어오면 거주자 메모를 위에 고정"]], { new: 1 }),
+    A("n"),
+    C("26-qr-code", "LF-18", "집주인", "현관 QR과 입주 카드", [["권한", "이 건물 집주인만"], ["누르면", "QR 인쇄 · 입주 카드를 카카오톡 공유로 전달"], ["원칙", "QR(누구나)과 가입코드(입주자)를 분리"], ["함이", "qr-sign"]]),
+    A("p", "입주 카드\nA에게"),
+  ]],
+  ["A가 QR로 들어와 첫날을 시작한다", "소개·가입 없이 먼저 읽고, 원할 때 연결한다", [
+    C("01-public-entry", "LF-01", "누구나", "공개 건물 화면", [["진입", "현관 QR (스플래시 없음)"], ["권한", "공개 안내·공지만"], ["누르면", "안내 타일 → 11 / 자주 쓰는 말 → 20 / 연결하기 → 02"], ["함이", "guide · 첫 방문에만"]]),
+    A("n"),
+    C("11-guide-detail", "LF-02", "누구나", "기본 안내 상세 · 읽어주기", [["목표", "‘분리수거함 어디?’를 로그인 없이 두 번 눌러 찾기"], ["누르면", "읽어주기 재생·멈춤 / 거주자는 메모 남기기"], ["예외", "안내가 없으면 14"]]),
+    A("n"),
+    C("02-join-code", "LF-04", "A", "가입코드 1/3", [["진입", "01의 ‘연결하기’"], ["누르면", "6칸이 다 차면 ‘다음’"], ["실패", "틀리면 칸 아래 안내, 5회면 10분 대기"]]),
+    A("n"),
+    C("16-join-login", "LF-04", "A", "로그인과 동의 2/3", [["누르면", "카카오 로그인 → 관계 생성"], ["취소", "코드 입력은 유지하고 이 화면으로 복귀"], ["예외", "다른 건물 거주 중이면 전환 확인"]]),
+    A("n"),
+    C("36-first-guide", "첫날", "A", "처음 오셨나요 · 한 장씩", [["진입", "연결 직후 한 번"], ["구성", "실제 기본 안내 5장, 마지막 장에 홈 화면 추가 안내"], ["누르면", "건너뛰기·전체 보기 가능"], ["함이", "guide"]], { new: 1 }),
+    A("n"),
+    C("03-resident-home-a", "LF-05", "A", "거주자 홈", [["진입", "연결 완료 · 탭 · 공지 알림"], ["권한", "이 건물 거주자"], ["구성", "공개 화면과 같은 헤더 + 생활 팁 + 알리기"]]),
+  ]],
+  ["A가 산다", "읽기만으로 충분하고, 남기는 것은 선택", [
+    C("15-notice-detail", "LF-03", "누구나", "공지 상세", [["구성", "적용 기간·대상을 본문보다 먼저"], ["원칙", "기간이 지나면 내려감. 계속 규칙은 기본 안내에"]]),
+    A("alt", "또는"),
+    C("04-tips", "LF-06", "A", "생활 팁 · 작성 직후", [["권한", "이 건물 거주자만 읽기"], ["구성", "작성자·반응 없음, 월 단위 날짜"], ["함이", "hami-mini 토스트"], ["예외", "팁이 없으면 18"]]),
+    A("n"),
+    C("19-tip-write", "LF-07", "A", "생활 팁 작성 · 키보드", [["누르면", "저장 → 04 목록에 추가 + 토스트"], ["실패", "입력 유지, 작성 중 닫으면 버리기 확인"]]),
+    A("alt", "또는"),
+    C("21-sent-list", "LF-08", "A", "보낸 내용 탭", [["권한", "이 계정으로 보낸 것만"], ["구성", "상태 4종을 색과 글자로"], ["원칙", "비회원으로 보낸 것은 섞지 않음"]]),
+  ]],
+  ["이웃이 알리고, 집주인에게 닿는다", "두 번 눌러 보내고, 다음 날 같은 QR로 다시 본다", [
+    C("01-public-entry", "LF-01", "이웃", "자주 쓰는 말 누르기 (같은 화면)", [["누르면", "1번째 탭 → 20 확인 시트"], ["권한", "가입 없이 가능"], ["예외", "‘직접 적기’ → 05"]]),
+    A("n"),
+    C("20-report-confirm", "LF-10", "이웃", "보내기 전 확인", [["구성", "받는 사람·공개 범위·보낼 말"], ["누르면", "2번째 탭 ‘집주인에게 보내기’ → 06"], ["선택", "위치나 내용 덧붙이기"], ["실패", "저장 실패면 내용 유지, 성공으로 표시 안 함"]]),
+    A("n"),
+    C("06-report-status", "LF-11", "이웃", "접수됨", [["문구", "집주인은 아직 확인 전이에요"], ["누르면", "카카오톡에 보관 · 링크 복사"], ["재진입", "같은 기기는 QR로, 다른 기기는 링크(30일)"], ["함이", "envelope"]]),
+    A("p", "쪽지\n집주인에게"),
+    C("32-landlord-alert", "알림", "집주인", "새 쪽지 알림", [["채널", "시연: 웹 푸시(홈 화면 추가)·앱 안 표시 / 상용화: 알림톡"], ["누르면", "07 제보 상세로 바로"]], { new: 1 }),
+    A("n"),
+    C("07-landlord-report", "LF-16", "집주인", "받은 제보 · 확인 전", [["원칙", "열어보기만으로 ‘확인함’이 되지 않음"], ["누르면", "확인했어요 → 보낸 사람 화면이 ‘확인함’"]]),
+    A("n"),
+    C("35-landlord-report-result", "LF-16", "집주인", "처리 결과 저장", [["누르면", "처리 완료 / 처리가 어려움 + 한 줄(선택)"], ["이어서", "공지로 알리기 · 안내 고치기 (제보 원문은 자동 공개 안 함)"]], { new: 1 }),
+    A("t", "다음 날\n이웃이 다시"),
+    C("30-public-return", "LF-01", "이웃", "같은 QR을 다시 찍었을 때", [["진입", "같은 기기의 현관 QR"], ["구성", "‘내가 보낸 내용’ 배너 → 31"]], { new: 1 }),
+    A("n"),
+    C("31-report-status-done", "LF-11", "이웃", "처리 완료로 표시된 뒤", [["문구", "‘집주인이 처리 완료로 표시했어요’"], ["원칙", "해결을 서비스가 보증하지 않음"], ["함이", "없음"]], { new: 1 }),
+  ]],
+  ["집주인이 판단하고, 건물에 남긴다", "메모는 반영하거나 유지하고, 공지는 기간이 있는 일만", [
+    C("12-guide-memo-write", "LF-02", "A", "내용이 달라요 · 키보드", [["권한", "이 건물 거주자"], ["공개", "거주자와 집주인"], ["누르면", "저장 → 13"]]),
+    A("n"),
+    C("13-guide-memo-sent", "LF-02", "A", "메모를 남긴 뒤", [["문구", "집주인이 확인하기 전까지 기본 안내는 그대로"], ["함이", "tip-saved"]]),
+    A("p", "메모\n집주인에게"),
+    C("24-landlord-home", "LF-13", "집주인", "건물 관리 홈", [["구성", "확인할 것 → 지금 보이는 것 → 새 거주자 연결"], ["누르면", "제보 → 07, 메모 → 25"]]),
+    A("n"),
+    C("25-memo-review", "LF-17", "집주인", "수정 메모 검토", [["누르면", "안내에 반영 → 33(메모 고정) / 기존 유지 → 사유"], ["원칙", "저장 성공 뒤에만 메모가 ‘반영됨’"]]),
+    A("alt", "기간이 있는 일"),
+    C("34-landlord-notice-write", "LF-15", "집주인", "공지 올리기", [["구성", "일정·내용·알림 대상 수"], ["원칙", "계속 바뀌는 규칙이면 기본 안내도 고치도록 안내"]], { new: 1 }),
+  ]],
+  ["A가 떠나고, B가 이어받는다", "사람의 관계만 바뀌고, 건물의 기록은 그대로", [
+    C("08-move-out-confirm", "LF-09", "A", "이사 확인", [["구성", "끝나는 것 / 남는 것"], ["원칙", "재확인 미응답은 이사가 아님(14일 뒤 읽기만)"]]),
+    A("n"),
+    C("09-move-out-done", "LF-09", "A", "이사 처리 완료", [["결과", "A의 관계 종료, 이 건물 공지 알림 제외"], ["함이", "moving"]]),
+    A("t", "몇 달 뒤\nB가 입주"),
+    C("10-resident-home-b", "LF-05", "B", "B의 거주자 홈 · 연결 직후", [["같은 기록", "A 메모가 반영된 ‘9월 수정’, A의 팁(작성자 없음)"], ["원칙", "팁이 없어도 안내·공지로 첫날이 성립"], ["함이", "house · 첫 연결에만"]]),
+    A("n"),
+    C("17-notify-choice", "LF-04", "B", "알림 선택", [["원칙", "가입 완료와 알림 허용을 분리"], ["함이", "bell"]]),
+  ]],
+  ["대체 경로 · 예외 · 보기 방식 · 시연", "같은 화면의 다른 상태와 선택 경로", [
+    C("05-report-compose", "LF-10", "누구나", "직접 적어서 알리기", [["진입", "01의 ‘직접 적기’, 거주자 홈의 알리기"], ["누르면", "보낼 내용 확인 → 20과 같은 확인 시트"], ["선택", "한 문장으로 다듬기(AI 초안, 직접 고친 뒤 전송)"], ["함이", "envelope (받는 사람 카드 모서리)"]]),
+    A("alt", ""),
+    C("14-guide-empty", "LF-02", "누구나", "안내 없음", [["함이", "folder"], ["원칙", "안내가 없어도 알리기는 가능"]]),
+    A("alt", ""),
+    C("18-tips-empty", "LF-06", "거주자", "생활 팁 없음", [["함이", "tray-empty"]]),
+    A("alt", ""),
+    C("22-building-not-found", "예외", "누구나", "건물을 찾을 수 없음", [["원칙", "다른 건물을 임의로 보여주지 않음"], ["함이", "lost"]]),
+    A("alt", ""),
+    C("28-large-mode", "LF-01", "누구나", "크게 보기", [["원칙", "같은 데이터·권한, 배치와 글자만 바뀜"]]),
+    A("alt", ""),
+    C("00-splash", "스플래시", "거주자", "홈 화면 아이콘으로 열 때", [["원칙", "현관 QR 진입에는 없음"], ["함이", "house + envelope"]]),
+    A("alt", ""),
+    C("29-demo-start", "LF-20", "시연자", "데모 시작", [["원칙", "역할을 바꿔도 데이터 유지, 초기화는 따로"], ["함이", "wave"]]),
+  ]],
+];
+
+const ASSETS = [
+  ["guide", "LF-01 첫 방문 · 처음 오셨나요"], ["house", "B 연결 환영 · 거주 재확인 · 스플래시"], ["envelope", "LF-11 접수 · LF-10 받는 사람 · 스플래시"],
+  ["hami-mini", "팁 저장 토스트 등 40pt 이하"], ["moving", "LF-09 이사 완료"], ["tip-saved", "LF-02 메모 남긴 뒤"],
+  ["tray-empty", "LF-06 생활 팁 없음"], ["folder", "LF-02 안내 없음"], ["bell", "연결 뒤 알림 선택"],
+  ["clipboard", "LF-12 건물 만들기"], ["qr-sign", "LF-18 QR과 입주 카드"], ["lost", "건물 없음 · 링크 만료"], ["wave", "LF-20 데모 시작"],
+];
+
+const arrowHtml = ({ a, l }) => {
+  const sym = a === "p" ? "⇢" : a === "t" ? "⏱" : a === "alt" ? "·" : "→";
+  return `<div class="arrow ${a}"><span class="ln">${sym}</span>${l ? `<span class="lb">${l.replace("\n", "<br>")}</span>` : ""}</div>`;
+};
+const cardHtml = (c) => `<div class="card"><img src="out/${c.f}.png" alt="" />
+  <div class="id"><span class="tag">${c.id}</span><span class="tag role">${c.r}</span>${c.new ? '<span class="tag new">새로 그림</span>' : ""}</div>
+  <h4>${c.t}</h4><dl>${c.d.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl></div>`;
+
+document.getElementById("flow").innerHTML = CHAPTERS.map(([t, s, items], i) =>
+  `<section class="chapter"><h2><span class="n">${i + 1}</span>${t} <small>${s}</small></h2><div class="lane">${
+    items.map((x) => (x.f ? cardHtml(x) : arrowHtml(x))).join("")}</div></section>`).join("");
+
+document.getElementById("assets").innerHTML = ASSETS.map(([f, u]) =>
+  `<div class="a"><div class="th"><img src="assets/hami/${f}.png" alt="" /></div><b>${f}</b><span>${u}</span></div>`).join("");
+</script>
+</body>
+</html>

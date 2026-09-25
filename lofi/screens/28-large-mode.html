@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-01 공개 건물 진입 · 크게 보기</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<link rel="stylesheet" href="../src/building.css" />
+<style>
+  .pill-btn.on { background: var(--navy-600); color: #fff; height: 40px; font-size: 16px; padding: 0 14px; border-radius: 20px; }
+  .scene { height: 120px; }
+  .bld .h-display { font-size: 32px; }
+  .bld .small { font-size: 17px; }
+  .notice { padding: 18px; }
+  .notice .t { font-size: 19px; }
+  .notice .s { font-size: 16px; }
+  .big-list { margin: 20px var(--gutter) 0; border-radius: 18px; border: 1px solid var(--gray-200); overflow: hidden; }
+  .big-list .r { display: flex; align-items: center; gap: 14px; min-height: 68px; padding: 0 18px; font-size: 19px; font-weight: 600; }
+  .big-list .r + .r { border-top: 1px solid var(--gray-100); }
+  .big-list .r svg { width: 24px; height: 24px; color: var(--navy-600); }
+  .big-list .r .chev { margin-left: auto; color: var(--gray-400); }
+  .section-head h3 { font-size: 21px; }
+  .cta-dock .btn { height: 64px; font-size: 20px; }
+  .cta-dock .hint { font-size: 15px; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="content">
+    <div class="topbar">
+      <div class="brand" style="font-size:19px"><span class="stamp"><i data-lucide="moon"></i></span>월계함</div>
+      <div class="right" style="padding-right:8px"><button class="pill-btn on" aria-pressed="true"><i data-lucide="type"></i>크게 보기 켜짐</button></div>
+    </div>
+    <div class="scene" data-city data-scale="8" data-oy="0.6" data-pin="off"></div>
+    <div class="bld">
+      <h1 class="h-display">햇살빌라</h1>
+      <p class="small mt-4">서울 노원구 월계동</p>
+    </div>
+    <div class="notice">
+      <div class="ic"><i data-lucide="megaphone"></i></div>
+      <div style="flex:1"><div class="t">9월 28일(일) 오전 단수</div><div class="s">공지 · 9월 28일까지</div></div>
+    </div>
+    <div class="section-head mt-24"><h3>건물 안내</h3></div>
+    <div class="big-list" style="margin-top:0">
+      <div class="r"><i data-lucide="recycle"></i>분리수거<i data-lucide="chevron-right" class="chev"></i></div>
+      <div class="r"><i data-lucide="package"></i>택배<i data-lucide="chevron-right" class="chev"></i></div>
+      <div class="r"><i data-lucide="flame"></i>보일러·설비<i data-lucide="chevron-right" class="chev"></i></div>
+    </div>
+  </div>
+  <div class="cta-dock">
+    <p class="hint">가입하지 않아도 보낼 수 있어요</p>
+    <button class="btn btn-primary"><i data-lucide="mail"></i>집주인에게 알리기</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

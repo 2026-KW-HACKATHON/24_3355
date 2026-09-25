@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-04 우리 건물로 연결하기 · 가입코드</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .content { bottom: 0; }
+  .target { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px 0 6px; border-radius: 18px; background: var(--gray-100); font-size: 14px; font-weight: 600; color: var(--gray-800); }
+  .target .b { width: 26px; height: 26px; border-radius: 13px; background: var(--navy-600); display: grid; place-items: center; color: #fff; }
+  .target .b svg { width: 14px; height: 14px; }
+  .help { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; line-height: 1.5; color: var(--gray-600); }
+  .help svg { width: 16px; height: 16px; flex: none; margin-top: 2px; color: var(--gray-500); }
+  .above-kb { position: absolute; left: 0; right: 0; bottom: 295px; padding: 12px var(--gutter); z-index: 46; background: #fff; }
+</style>
+</head>
+<body>
+<div class="phone" data-safari="off">
+  <div class="content">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="뒤로"><i data-lucide="chevron-left"></i></button>
+      <span class="title">우리 건물로 연결하기</span>
+      <span style="width:44px"></span>
+    </div>
+    <div class="pad">
+      <div class="steps"><span class="on"></span><span></span><span></span></div>
+      <p class="caption mt-8">1 / 3 · 가입코드 입력</p>
+
+      <div class="target mt-24"><span class="b"><i data-lucide="building-2"></i></span>햇살빌라 · 월계동</div>
+      <h1 class="h-title mt-12">이 건물에 살고 있나요?</h1>
+      <p class="body mt-4" style="color:var(--gray-600)">집주인에게 받은 6자리 가입코드를 입력해주세요.</p>
+
+      <div class="otp mt-24" role="group" aria-label="가입코드 6자리">
+        <div class="cell filled">W</div>
+        <div class="cell filled">K</div>
+        <div class="cell filled">7</div>
+        <div class="cell filled">2</div>
+        <div class="cell active"></div>
+        <div class="cell"></div>
+      </div>
+
+      <div class="help mt-16"><i data-lucide="info"></i><span>영문과 숫자로 된 코드예요. 휴대폰 인증번호가 아니에요.</span></div>
+      <p class="mt-12" style="font-size:14px;font-weight:600;color:var(--navy-600);text-decoration:underline;text-underline-offset:3px">코드를 받지 못했나요?</p>
+    </div>
+  </div>
+
+  <div class="above-kb"><button class="btn btn-disabled" disabled>다음</button></div>
+
+  <div class="kb">
+    <div class="acc"><span class="arrows"><i data-lucide="chevron-up"></i><i data-lucide="chevron-down"></i></span><span style="font-weight:600">완료</span></div>
+    <div class="rows">
+      <div class="row"><span class="k">Q</span><span class="k">W</span><span class="k">E</span><span class="k">R</span><span class="k">T</span><span class="k">Y</span><span class="k">U</span><span class="k">I</span><span class="k">O</span><span class="k">P</span></div>
+      <div class="row"><span class="k">A</span><span class="k">S</span><span class="k">D</span><span class="k">F</span><span class="k">G</span><span class="k">H</span><span class="k">J</span><span class="k">K</span><span class="k">L</span></div>
+      <div class="row"><span class="k fn"><i data-lucide="arrow-big-up"></i></span><span style="width:6px"></span><span class="k">Z</span><span class="k">X</span><span class="k">C</span><span class="k">V</span><span class="k">B</span><span class="k">N</span><span class="k">M</span><span style="width:6px"></span><span class="k fn"><i data-lucide="delete"></i></span></div>
+      <div class="row"><span class="k fn" style="flex-basis:88px">123</span><span class="k wide">space</span><span class="k ret">다음</span></div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

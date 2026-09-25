@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-13 건물 관리 홈 · 집주인</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .switch { display: inline-flex; align-items: center; gap: 4px; padding-left: 12px; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  .switch svg { width: 20px; height: 20px; color: var(--gray-500); }
+  .todo { margin: 0 var(--gutter); border-radius: 16px; border: 1px solid var(--gray-200); overflow: hidden; }
+  .todo .row-i { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+  .todo .row-i + .row-i { border-top: 1px solid var(--gray-100); }
+  .todo .ic { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; flex: none; }
+  .todo .ic svg { width: 18px; height: 18px; }
+  .todo .t { font-size: 15.5px; font-weight: 600; }
+  .todo .s { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
+  .todo .chev { color: var(--gray-400); width: 20px; margin-left: auto; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 var(--gutter); }
+  .stat { border-radius: 14px; background: var(--gray-50); padding: 14px 16px; }
+  .stat .n { font-size: 22px; font-weight: 700; margin-top: 4px; }
+  .stat .l { font-size: 13.5px; color: var(--gray-600); display: flex; align-items: center; gap: 6px; }
+  .stat .l svg { width: 15px; height: 15px; }
+  .quick { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 var(--gutter); }
+  .quick .btn { height: 52px; font-size: 15.5px; }
+  .recent { display: flex; align-items: center; gap: 10px; margin: 12px var(--gutter) 0; padding: 12px 14px; border-radius: 14px; border: 1px dashed var(--gray-300); font-size: 14px; color: var(--gray-700); }
+  .recent svg { width: 18px; height: 18px; color: var(--navy-600); flex: none; }
+  .recent b { color: var(--gray-900); }
+  .recent .when { margin-left: auto; font-size: 12.5px; color: var(--gray-500); }
+</style>
+</head>
+<body>
+<div class="phone" data-tabs="landlord:manage:inbox">
+  <div class="content">
+    <div class="topbar">
+      <span class="switch">햇살빌라<i data-lucide="chevron-down"></i></span>
+      <button class="icon-btn" aria-label="QR·가입코드"><i data-lucide="qr-code"></i></button>
+    </div>
+
+    <div class="section-head mt-8"><h3>확인할 것</h3><span class="more">2건</span></div>
+    <div class="todo">
+      <div class="row-i">
+        <span class="ic" style="background:var(--st-received-bg);color:var(--st-received)"><i data-lucide="mail"></i></span>
+        <div><div class="t">받은 상황 1건</div><div class="s">건물 앞 쓰레기가 넘쳤어요 · 오늘 오후 3:12</div></div>
+        <i data-lucide="chevron-right" class="chev"></i>
+      </div>
+      <div class="row-i">
+        <span class="ic" style="background:var(--navy-50);color:var(--navy-600)"><i data-lucide="file-pen-line"></i></span>
+        <div><div class="t">안내 수정 메모 1건</div><div class="s">분리수거 안내 · 9월 20일</div></div>
+        <i data-lucide="chevron-right" class="chev"></i>
+      </div>
+    </div>
+
+    <div class="section-head mt-24"><h3>지금 건물에 보이는 것</h3></div>
+    <div class="stats">
+      <div class="stat"><div class="l"><i data-lucide="book-open"></i>기본 안내</div><div class="n">4개</div></div>
+      <div class="stat"><div class="l"><i data-lucide="megaphone"></i>진행 중 공지</div><div class="n">1개</div></div>
+      <div class="stat"><div class="l"><i data-lucide="users"></i>연결된 거주자</div><div class="n">5명</div></div>
+      <div class="stat"><div class="l"><i data-lucide="sticky-note"></i>생활 팁</div><div class="n">4개</div></div>
+    </div>
+
+    <div class="recent"><i data-lucide="user-plus"></i><span><b>새 거주자 1명</b>이 가입코드로 연결됐어요</span><span class="when">오늘</span></div>
+
+    <div class="quick mt-16">
+      <button class="btn btn-secondary"><i data-lucide="megaphone"></i>공지 쓰기</button>
+      <button class="btn btn-neutral"><i data-lucide="pencil-line"></i>안내 고치기</button>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

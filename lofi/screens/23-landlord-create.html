@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-12 건물 개설 · 집주인</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .head { display: flex; align-items: flex-end; justify-content: space-between; }
+  .head img { width: 118px; margin: -14px -14px -12px 0; }
+  .next { margin-top: 24px; border-radius: 14px; background: var(--gray-50); padding: 14px 16px; }
+  .next .h { font-size: 13px; font-weight: 700; color: var(--gray-500); margin-bottom: 6px; }
+  .next .i { display: flex; gap: 10px; align-items: center; font-size: 14.5px; color: var(--gray-700); padding: 3px 0; }
+  .next .i b { width: 20px; height: 20px; border-radius: 10px; background: #fff; border: 1px solid var(--gray-200); display: grid; place-items: center; font-size: 11.5px; color: var(--gray-600); flex: none; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="content">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="닫기"><i data-lucide="x"></i></button>
+      <span class="title">건물 만들기</span>
+      <span style="width:44px"></span>
+    </div>
+    <div class="pad">
+      <div class="head mt-8">
+        <h1 class="h-title">어떤 건물의 안내를<br />준비할까요?</h1>
+        <img src="../assets/hami/clipboard.png" alt="함이가 체크보드에 적고 있어요" />
+      </div>
+
+      <div class="field-label mt-24">건물 이름</div>
+      <div class="input focus">햇살빌라<span class="caret" style="height:18px"></span></div>
+      <p class="caption mt-8">현관 QR을 연 사람이 가장 먼저 보는 이름이에요.</p>
+
+      <div class="field-label mt-20">주소</div>
+      <div class="input"><i data-lucide="search"></i>서울 노원구 월계동 000-00</div>
+
+      <div class="next">
+        <div class="h">만든 다음에 할 일</div>
+        <div class="i"><b>1</b>분리수거·택배 같은 기본 안내 적기</div>
+        <div class="i"><b>2</b>현관 QR 내려받아 붙이기</div>
+        <div class="i"><b>3</b>입주자에게 가입코드 전하기</div>
+      </div>
+    </div>
+  </div>
+  <div class="cta-dock">
+    <button class="btn btn-primary">건물 만들기</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

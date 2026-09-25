@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-14 기본 안내 쓰기 · 카톡 문구 붙여넣기</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .paste { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--moon-50); }
+  .paste svg { width: 18px; height: 18px; color: #8a6a24; flex: none; }
+  .paste span { flex: 1; font-size: 14px; line-height: 1.45; color: var(--gray-800); }
+  .paste b { font-size: 14px; color: #8a6a24; white-space: nowrap; }
+  .chip { height: 34px; font-size: 14px; padding: 0 12px; }
+  .textarea { min-height: 0; white-space: pre-line; font-size: 15.5px; }
+  .photo-add { display: flex; gap: 8px; margin-top: 10px; }
+  .photo-add span { width: 64px; height: 64px; border-radius: 12px; border: 1.5px dashed var(--gray-300); display: grid; place-items: center; color: var(--gray-500); }
+  .photo-add span svg { width: 20px; height: 20px; }
+  .preview { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 600; color: var(--navy-600); }
+  .preview svg { width: 16px; height: 16px; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="content">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="닫기"><i data-lucide="x"></i></button>
+      <span class="title">기본 안내 쓰기</span>
+      <span style="width:44px"></span>
+    </div>
+    <div class="pad">
+      <div class="paste mt-4"><i data-lucide="clipboard-paste"></i><span>카톡으로 보냈던 문구를 그대로 붙여넣어도 돼요</span><b>붙여넣기</b></div>
+
+      <div class="field-label mt-20">종류</div>
+      <div class="chips">
+        <span class="chip on">분리수거</span><span class="chip">택배</span><span class="chip">보일러·설비</span><span class="chip">공용공간</span><span class="chip">연락</span>
+      </div>
+
+      <div class="field-label mt-20">제목</div>
+      <div class="input">분리수거함은 주차장 안쪽에 있어요</div>
+
+      <div class="field-label mt-16">내용</div>
+      <div class="textarea focus">안녕하세요 햇살빌라입니다.
+분리수거함은 주차장 안쪽에 있어요.
+일반 쓰레기는 매일 저녁 7시 이후, 재활용은 화·금, 음식물은 목·일 저녁에 내놓아 주세요.
+페트병은 라벨을 떼고 눌러 주세요.<span class="caret"></span></div>
+      <div class="row between mt-8">
+        <div class="photo-add"><span><i data-lucide="image-plus"></i></span></div>
+        <span class="preview"><i data-lucide="eye"></i>공개 화면으로 보기</span>
+      </div>
+    </div>
+  </div>
+  <div class="cta-dock">
+    <p class="hint">저장하면 현관 QR로 누구나 읽어요</p>
+    <button class="btn btn-primary">안내 저장</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

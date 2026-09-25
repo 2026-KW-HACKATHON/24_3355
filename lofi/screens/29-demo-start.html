@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-20 해커톤 데모 시작</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .phone { background: var(--gray-100); }
+  .demo-tag { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; background: var(--gray-900); color: #fff; font-size: 13px; font-weight: 700; }
+  .demo-tag svg { width: 14px; height: 14px; }
+  .head { display: flex; align-items: flex-end; justify-content: space-between; }
+  .head img { width: 110px; margin: -16px -12px -12px 0; }
+  .role { display: flex; align-items: center; gap: 14px; background: #fff; border-radius: 16px; padding: 14px 16px; }
+  .role + .role { margin-top: 8px; }
+  .role .av { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; font-weight: 800; font-size: 16px; flex: none; }
+  .role .t { font-size: 16px; font-weight: 700; }
+  .role .s { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
+  .role .chev { margin-left: auto; color: var(--gray-400); width: 20px; }
+  .reset { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; padding: 14px 16px; border-radius: 16px; border: 1px dashed var(--gray-300); }
+  .reset span { font-size: 13.5px; color: var(--gray-600); }
+  .reset button { font-size: 14.5px; font-weight: 600; color: var(--danger); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="content">
+    <div class="pad" style="padding-top:20px">
+      <span class="demo-tag"><i data-lucide="presentation"></i>시연용 데이터</span>
+      <div class="head mt-12">
+        <h1 class="h-title">누구의 화면으로<br />볼까요?</h1>
+        <img src="../assets/hami/wave.png" alt="함이가 손을 흔들고 있어요" />
+      </div>
+      <p class="small mt-8">역할을 바꿔도 햇살빌라의 안내와 제보 상태는 그대로 이어져요.</p>
+
+      <div class="mt-20">
+        <div class="role"><span class="av" style="background:var(--navy-50);color:var(--navy-600)">A</span><div><div class="t">입주자 A</div><div class="s">거주 중 · 팁 1개 · 메모 1개</div></div><i data-lucide="chevron-right" class="chev"></i></div>
+        <div class="role"><span class="av" style="background:var(--gray-100);color:var(--gray-700)"><i data-lucide="footprints" style="width:20px"></i></span><div><div class="t">옆 건물 주민</div><div class="s">비회원 · 제보 1건 접수됨</div></div><i data-lucide="chevron-right" class="chev"></i></div>
+        <div class="role"><span class="av" style="background:var(--moon-50);color:#8a6a24"><i data-lucide="key-round" style="width:20px"></i></span><div><div class="t">집주인</div><div class="s">확인할 것 2건</div></div><i data-lucide="chevron-right" class="chev"></i></div>
+        <div class="role"><span class="av" style="background:var(--navy-50);color:var(--navy-600)">B</span><div><div class="t">다음 입주자 B</div><div class="s">아직 연결 전 · 가입코드 받음</div></div><i data-lucide="chevron-right" class="chev"></i></div>
+      </div>
+
+      <div class="reset"><span>처음 상태로 되돌리기</span><button>시연 초기화</button></div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

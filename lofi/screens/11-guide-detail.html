@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-02 기본 안내 상세 · 읽어주기</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .memo-cta { display: flex; align-items: center; gap: 12px; margin-top: 24px; padding: 14px 16px; border-radius: 14px; background: var(--gray-50); }
+  .memo-cta .q { flex: 1; }
+  .memo-cta .q b { display: block; font-size: 15px; color: var(--gray-900); }
+  .memo-cta .q span { font-size: 13px; color: var(--gray-500); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="content">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="뒤로"><i data-lucide="chevron-left"></i></button>
+      <span class="title">건물 안내</span>
+      <button class="icon-btn" aria-label="읽어주기" style="color:var(--navy-600)"><i data-lucide="volume-2"></i></button>
+    </div>
+
+    <div class="tts" role="status" data-quiet-hide>
+      <span class="wave"><i style="height:6px"></i><i style="height:14px"></i><i style="height:9px"></i><i style="height:16px"></i><i style="height:7px"></i></span>
+      <span>‘분리수거’ 안내를 읽고 있어요</span>
+      <span class="stop"><i data-lucide="square"></i>멈추기</span>
+    </div>
+
+    <div class="pad doc">
+      <div class="row between mt-20"><span class="badge navy"><i data-lucide="recycle"></i>분리수거</span><span class="caption">집주인 안내 · 2026년 3월 수정</span></div>
+      <h1 class="h-title mt-12">분리수거함은 주차장 안쪽에 있어요</h1>
+      <div class="photo mt-16"><span><i data-lucide="image"></i>수거함 위치 사진</span></div>
+
+      <h4>버리는 날</h4>
+      <ul>
+        <li><span>일반 쓰레기</span><span>매일 저녁 7시 이후</span></li>
+        <li><span>재활용</span><span>화 · 금</span></li>
+        <li><span>음식물</span><span>목 · 일 저녁</span></li>
+      </ul>
+
+      <h4>지켜주세요</h4>
+      <p class="mt-4">페트병은 라벨을 떼고 납작하게 눌러 주세요. 수거함이 가득 차면 옆에 두지 말고 다음 수거일에 내놓아 주세요.</p>
+
+      <div class="memo-cta">
+        <div class="q"><b>안내가 달라졌나요?</b><span>집주인이 확인하고 반영할 수 있어요</span></div>
+        <button class="btn btn-sm btn-secondary">메모 남기기</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

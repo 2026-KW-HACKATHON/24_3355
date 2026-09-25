@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-11 보낸 내용과 처리 상태 · 비회원</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .hero { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 4px; }
+  .hero img { width: 128px; margin: -14px 0 -18px; }
+  .track { border-radius: 16px; border: 1px solid var(--gray-200); padding: 16px; }
+  .step { display: flex; gap: 12px; }
+  .step .rail { display: flex; flex-direction: column; align-items: center; width: 22px; }
+  .step .dot { width: 22px; height: 22px; border-radius: 11px; display: grid; place-items: center; flex: none; }
+  .step .dot svg { width: 13px; height: 13px; stroke-width: 3; color: #fff; }
+  .step .dot.on { background: var(--navy-600); }
+  .step .dot.wait { border: 2px solid var(--gray-300); background: #fff; }
+  .step .line { width: 2px; flex: 1; background: var(--gray-200); margin: 4px 0; min-height: 14px; }
+  .step .body2 { padding-bottom: 14px; flex: 1; }
+  .step .t { font-size: 15.5px; font-weight: 600; }
+  .step .s { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
+  .outcomes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .outcome { border: 1px dashed var(--gray-300); border-radius: 10px; padding: 8px 10px; font-size: 13.5px; color: var(--gray-500); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .outcome svg { width: 15px; height: 15px; }
+  .link { display: flex; align-items: center; gap: 10px; border-radius: 14px; background: var(--gray-50); padding: 12px 14px; }
+  .link .u { flex: 1; font-size: 14.5px; font-weight: 600; color: var(--gray-800); }
+  .link .u small { display: block; font-size: 12.5px; font-weight: 500; color: var(--gray-500); margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="content">
+    <div class="topbar">
+      <span style="width:44px"></span>
+      <span class="title">보낸 내용</span>
+      <button class="icon-btn" aria-label="닫기"><i data-lucide="x"></i></button>
+    </div>
+    <div class="pad">
+      <div class="hero">
+        <img src="../assets/hami/envelope.png" alt="함이가 봉투를 들고 있어요" />
+        <h1 class="h-title mt-8">내용을 접수했어요</h1>
+        <p class="small mt-4">집주인은 아직 확인 전이에요.</p>
+      </div>
+
+      <div class="track mt-20">
+        <div class="step">
+          <div class="rail"><span class="dot on"><i data-lucide="check"></i></span><span class="line"></span></div>
+          <div class="body2"><div class="row gap-8"><span class="t">접수됨</span><span class="badge received">현재</span></div><div class="s">‘건물 앞 쓰레기가 넘쳤어요’ · 9월 25일 오후 3:12</div></div>
+        </div>
+        <div class="step">
+          <div class="rail"><span class="dot wait"></span><span class="line"></span></div>
+          <div class="body2"><div class="t" style="color:var(--gray-500)">확인함</div><div class="s">집주인이 확인 버튼을 누르면 표시돼요</div></div>
+        </div>
+        <div class="step">
+          <div class="rail"><span class="dot wait"></span></div>
+          <div class="body2" style="padding-bottom:0">
+            <div class="t" style="color:var(--gray-500)">처리 결과</div>
+            <div class="s">확인 후 둘 중 하나로 표시돼요</div>
+            <div class="outcomes"><span class="outcome"><i data-lucide="circle-check"></i>처리 완료</span><span class="outcome"><i data-lucide="circle-alert"></i>처리가 어려움</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-label mt-20">나중에 다시 보려면</div>
+      <div class="link">
+        <i data-lucide="smartphone" style="width:18px;color:var(--gray-500)"></i>
+        <span class="u">이 휴대폰은 기억해요<small>같은 QR을 다시 찍으면 보낸 내용이 보여요</small></span>
+      </div>
+      <div class="link mt-8">
+        <i data-lucide="link" style="width:18px;color:var(--gray-500)"></i>
+        <span class="u">다른 기기에서는 링크로<small>30일 동안 볼 수 있어요 · 링크 복사</small></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-dock">
+    <div class="btn-row">
+      <button class="btn btn-neutral">건물로</button>
+      <button class="btn btn-primary grow"><i data-lucide="message-circle"></i>카카오톡에 보관</button>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

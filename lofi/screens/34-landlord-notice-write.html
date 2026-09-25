@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-15 공지 올리기 · 집주인</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .input { height: 52px; font-size: 15px; }
+  .input small { color: var(--gray-500); font-size: 12.5px; margin-right: 2px; }
+  .textarea { min-height: 0; font-size: 15.5px; }
+  .who { display: flex; gap: 10px; align-items: center; margin-top: 16px; padding: 12px 14px; border-radius: 14px; background: var(--gray-50); font-size: 14.5px; color: var(--gray-700); }
+  .who svg { width: 18px; height: 18px; color: var(--gray-500); flex: none; }
+  .who b { color: var(--gray-900); }
+  .rule { display: flex; gap: 8px; margin-top: 10px; font-size: 13.5px; line-height: 1.5; color: var(--gray-600); }
+  .rule svg { width: 15px; height: 15px; flex: none; margin-top: 2px; color: #8a6a24; }
+  .rule b { color: var(--navy-600); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="content">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="닫기"><i data-lucide="x"></i></button>
+      <span class="title">공지 올리기</span>
+      <span style="width:44px"></span>
+    </div>
+    <div class="pad">
+      <div class="field-label mt-4">제목</div>
+      <div class="input">9월 28일(일) 오전 단수 안내</div>
+
+      <div class="field-label mt-16">언제 일어나는 일인가요</div>
+      <div class="two">
+        <div class="input"><small>시작</small>9/28 오전 10:00</div>
+        <div class="input"><small>끝</small>9/28 낮 12:00</div>
+      </div>
+      <p class="caption mt-8">끝난 뒤에는 건물 화면에서 자동으로 내려가요</p>
+
+      <div class="field-label mt-16">내용</div>
+      <div class="textarea">물탱크 청소로 위 시간 동안 물이 나오지 않아요. 전날 밤에 필요한 물을 받아 두세요.</div>
+
+      <div class="who"><i data-lucide="bell"></i><span>연결된 거주자 <b>5명</b> 중 알림을 켠 <b>3명</b>에게 보내요</span></div>
+      <div class="rule"><i data-lucide="lightbulb"></i><span>분리수거 요일처럼 앞으로 계속 바뀌는 규칙이면 <b>기본 안내도 고쳐 주세요</b>. 공지는 기간이 지나면 내려가요.</span></div>
+    </div>
+  </div>
+  <div class="cta-dock">
+    <button class="btn btn-primary">공지 올리기</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

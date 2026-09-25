@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-02 수정 메모 작성 · 키보드</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .sheet h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  .about { display: flex; gap: 8px; align-items: center; font-size: 13.5px; color: var(--gray-600); margin-top: 6px; }
+  .about svg { width: 15px; height: 15px; color: var(--gray-500); }
+</style>
+</head>
+<body>
+<div class="phone" data-bare="on" data-kb="ko">
+  <iframe class="bg" src="11-guide-detail.html#quiet" title="배경: 기본 안내 상세"></iframe>
+  <div class="dim"></div>
+  <div class="sheet" role="dialog" aria-labelledby="t">
+    <div class="grabber"></div>
+    <div class="row between"><span class="badge gray">분리수거 안내</span><button class="icon-btn" aria-label="닫기" style="margin:-10px -12px"><i data-lucide="x"></i></button></div>
+    <h2 id="t" class="mt-8">어떤 부분이 달라졌나요?</h2>
+    <p class="small mt-4">집주인이 확인하고 기본 안내에 반영할 수 있어요.</p>
+    <div class="textarea focus mt-16" style="min-height:96px">재활용 수거일이 이번 달부터 월·목으로 바뀌었어요.<span class="caret"></span><span class="count">27 / 200</span></div>
+    <div class="about"><i data-lucide="users"></i>이 건물 거주자와 집주인이 볼 수 있어요</div>
+    <button class="btn btn-primary mt-16">메모 남기기</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

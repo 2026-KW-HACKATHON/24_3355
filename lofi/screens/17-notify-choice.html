@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-04 연결 뒤 알림 선택</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .sheet .hami { display: flex; justify-content: center; }
+  .sheet .hami img { width: 140px; margin: -16px 0 -18px; }
+  .sheet h2 { font-size: 20px; font-weight: 700; text-align: center; letter-spacing: -0.02em; }
+  .sheet .lead { text-align: center; }
+  .what { margin-top: 18px; border-radius: 14px; background: var(--gray-50); padding: 12px 16px; }
+  .what .i { display: flex; gap: 10px; align-items: center; font-size: 14.5px; color: var(--gray-700); padding: 4px 0; }
+  .what .i svg { width: 17px; height: 17px; color: var(--gray-500); flex: none; }
+</style>
+</head>
+<body>
+<div class="phone" data-bare="on">
+  <iframe class="bg" src="10-resident-home-b.html" title="배경: B의 거주자 홈"></iframe>
+  <div class="dim"></div>
+  <div class="sheet" role="dialog" aria-labelledby="t">
+    <div class="grabber"></div>
+    <div class="hami"><img src="../assets/hami/bell.png" alt="함이가 작은 종을 안고 있어요" /></div>
+    <h2 id="t" class="mt-8">햇살빌라 공지를 알림으로 받을까요?</h2>
+    <p class="small lead mt-4">지금 받지 않아도 내 정보에서 언제든 바꿀 수 있어요.</p>
+    <div class="what">
+      <div class="i"><i data-lucide="megaphone"></i>단수·점검처럼 기간이 있는 공지만 보내요</div>
+      <div class="i"><i data-lucide="bell-off"></i>생활 팁과 다른 사람의 메모는 보내지 않아요</div>
+    </div>
+    <div class="btn-row mt-20">
+      <button class="btn btn-neutral">나중에</button>
+      <button class="btn btn-primary grow">알림 받기</button>
+    </div>
+    <p class="caption center mt-8">‘알림 받기’를 누르면 브라우저가 한 번 더 물어봐요</p>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

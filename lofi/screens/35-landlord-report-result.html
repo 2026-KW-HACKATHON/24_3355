@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-16 처리 결과 저장 · 확인함 이후</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .opt { height: 56px; border-radius: 14px; border: 1.5px solid var(--gray-200); display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 15.5px; font-weight: 600; color: var(--gray-700); }
+  .opt svg { width: 18px; height: 18px; }
+  .opt.on { border-color: var(--st-done); background: var(--st-done-bg); color: var(--st-done); }
+  .textarea { min-height: 0; font-size: 15.5px; }
+  .next { margin-top: 20px; border-radius: 16px; background: var(--gray-50); padding: 14px 16px; }
+  .next .h { font-size: 13px; font-weight: 700; color: var(--gray-500); }
+  .next .btns { display: flex; gap: 8px; margin-top: 10px; }
+  .next .btns .btn { flex: 1; height: 44px; font-size: 14.5px; border-radius: 12px; background: #fff; border: 1px solid var(--gray-200); color: var(--gray-800); }
+  .next p { font-size: 12.5px; color: var(--gray-500); margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="phone" data-tabs="landlord:inbox">
+  <div class="content">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="뒤로"><i data-lucide="chevron-left"></i></button>
+      <span class="title">받은 내용</span>
+      <span style="width:44px"></span>
+    </div>
+    <div class="pad">
+      <div class="row gap-6 mt-8"><span class="badge checked">확인함</span><span class="caption">오늘 오후 5:40에 확인</span></div>
+      <h1 class="h-title mt-8">건물 앞 쓰레기가 넘쳤어요</h1>
+      <p class="small mt-4">햇살빌라 · 비회원 · 9월 25일 오후 3:12</p>
+
+      <div class="field-label mt-24">처리 결과</div>
+      <div class="opts">
+        <span class="opt on"><i data-lucide="circle-check"></i>처리 완료</span>
+        <span class="opt"><i data-lucide="circle-alert"></i>처리가 어려움</span>
+      </div>
+
+      <div class="field-label mt-16">보낸 분께 한 줄 <span style="font-weight:500;color:var(--gray-500)">선택</span></div>
+      <div class="textarea">청소하시는 분께 오늘 오전에 치워 달라고 전했어요.</div>
+
+      <div class="next">
+        <div class="h">필요하면 이어서</div>
+        <div class="btns">
+          <button class="btn"><i data-lucide="megaphone"></i>공지로 알리기</button>
+          <button class="btn"><i data-lucide="pencil-line"></i>안내 고치기</button>
+        </div>
+        <p>받은 내용은 공지나 안내에 자동으로 공개되지 않아요</p>
+      </div>
+    </div>
+  </div>
+  <div class="cta-dock">
+    <button class="btn btn-primary">결과 저장</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

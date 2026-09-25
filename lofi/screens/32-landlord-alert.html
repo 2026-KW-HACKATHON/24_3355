@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>집주인 · 새 쪽지 알림 도착</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .phone { background: radial-gradient(120% 70% at 30% 20%, #3d5286 0%, #1c2945 55%, #121a2e 100%); color: #fff; }
+  .clock { position: absolute; left: 0; right: 0; top: 96px; text-align: center; }
+  .clock .d { font-size: 19px; font-weight: 600; opacity: .9; }
+  .clock .t { font-size: 88px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; margin-top: 2px; }
+  .stack { position: absolute; left: 12px; right: 12px; top: 420px; }
+  .noti { background: rgba(245,247,251,.86); color: var(--gray-900); border-radius: 22px; padding: 13px 14px; display: flex; gap: 11px; backdrop-filter: blur(12px); }
+  .noti + .noti { margin-top: 8px; opacity: .92; }
+  .noti .app { width: 38px; height: 38px; border-radius: 10px; background: var(--navy-600); display: grid; place-items: center; flex: none; }
+  .noti .app span { width: 18px; height: 20px; border-radius: 2px; outline: 2px dashed #fff; outline-offset: -3px; display: grid; place-items: center; }
+  .noti .app svg { width: 11px; height: 11px; color: var(--moon); fill: var(--moon); stroke: none; }
+  .noti .top { display: flex; justify-content: space-between; font-size: 13px; color: var(--gray-600); }
+  .noti .h { font-size: 15.5px; font-weight: 700; margin-top: 1px; }
+  .noti .b { font-size: 15px; color: var(--gray-800); margin-top: 1px; }
+  .corner { position: absolute; bottom: 52px; width: 50px; height: 50px; border-radius: 25px; background: rgba(255,255,255,.16); display: grid; place-items: center; }
+  .corner svg { width: 22px; height: 22px; }
+</style>
+</head>
+<body>
+<div class="phone" data-safari="off" data-status-dark="on">
+  <div class="clock"><div class="d">9월 25일 목요일</div><div class="t">3:12</div></div>
+  <div class="stack">
+    <div class="noti">
+      <div class="app"><span><i data-lucide="moon"></i></span></div>
+      <div style="flex:1">
+        <div class="top"><span>월계함</span><span>지금</span></div>
+        <div class="h">햇살빌라 우편함에 쪽지가 왔어요</div>
+        <div class="b">건물 앞 쓰레기가 넘쳤어요</div>
+      </div>
+    </div>
+    <div class="noti">
+      <div class="app"><span><i data-lucide="moon"></i></span></div>
+      <div style="flex:1">
+        <div class="top"><span>월계함</span><span>5일 전</span></div>
+        <div class="h">분리수거 안내에 수정 메모가 있어요</div>
+        <div class="b">확인하고 반영하거나 그대로 둘 수 있어요</div>
+      </div>
+    </div>
+  </div>
+  <div class="corner" style="left:46px"><i data-lucide="flashlight"></i></div>
+  <div class="corner" style="right:46px"><i data-lucide="camera"></i></div>
+  <div class="home-ind" style="background:#fff"></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-03 공지 상세</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .period { margin-top: 18px; border-radius: 14px; background: var(--moon-50); padding: 14px 16px; }
+  .period .r { display: flex; font-size: 14.5px; line-height: 1.5; padding: 3px 0; }
+  .period .r span:first-child { width: 64px; color: #8a6a24; font-weight: 600; flex: none; }
+  .period .r span:last-child { color: var(--gray-900); font-weight: 600; }
+  .note { display: flex; gap: 8px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--gray-100); font-size: 13.5px; line-height: 1.5; color: var(--gray-600); }
+  .note svg { width: 16px; height: 16px; flex: none; margin-top: 2px; color: var(--gray-500); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="content">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="뒤로"><i data-lucide="chevron-left"></i></button>
+      <span class="title">공지</span>
+      <button class="icon-btn" aria-label="읽어주기"><i data-lucide="volume-2"></i></button>
+    </div>
+    <div class="pad doc">
+      <div class="row gap-6 mt-8"><span class="badge moon"><i data-lucide="megaphone"></i>공지</span><span class="badge gray">3일 뒤</span></div>
+      <h1 class="h-title mt-12">9월 28일(일) 오전 단수 안내</h1>
+      <p class="caption mt-4">집주인 · 9월 22일 게시</p>
+
+      <div class="period">
+        <div class="r"><span>적용 기간</span><span>9월 28일(일) 오전 10시 ~ 12시</span></div>
+        <div class="r"><span>대상</span><span>햇살빌라 전 세대</span></div>
+      </div>
+
+      <p class="mt-20">건물 물탱크 청소로 위 시간 동안 물이 나오지 않아요. 전날 밤에 필요한 물을 미리 받아 두세요.</p>
+      <p class="mt-12">작업이 일찍 끝나면 따로 알리지 않고 바로 물이 나와요.</p>
+
+      <div class="note"><i data-lucide="info"></i><span>공지는 기간이 지나면 건물 화면에서 내려가요. 계속 필요한 규칙은 건물 안내에 있어요.</span></div>
+    </div>
+  </div>
+  <div class="cta-dock">
+    <button class="btn btn-neutral">건물로 돌아가기</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

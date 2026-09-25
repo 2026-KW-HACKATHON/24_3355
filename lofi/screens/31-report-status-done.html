@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-11 보낸 내용 · 처리 완료로 표시된 뒤</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .track { border-radius: 16px; border: 1px solid var(--gray-200); padding: 16px; }
+  .step { display: flex; gap: 12px; }
+  .step .rail { display: flex; flex-direction: column; align-items: center; width: 22px; }
+  .step .dot { width: 22px; height: 22px; border-radius: 11px; display: grid; place-items: center; flex: none; background: var(--navy-600); }
+  .step .dot svg { width: 13px; height: 13px; stroke-width: 3; color: #fff; }
+  .step .dot.done { background: var(--st-done); }
+  .step .line { width: 2px; flex: 1; background: var(--navy-100); margin: 4px 0; min-height: 14px; }
+  .step .body2 { padding-bottom: 14px; flex: 1; }
+  .step .t { font-size: 15.5px; font-weight: 600; }
+  .step .s { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
+  .note { margin-top: 10px; border-radius: 12px; background: var(--st-done-bg); padding: 12px 14px; font-size: 15px; line-height: 1.5; color: var(--gray-900); }
+  .note small { display: block; font-size: 12.5px; color: var(--st-done); font-weight: 600; margin-bottom: 4px; }
+  .foot { display: flex; gap: 8px; margin-top: 16px; font-size: 13px; line-height: 1.5; color: var(--gray-500); }
+  .foot svg { width: 15px; height: 15px; flex: none; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="content">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="뒤로"><i data-lucide="chevron-left"></i></button>
+      <span class="title">보낸 내용</span>
+      <span style="width:44px"></span>
+    </div>
+    <div class="pad">
+      <span class="badge done mt-8"><i data-lucide="circle-check"></i>처리 완료</span>
+      <h1 class="h-title mt-8">집주인이 처리 완료로<br />표시했어요</h1>
+      <p class="small mt-4">햇살빌라 · ‘건물 앞 쓰레기가 넘쳤어요’</p>
+
+      <div class="track mt-20">
+        <div class="step">
+          <div class="rail"><span class="dot"><i data-lucide="check"></i></span><span class="line"></span></div>
+          <div class="body2"><div class="t">접수됨</div><div class="s">9월 25일 오후 3:12</div></div>
+        </div>
+        <div class="step">
+          <div class="rail"><span class="dot"><i data-lucide="check"></i></span><span class="line"></span></div>
+          <div class="body2"><div class="t">확인함</div><div class="s">9월 25일 오후 5:40</div></div>
+        </div>
+        <div class="step">
+          <div class="rail"><span class="dot done"><i data-lucide="check"></i></span></div>
+          <div class="body2" style="padding-bottom:0">
+            <div class="row gap-8"><span class="t">처리 완료</span><span class="badge done">현재</span></div>
+            <div class="s">9월 26일 오전 9:10</div>
+            <div class="note"><small>집주인이 남긴 말</small>청소하시는 분께 오늘 오전에 치워 달라고 전했어요.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="foot"><i data-lucide="info"></i><span>처리 완료는 집주인이 표시한 상태예요. 다른 불편이 있으면 다시 알려 주세요.</span></div>
+    </div>
+  </div>
+  <div class="cta-dock">
+    <button class="btn btn-neutral">건물로 돌아가기</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

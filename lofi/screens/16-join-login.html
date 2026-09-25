@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-04 우리 건물로 연결하기 · 로그인과 동의</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .code-ok { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--gray-50); font-size: 14.5px; color: var(--gray-700); }
+  .code-ok svg { width: 18px; height: 18px; color: var(--st-done); flex: none; }
+  .code-ok b { color: var(--gray-900); letter-spacing: 0.08em; }
+  .consent { margin-top: 20px; border-top: 1px solid var(--gray-100); padding-top: 6px; }
+  .all { font-weight: 700; color: var(--gray-900); }
+  .kakao { height: 56px; border-radius: 16px; background: #fee500; color: rgba(0,0,0,.88); font-size: 17px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+  .kakao svg { width: 20px; height: 20px; fill: #000; stroke: none; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="content">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="뒤로"><i data-lucide="chevron-left"></i></button>
+      <span class="title">우리 건물로 연결하기</span>
+      <span style="width:44px"></span>
+    </div>
+    <div class="pad">
+      <div class="steps"><span class="on"></span><span class="on"></span><span></span></div>
+      <p class="caption mt-8">2 / 3 · 로그인과 동의</p>
+
+      <h1 class="h-title mt-24">연결을 이어가려면<br />로그인이 필요해요</h1>
+      <p class="body mt-4" style="color:var(--gray-600)">다음에 들어올 때 코드를 다시 넣지 않아도 돼요.</p>
+
+      <div class="code-ok mt-20"><i data-lucide="circle-check"></i><span>햇살빌라 · 가입코드 <b>WK72P4</b> 확인</span></div>
+
+      <div class="consent">
+        <div class="check all"><span class="box on"><i data-lucide="check"></i></span>모두 동의해요</div>
+        <div class="check"><span class="box on"><i data-lucide="check"></i></span><span><span class="req">필수</span>서비스 이용약관</span><span class="view">보기</span></div>
+        <div class="check"><span class="box on"><i data-lucide="check"></i></span><span><span class="req">필수</span>개인정보 수집·이용</span><span class="view">보기</span></div>
+      </div>
+      <p class="caption mt-8">공지 알림은 연결한 뒤에 따로 고를 수 있어요.</p>
+    </div>
+  </div>
+  <div class="cta-dock">
+    <p class="hint">카카오 로그인은 거주 여부를 확인하는 절차가 아니에요</p>
+    <button class="kakao"><svg viewBox="0 0 24 24"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7l-1 3.6c-.1.3.3.6.6.4l4.2-2.8c.5.1 1 .1 1.5.1 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>카카오로 계속하기</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

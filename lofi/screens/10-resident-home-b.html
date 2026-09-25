@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-05 거주자 홈 · B 연결 직후</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<link rel="stylesheet" href="../src/building.css" />
+<style>
+  .welcome { margin: 4px 12px 0; border-radius: 20px; background: linear-gradient(135deg,#dfe5f1,#eef1f7); padding: 10px 16px 10px 8px; display: flex; gap: 10px; align-items: center; }
+  .welcome img { width: 104px; flex: none; margin: -14px -10px -14px -8px; }
+  .welcome .t { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
+  .welcome .s { font-size: 14px; color: var(--gray-700); margin-top: 2px; }
+  .first { margin: 12px var(--gutter) 0; display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--navy-100); }
+  .first svg { width: 18px; height: 18px; color: var(--navy-600); flex: none; }
+  .first span { flex: 1; font-size: 14.5px; font-weight: 600; color: var(--navy-600); }
+  .tile { position: relative; }
+  .tile .upd-dot { position: absolute; top: -3px; right: -3px; width: 9px; height: 9px; border-radius: 50%; background: var(--moon); border: 2px solid #fff; }
+  .upd-note { display: flex; gap: 6px; align-items: center; margin: 10px var(--gutter) 0; font-size: 13px; color: var(--gray-600); }
+</style>
+</head>
+<body>
+<div class="phone" data-tabs="resident:building">
+  <div class="content">
+    <div class="topbar">
+      <div class="brand"><span class="stamp"><i data-lucide="moon"></i></span>월계함</div>
+      <div class="right">
+        <button class="pill-btn" aria-label="크게 보기"><i data-lucide="type"></i>크게 보기</button>
+        <button class="icon-btn" aria-label="알림"><i data-lucide="bell"></i></button>
+      </div>
+    </div>
+
+    <div class="welcome">
+      <img src="../assets/hami/house.png" alt="함이가 건물 카드를 들고 있어요" />
+      <div><div class="t">햇살빌라에 연결됐어요</div><div class="s">이제 생활 팁도 확인할 수 있어요.</div></div>
+    </div>
+
+    <div class="bld">
+      <div class="row between"><h1 class="h-display">햇살빌라</h1><span class="badge navy"><i data-lucide="house"></i>거주 중</span></div>
+      <p class="small mt-4">서울 노원구 월계동 · 오늘 연결</p>
+    </div>
+
+    <div class="first"><i data-lucide="book-open-check"></i><span>처음 오셨나요? 안내를 한 장씩 넘겨 봐요</span><i data-lucide="chevron-right" style="color:var(--navy-500)"></i></div>
+
+    <div class="section-head mt-20"><h3>건물 안내</h3><span class="more">전체 보기<i data-lucide="chevron-right"></i></span></div>
+    <div class="tiles">
+      <div class="tile"><span class="ic" style="position:relative"><span class="upd-dot"></span><i data-lucide="recycle"></i></span>분리수거</div>
+      <div class="tile"><span class="ic"><i data-lucide="package"></i></span>택배</div>
+      <div class="tile"><span class="ic"><i data-lucide="flame"></i></span>보일러·설비</div>
+      <div class="tile"><span class="ic"><i data-lucide="door-open"></i></span>공용공간</div>
+    </div>
+    <p class="upd-note"><span style="width:8px;height:8px;border-radius:50%;background:var(--moon);flex:none"></span>분리수거 안내가 9월에 바뀌었어요 · 거주자 메모 반영</p>
+
+    <div class="section-head mt-20"><h3>먼저 살던 분들의 생활 팁</h3><span class="more">4개<i data-lucide="chevron-right"></i></span></div>
+    <div class="tips-scroll">
+      <div class="tip">
+        <div class="meta"><span class="badge gray">분리수거</span><span class="caption">2026년 9월</span></div>
+        <p>음식물 쓰레기는 목요일 밤에 내놓으면 금요일 아침에 수거돼요.</p>
+      </div>
+      <div class="tip">
+        <div class="meta"><span class="badge gray">택배</span><span class="caption">2026년 5월</span></div>
+        <p>비 오는 날 택배는 현관 안쪽 선반에 올려 두면 젖지 않아요.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-17 수정 메모 검토 · 집주인</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .cmp { border-radius: 16px; padding: 14px 16px; }
+  .cmp .h { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 700; color: var(--gray-500); }
+  .cmp .v { font-size: 16px; line-height: 1.55; margin-top: 6px; color: var(--gray-900); }
+  .cmp.now { background: var(--gray-50); }
+  .cmp.memo { background: var(--navy-50); margin-top: 8px; }
+  .cmp.memo .h { color: var(--navy-600); }
+  .arrow { display: flex; justify-content: center; margin: -2px 0 -10px; position: relative; z-index: 1; }
+  .arrow span { width: 28px; height: 28px; border-radius: 14px; background: #fff; border: 1px solid var(--gray-200); display: grid; place-items: center; color: var(--gray-500); }
+  .arrow svg { width: 16px; height: 16px; }
+  .strike { text-decoration: line-through; color: var(--gray-500); }
+  .result { margin-top: 20px; }
+  .fx { display: flex; gap: 10px; align-items: center; font-size: 15px; color: var(--gray-700); padding: 5px 0; }
+  .fx svg { width: 18px; height: 18px; color: var(--gray-500); flex: none; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="content">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="뒤로"><i data-lucide="chevron-left"></i></button>
+      <span class="title">안내 수정 메모</span>
+      <span style="width:44px"></span>
+    </div>
+    <div class="pad">
+      <span class="badge navy mt-8"><i data-lucide="recycle"></i>분리수거 안내</span>
+      <h1 class="h-title mt-8">재활용 수거일이 바뀌었다는 메모예요</h1>
+
+      <div class="cmp now mt-16">
+        <div class="h"><span>지금 안내 · 2026년 3월</span></div>
+        <div class="v">재활용 · <span class="strike">화 · 금</span></div>
+      </div>
+      <div class="arrow"><span><i data-lucide="arrow-down"></i></span></div>
+      <div class="cmp memo">
+        <div class="h"><span>거주자 메모 · 9월 20일</span><span>작성자 비공개</span></div>
+        <div class="v">재활용 수거일이 이번 달부터 월·목으로 바뀌었어요.</div>
+      </div>
+
+      <div class="result">
+        <div class="field-label">반영하면</div>
+        <div class="fx"><i data-lucide="calendar-check"></i>안내 수정일이 2026년 9월로 바뀌어요</div>
+        <div class="fx"><i data-lucide="user-check"></i>메모를 남긴 거주자에게 ‘반영됨’으로 보여요</div>
+        <div class="fx"><i data-lucide="eye"></i>다음 입주자는 바뀐 안내를 바로 읽어요</div>
+      </div>
+    </div>
+  </div>
+  <div class="cta-dock">
+    <div class="btn-row">
+      <button class="btn btn-neutral">기존 안내 유지</button>
+      <button class="btn btn-primary grow">안내에 반영</button>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

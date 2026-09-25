@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>스플래시 · 앱 첫 1초</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .phone {
+    background:
+      radial-gradient(120% 60% at 20% 40%, rgba(255,255,255,.9), rgba(255,255,255,0) 60%),
+      radial-gradient(90% 50% at 90% 75%, rgba(201,164,92,.16), rgba(201,164,92,0) 70%),
+      linear-gradient(180deg, #f5f7fb 0%, #e7edf8 100%);
+  }
+  .word { position: absolute; left: 0; right: 0; text-align: center; font-weight: 900; color: #111621; letter-spacing: -0.07em; line-height: 1; z-index: 5; }
+  .word.top { top: 104px; font-size: 104px; }
+  .word.bottom { top: 588px; font-size: 92px; }
+  .word.bottom em { font-style: normal; color: var(--navy-600); }
+
+  .float { position: absolute; z-index: 3; filter: drop-shadow(0 18px 24px rgba(28,41,69,.16)); }
+  .h1 { width: 300px; left: -46px; top: 196px; transform: rotate(-9deg); z-index: 4; }
+  .h2 { width: 270px; right: -44px; top: 356px; transform: rotate(8deg); z-index: 6; }
+
+  .deco { position: absolute; z-index: 2; }
+  .moon { width: 64px; right: 40px; top: 300px; transform: rotate(-18deg); filter: drop-shadow(0 10px 14px rgba(160,120,40,.25)); }
+  .star { width: 58px; left: 36px; top: 530px; transform: rotate(12deg); filter: drop-shadow(0 10px 14px rgba(28,41,69,.14)); z-index: 7; }
+  .stamp { width: 58px; left: 250px; top: 176px; transform: rotate(16deg); filter: drop-shadow(0 8px 12px rgba(28,41,69,.22)); }
+
+  .brand-foot { position: absolute; left: 0; right: 0; bottom: 58px; display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 5; }
+  .brand-foot .b { display: flex; align-items: center; gap: 7px; font-size: 18px; font-weight: 800; letter-spacing: -0.03em; color: var(--gray-900); }
+  .brand-foot .b .st { width: 20px; height: 22px; border-radius: 3px; background: var(--navy-600); display: grid; place-items: center; outline: 2px dashed #fff; outline-offset: -3px; }
+  .brand-foot .b .st svg { width: 11px; height: 11px; color: var(--moon); fill: var(--moon); stroke: none; }
+  .brand-foot .s { font-size: 13px; color: var(--gray-500); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .h1 { animation: bob 3.2s ease-in-out infinite; }
+    .h2 { animation: bob 3.2s ease-in-out -1.6s infinite; }
+    @keyframes bob { 50% { translate: 0 -8px; } }
+  }
+</style>
+</head>
+<body>
+<div class="phone" data-safari="off">
+  <div class="word top">건물이</div>
+
+  <svg class="deco stamp" viewBox="0 0 60 72" aria-hidden="true">
+    <defs><mask id="scal"><rect width="60" height="72" fill="#fff"/>
+      <g fill="#000">
+        <circle cx="0" cy="6" r="3.2"/><circle cx="0" cy="18" r="3.2"/><circle cx="0" cy="30" r="3.2"/><circle cx="0" cy="42" r="3.2"/><circle cx="0" cy="54" r="3.2"/><circle cx="0" cy="66" r="3.2"/>
+        <circle cx="60" cy="6" r="3.2"/><circle cx="60" cy="18" r="3.2"/><circle cx="60" cy="30" r="3.2"/><circle cx="60" cy="42" r="3.2"/><circle cx="60" cy="54" r="3.2"/><circle cx="60" cy="66" r="3.2"/>
+        <circle cx="6" cy="0" r="3.2"/><circle cx="18" cy="0" r="3.2"/><circle cx="30" cy="0" r="3.2"/><circle cx="42" cy="0" r="3.2"/><circle cx="54" cy="0" r="3.2"/>
+        <circle cx="6" cy="72" r="3.2"/><circle cx="18" cy="72" r="3.2"/><circle cx="30" cy="72" r="3.2"/><circle cx="42" cy="72" r="3.2"/><circle cx="54" cy="72" r="3.2"/>
+      </g></mask>
+      <linearGradient id="nv" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d5286"/><stop offset="1" stop-color="#1c2945"/></linearGradient>
+      <linearGradient id="gd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3dc9b"/><stop offset="1" stop-color="#b8903f"/></linearGradient>
+    </defs>
+    <g mask="url(#scal)"><rect width="60" height="72" rx="2" fill="#fff"/><rect x="7" y="7" width="46" height="58" rx="2" fill="url(#nv)"/></g>
+    <path d="M36 24a13 13 0 1 0 0 24a10 10 0 1 1 0-24z" fill="url(#gd)"/>
+  </svg>
+
+  <svg class="deco moon" viewBox="0 0 80 80" aria-hidden="true">
+    <defs><radialGradient id="mg" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff3cf"/><stop offset=".45" stop-color="#e7c574"/><stop offset="1" stop-color="#a97f30"/></radialGradient></defs>
+    <mask id="cres"><rect width="80" height="80" fill="#fff"/><circle cx="54" cy="32" r="26" fill="#000"/></mask>
+    <circle cx="40" cy="40" r="32" fill="url(#mg)" mask="url(#cres)"/>
+  </svg>
+
+  <img class="float h1" src="../assets/hami/house.png" alt="" />
+  <img class="float h2" src="../assets/hami/envelope.png" alt="" />
+
+  <svg class="deco star" viewBox="0 0 80 80" aria-hidden="true">
+    <defs><radialGradient id="sg" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#eef1f7"/><stop offset="1" stop-color="#c9d1e3"/></radialGradient></defs>
+    <path d="M40 4c3 20 8 29 36 36c-28 7-33 16-36 36c-3-20-8-29-36-36c28-7 33-16 36-36z" fill="url(#sg)" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg>
+
+  <div class="word bottom">기억해요<em>.</em></div>
+
+  <div class="brand-foot">
+    <div class="b"><span class="st"><i data-lucide="moon"></i></span>월계함</div>
+    <div class="s">사람은 바뀌어도, 건물에 남는 생활 안내</div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

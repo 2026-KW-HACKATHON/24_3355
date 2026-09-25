@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>처음 오셨나요 · 안내를 한 장씩</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .phone { background: var(--gray-100); }
+  .skip { font-size: 15px; font-weight: 600; color: var(--gray-600); padding: 0 12px; }
+  .hello { display: flex; align-items: center; gap: 6px; padding: 0 var(--gutter); }
+  .hello img { width: 72px; margin: -10px -6px -10px -10px; }
+  .hello .bubble { font-size: 14px; padding: 10px 12px; }
+  .dots { display: flex; gap: 6px; justify-content: center; margin-top: 14px; }
+  .dots span { width: 6px; height: 6px; border-radius: 3px; background: var(--gray-300); }
+  .dots span.on { width: 18px; background: var(--navy-600); }
+  .slide { margin: 14px var(--gutter) 0; background: #fff; border-radius: 22px; padding: 20px; box-shadow: 0 2px 12px rgba(25,31,40,.06); }
+  .slide h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.35; margin-top: 10px; }
+  .photo { height: 128px; margin-top: 14px; }
+  .facts { margin-top: 12px; }
+  .facts .f { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--gray-100); font-size: 16px; }
+  .facts .f:last-child { border-bottom: 0; }
+  .facts .f span:last-child { font-weight: 600; }
+  .gray .cta-dock { background: linear-gradient(to bottom, rgba(242,244,246,0), var(--gray-100) 20px); }
+</style>
+</head>
+<body>
+<div class="phone gray">
+  <div class="content">
+    <div class="topbar">
+      <span style="width:44px"></span>
+      <span class="title">처음 오셨나요?</span>
+      <span class="skip">건너뛰기</span>
+    </div>
+    <div class="hello">
+      <img src="../assets/hami/guide.png" alt="" />
+      <div class="bubble tail-left">햇살빌라에서 먼저 알아두면 좋은 안내예요.</div>
+    </div>
+    <div class="dots" aria-label="5장 중 1번째"><span class="on"></span><span></span><span></span><span></span><span></span></div>
+
+    <div class="slide">
+      <span class="badge navy"><i data-lucide="recycle"></i>분리수거 · 1 / 5</span>
+      <h2>분리수거함은<br />주차장 안쪽에 있어요</h2>
+      <div class="photo"><span><i data-lucide="image"></i>수거함 위치 사진</span></div>
+      <div class="facts">
+        <div class="f"><span>재활용</span><span>화 · 금</span></div>
+        <div class="f"><span>음식물</span><span>목 · 일 저녁</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="cta-dock">
+    <div class="btn-row">
+      <button class="btn btn-neutral">전체 안내 보기</button>
+      <button class="btn btn-primary grow">다음 안내</button>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>
