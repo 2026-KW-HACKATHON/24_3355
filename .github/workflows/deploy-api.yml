@@ -1,0 +1,120 @@
+name: Deploy API
+
+# main → dev, release → prod. 수동 실행으로 dev/prod를 고를 수도 있습니다.
+# AWS 자격증명은 OIDC로 받습니다(저장소에 액세스 키를 두지 않음). 설정: docs/aws-setup.md
+on:
+  push:
+    branches: [main, release]
+    paths:
+      - apps/api/**
+      - packages/contracts/**
+      - infra/server/**
+      - pnpm-lock.yaml
+      - .github/workflows/deploy-api.yml
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 배포 환경
+        type: choice
+        options: [dev, prod]
+        default: dev
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy-api-${{ github.event_name == 'workflow_dispatch' && inputs.target || (github.ref_name == 'release' && 'prod' || 'dev') }}
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ap-northeast-2
+  TARGET: ${{ github.event_name == 'workflow_dispatch' && inputs.target || (github.ref_name == 'release' && 'prod' || 'dev') }}
+
+jobs:
+  check:
+    # AWS 준비(docs/aws-setup.md 8단계) 전에는 건너뜁니다.
+    if: vars.AWS_DEPLOY_ROLE_ARN != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # DB 테스트용. 값은 CI 전용이고 비밀이 아닙니다.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: wolgyeham
+          POSTGRES_PASSWORD: ci-only
+          POSTGRES_DB: wolgyeham_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U wolgyeham -d wolgyeham_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      TEST_DATABASE_URL: postgres://wolgyeham:ci-only@127.0.0.1:5432/wolgyeham_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+
+  deploy:
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: prod는 release 브랜치에서만
+        if: env.TARGET == 'prod' && github.ref_name != 'release'
+        run: |
+          echo "prod 배포는 release 브랜치에서만 실행합니다." >&2
+          exit 1
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: 이미지 빌드·푸시
+        env:
+          IMAGE: ${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}
+        run: |
+          docker build -f apps/api/Dockerfile -t "$IMAGE:$GITHUB_SHA" .
+          docker push "$IMAGE:$GITHUB_SHA"
+
+      - name: 서버 파일 올리기
+        run: aws s3 sync infra/server "s3://${{ vars.OPS_BUCKET }}/server" --delete --only-show-errors
+
+      - name: 서버에서 배포
+        run: |
+          INSTANCE_ID=$(aws ec2 describe-instances \
+            --filters "Name=tag:Project,Values=wolgyeham" "Name=tag:Role,Values=app" "Name=instance-state-name,Values=running" \
+            --query 'Reservations[0].Instances[0].InstanceId' --output text)
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name AWS-RunShellScript \
+            --comment "deploy $TARGET ${GITHUB_SHA::7}" \
+            --parameters "commands=[\"aws s3 sync s3://${{ vars.OPS_BUCKET }}/server /opt/wolgyeham --only-show-errors\",\"chmod +x /opt/wolgyeham/*.sh /opt/wolgyeham/postgres-init/*.sh\",\"/opt/wolgyeham/deploy.sh $TARGET $GITHUB_SHA\"]" \
+            --query 'Command.CommandId' --output text)
+          aws ssm wait command-executed --command-id "$COMMAND_ID" --instance-id "$INSTANCE_ID" || true
+          aws ssm get-command-invocation --command-id "$COMMAND_ID" --instance-id "$INSTANCE_ID" \
+            --query '{status:Status,out:StandardOutputContent,err:StandardErrorContent}' --output json
+          STATUS=$(aws ssm get-command-invocation --command-id "$COMMAND_ID" --instance-id "$INSTANCE_ID" --query Status --output text)
+          test "$STATUS" = "Success"
+
+      - name: 상태 확인
+        env:
+          BASE_URL: ${{ env.TARGET == 'prod' && vars.PROD_API_BASE_URL || vars.DEV_API_BASE_URL }}
+        run: curl -fsS --retry 5 --retry-delay 3 "$BASE_URL/api/health"

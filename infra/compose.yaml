@@ -1,0 +1,19 @@
+name: wolgyeham-local
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: wolgyeham
+      POSTGRES_PASSWORD: local-development-only
+      POSTGRES_DB: wolgyeham
+    ports:
+      - "127.0.0.1:54329:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wolgyeham -d wolgyeham"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  postgres-data:

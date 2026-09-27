@@ -1,0 +1,26 @@
+# AWS Amplify Hosting 빌드 설정 (웹). 앱 두 개가 같은 파일을 씁니다.
+#   wolgyeham-dev  : main 브랜치 + PR 미리 보기
+#   wolgyeham-prod : release 브랜치
+# 콘솔 환경 변수: AMPLIFY_MONOREPO_APP_ROOT=apps/web
+# /api 프록시 규칙은 infra/amplify/rewrites.*.json (docs/aws-setup.md)
+version: 1
+applications:
+  - appRoot: apps/web
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - nvm install 24 && nvm use 24
+            - corepack enable
+            - corepack prepare pnpm@10.28.2 --activate
+            - cd ../.. && pnpm install --frozen-lockfile
+        build:
+          commands:
+            - cd ../.. && pnpm --filter @wolgyeham/web build
+      artifacts:
+        baseDirectory: dist
+        files:
+          - "**/*"
+      cache:
+        paths:
+          - ../../node_modules/.pnpm/**/*

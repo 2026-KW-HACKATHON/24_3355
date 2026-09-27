@@ -1,0 +1,62 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "EcrLogin",
+      "Effect": "Allow",
+      "Action": "ecr:GetAuthorizationToken",
+      "Resource": "*"
+    },
+    {
+      "Sid": "EcrPushApiImage",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:CompleteLayerUpload",
+        "ecr:InitiateLayerUpload",
+        "ecr:PutImage",
+        "ecr:UploadLayerPart"
+      ],
+      "Resource": "arn:aws:ecr:ap-northeast-2:<ACCOUNT_ID>:repository/wolgyeham-api"
+    },
+    {
+      "Sid": "UploadServerFiles",
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": "arn:aws:s3:::<OPS_BUCKET>",
+      "Condition": { "StringLike": { "s3:prefix": ["server/*", "server"] } }
+    },
+    {
+      "Sid": "UploadServerObjects",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::<OPS_BUCKET>/server/*"
+    },
+    {
+      "Sid": "FindAppInstance",
+      "Effect": "Allow",
+      "Action": "ec2:DescribeInstances",
+      "Resource": "*"
+    },
+    {
+      "Sid": "RunDeployOnTaggedInstance",
+      "Effect": "Allow",
+      "Action": "ssm:SendCommand",
+      "Resource": "arn:aws:ec2:ap-northeast-2:<ACCOUNT_ID>:instance/*",
+      "Condition": { "StringEquals": { "aws:ResourceTag/Project": "wolgyeham" } }
+    },
+    {
+      "Sid": "RunShellDocument",
+      "Effect": "Allow",
+      "Action": "ssm:SendCommand",
+      "Resource": "arn:aws:ssm:ap-northeast-2::document/AWS-RunShellScript"
+    },
+    {
+      "Sid": "ReadCommandResult",
+      "Effect": "Allow",
+      "Action": ["ssm:GetCommandInvocation", "ssm:ListCommandInvocations"],
+      "Resource": "*"
+    }
+  ]
+}
