@@ -14,7 +14,7 @@
     "dev:api": "pnpm --filter @wolgyeham/api dev",
     "build": "pnpm -r --if-present build",
     "typecheck": "pnpm -r --if-present typecheck",
-    "test": "vitest run",
+    "test": "vitest run --no-file-parallelism",
     "lint": "biome check .",
     "format": "biome check --write .",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
