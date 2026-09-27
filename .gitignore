@@ -1,2 +1,14 @@
-.omc
-.omx
+.omc/
+.omx/
+.omo/
+.codegraph
+.DS_Store
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+*.log
+artifacts/local/
