@@ -1,0 +1,95 @@
+/* LF-12 건물 준비 완료 (lofi 38) */
+.sd-hero {
+  padding-top: var(--wh-space-6);
+}
+.sd-ok {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--wh-radius-pill);
+  background: var(--wh-primary);
+  color: var(--wh-gray-0);
+}
+.sd-ok svg {
+  width: 26px;
+  height: 26px;
+}
+.sd-title {
+  margin-top: var(--wh-space-4);
+  font-size: calc(1.5rem * var(--wh-font-scale));
+}
+.sd-check {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-2);
+  margin-top: var(--wh-space-3_5);
+  font-size: calc(0.90625rem * var(--wh-font-scale));
+  color: var(--wh-text-strong-subtle);
+}
+.sd-check svg {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  color: var(--wh-success);
+}
+.sd-check-sub {
+  margin-top: var(--wh-space-1);
+  padding-left: 25px;
+}
+
+.sd-steps {
+  margin-top: var(--wh-space-6);
+}
+.sd-steps li + li {
+  border-top: 1px solid var(--wh-border-soft);
+}
+.sd-step {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-3_5);
+  width: 100%;
+  padding: var(--wh-space-4) 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  color: var(--wh-text);
+}
+.sd-step:disabled {
+  cursor: not-allowed;
+}
+.sd-step__ic {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--wh-radius-m);
+  background: var(--wh-surface-muted);
+  color: var(--wh-primary);
+}
+.sd-step:disabled .sd-step__ic {
+  opacity: 0.6;
+}
+.sd-step__ic svg {
+  width: 22px;
+  height: 22px;
+}
+.sd-step__text {
+  display: grid;
+  gap: var(--wh-space-0_5);
+  flex: 1;
+  min-width: 0;
+}
+.sd-step__title {
+  font-size: var(--wh-type-body);
+  font-weight: 700;
+}
+.sd-step:disabled .sd-step__title {
+  color: var(--wh-text-strong-subtle);
+}
+.sd-step__sub {
+  font-size: calc(0.84375rem * var(--wh-font-scale));
+  line-height: var(--wh-leading-snug);
+  color: var(--wh-text-muted);
+}
