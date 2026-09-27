@@ -76,6 +76,8 @@ docker compose --env-file server.env --env-file .deploy.env ps
 
 서버에서 파일을 직접 고치지 않습니다. 다음 배포 때 덮어써집니다. 바꿀 것은 `infra/server/`에서 PR로 고칩니다.
 
+dev 시연 데이터(햇살빌라·새봄하우스)를 처음 상태로 되돌리려면 위 세션에서 `docker compose --env-file server.env --env-file .deploy.env run --rm --no-deps api-dev node seed.mjs --reset-demo`를 실행합니다(dev의 `DEMO_MODE=true`일 때만 동작, 다른 건물은 건드리지 않음. [database.md §8](database.md#8-시드시연-데이터)).
+
 ## 환경 변수 추가하기
 
 1. `apps/api/src/lib/env.ts`의 zod 스키마와 `apps/api/.env.example`에 키를 추가합니다(값은 샘플).

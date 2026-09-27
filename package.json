@@ -19,7 +19,9 @@
     "format": "biome check --write .",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "db:up": "docker compose -f infra/compose.yaml up -d --wait",
-    "db:down": "docker compose -f infra/compose.yaml down"
+    "db:down": "docker compose -f infra/compose.yaml down",
+    "db:migrate": "pnpm --filter @wolgyeham/api db:migrate",
+    "db:seed": "pnpm --filter @wolgyeham/api db:seed"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.14",

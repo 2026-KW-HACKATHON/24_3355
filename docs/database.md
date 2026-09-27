@@ -11,15 +11,20 @@
 | 항목 | 상태 |
 |---|---|
 | 로컬 PostgreSQL 17 (`infra/compose.yaml`, `127.0.0.1:54329`, DB `wolgyeham`) | 있음 (`pnpm db:up`, `pnpm db:down`) |
-| `DATABASE_URL` 샘플 | `apps/api/.env.example`에 있음. 코드에서는 아직 쓰지 않음 |
-| Drizzle ORM + drizzle-kit, `apps/api/src/db/schema.ts`, `apps/api/drizzle/` | 결정함([decisions.md](decisions.md) D-05), 아직 구현 전 (패키지 미설치) |
-| 스크립트 `db:generate`, `db:migrate`, `db:seed` | 아직 구현 전. 루트 `package.json`의 `db:up` 옆에 추가 |
-| 테스트 DB `wolgyeham_test` | 아직 구현 전 |
+| `DATABASE_URL` 샘플 | `apps/api/.env.example`에 있음 |
+| Drizzle ORM + drizzle-kit, `apps/api/src/db/schema.ts`, `apps/api/drizzle/` | 있음([decisions.md](decisions.md) D-05). 구현 순서 A의 테이블: `users`, `sessions`, `buildings`, `building_managers`, `manager_invites`, `guides`, `notices` |
+| 스크립트 `db:generate`, `db:migrate`, `db:seed`, `db:invite` | 있음. `apps/api/package.json`, 루트는 `db:migrate`·`db:seed` |
+| 테스트 DB `wolgyeham_test` | 있음. 로컬은 아래 명령으로 한 번 만듦, CI는 Postgres 서비스 |
+| 나머지 테이블(`join_codes`, `occupancies`, `correction_memos`, `notice_deliveries`, `push_subscriptions`, `reports`, `report_access_tokens`, `tips`, `content_reports`) | 아직 구현 전 |
 
 ```bash
-pnpm db:up    # Postgres 컨테이너 시작 (healthcheck 통과까지 대기)
+pnpm db:up       # Postgres 컨테이너 시작 (healthcheck 통과까지 대기)
+pnpm db:migrate  # apps/api/drizzle/의 SQL을 DATABASE_URL(apps/api/.env)에 적용
+pnpm db:seed     # 시연 데이터 (§8). 여러 번 실행해도 같은 상태
 docker compose -f infra/compose.yaml exec db psql -U wolgyeham wolgyeham        # 접속
 docker compose -f infra/compose.yaml exec db createdb -U wolgyeham wolgyeham_test # 테스트 DB 한 번 생성
+pnpm --filter @wolgyeham/api db:generate   # schema.ts를 고친 뒤 SQL 마이그레이션 생성
+pnpm --filter @wolgyeham/api db:invite <buildingId> [유효 일수]   # 집주인 초대 링크 한 번 출력
 ```
 
 ## 2. 도구와 위치
@@ -50,7 +55,7 @@ docker compose -f infra/compose.yaml exec db createdb -U wolgyeham wolgyeham_tes
 - 월 단위 표시(팁 작성 월 등)는 `Asia/Seoul` 기준으로 계산합니다. 저장은 `timestamptz`입니다.
 
 ```ts
-// apps/api/src/db/schema.ts (형태 예시, 아직 구현 전)
+// apps/api/src/db/schema.ts (형태 예시. 실제 파일은 CHECK 목록을 contracts 상수로 만듦)
 import { GUIDE_STATUSES } from "@wolgyeham/contracts";
 import { sql } from "drizzle-orm";
 import { check, index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
@@ -120,7 +125,7 @@ erDiagram
 
 | 테이블 | 주요 컬럼 | 제약·인덱스 |
 |---|---|---|
-| `buildings` | `name`, `display_address`(도로명까지), `full_address`(팀 확인값, 공개 안 함), `status` preparing·open, `opened_at` | CHECK `status` |
+| `buildings` | `name`, `display_address`(도로명까지), `full_address`(팀 확인값, 공개 안 함), `status` preparing·open, `opened_at` | CHECK `status`, CHECK `status = 'preparing' or opened_at is not null` |
 | `manager_invites` | `building_id`(cascade), `token_hash`, `status` issued·accepted·expired, `expires_at`, `accepted_by_user_id`(set null), `accepted_at` | `manager_invites_token_hash_key`, CHECK `status`. 초대 유효 기간은 정할 것 |
 | `building_managers` | `building_id`(cascade), `user_id`(cascade), `invite_id`(set null) | `building_managers_building_id_user_id_key`, `building_managers_user_id_idx` |
 | `join_codes` | `building_id`(cascade), `code`, `created_by_user_id`(set null), `retired_at` | 현재 코드는 `retired_at is null`. 건물마다 하나: 부분 유니크 `join_codes_building_id_current_key` |
@@ -144,7 +149,7 @@ erDiagram
 | `tips` | `building_id`(cascade), `author_user_id`(set null), `category`, `body` ≤200, `hidden_at` | CHECK 글자 수, `tips_building_id_idx`, `tips_author_user_id_idx` |
 | `content_reports` | `tip_id`(cascade), `reporter_user_id`(set null), `status` | `content_reports_tip_id_reporter_user_id_key`. `status` 값은 LF-19 설계 후 정할 것 |
 
-- `category`(안내·팁), `kind`(제보의 자주 쓰는 말) 값 목록은 정할 것입니다. 정하면 contracts enum과 CHECK를 같은 PR에 넣습니다.
+- 안내 `category`는 contracts `GUIDE_CATEGORIES`(`recycling`·`parcel`·`facility`·`common`·`contact` = 분리수거·택배·보일러·설비·공용공간·연락, 로파이 33)와 CHECK로 정했습니다. 안내 제목·본문은 80·2000자 이하입니다. 팁 `category`와 제보 `kind` 값 목록은 정할 것입니다. 정하면 contracts enum과 CHECK를 같은 PR에 넣습니다.
 - 사진 파일의 저장 위치는 정할 것입니다. DB에는 파일 키 목록(`photos jsonb`)만 둡니다.
 - 공개된 안내를 고치는 동안 초안을 어디에 둘지(같은 행의 별도 컬럼 또는 공개 요청에 전체 내용 전달)는 정할 것입니다. 어느 방식이든 공개가 실패하면 공개된 내용과 메모 상태는 그대로입니다.
 - 공개 건물 URL은 `buildings.id`(uuid v4)를 씁니다. 더 짧은 공개 키가 필요하면 정할 것입니다.
@@ -190,14 +195,18 @@ erDiagram
 | 배포 prod | `wolgyeham_prod` | 위와 같은 컨테이너 |
 
 - 연결 문자열은 `DATABASE_URL` 하나로 받습니다. 로컬 값은 `apps/api/.env`, 배포 값은 SSM Parameter Store에 있습니다([deploy.md](deploy.md)).
-- 테스트는 `DATABASE_URL`의 DB 이름만 `wolgyeham_test`로 바꿔 연결합니다. 설정 방법은 테스트 도입 PR에서 정합니다(아직 구현 전).
+- 테스트는 `TEST_DATABASE_URL`로 연결합니다. 없으면 로컬 `wolgyeham_test`(`postgres://wolgyeham:local-development-only@127.0.0.1:54329/wolgyeham_test`)를 씁니다. 테스트 파일마다 마이그레이션을 적용하고(advisory lock으로 한 번에 하나), 행을 지우지 않고 테스트마다 새 데이터를 만듭니다.
+- 이미지 안의 `migrate.mjs`가 같은 폴더의 `drizzle/`을 읽습니다. 배포 때 deploy.sh가 새 API를 띄우기 전에 `node migrate.mjs`를 실행합니다.
 
 ## 8. 시드·시연 데이터
 
 - `db:seed`는 로파이의 가상 건물 ‘햇살빌라’ 데이터를 만듭니다: 공개된 기본 안내, 공지, 시연 역할(입주자 A, 다음 입주자 B, 집주인, 옆 건물 주민)의 사용자와 관계. 실제 사람·실제 주소·실제 가입코드는 넣지 않습니다.
-- 시연 사용자의 `kakao_user_id`는 실제 카카오 회원번호와 겹치지 않는 값(예: `demo-a`)을 씁니다.
-- 시드는 로컬·dev·시연 환경에서만 실행합니다. prod에서는 실행하지 않습니다.
-- 시연 초기화(LF-20)는 시연용 건물 데이터만 되돌립니다.
+  - 지금 있는 것(구현 순서 A): 햇살빌라(open, id `5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f01`)와 공개 안내 4개(분리수거·택배·보일러·설비·공용공간), 시드 시점 기준 진행 중인 공지 1개, 시연 집주인(`kakao_user_id` `demo-landlord`)과 관리 관계. 집주인 시작 시연용 새봄하우스(preparing, 관리자 없음, id `…4f02`)는 처음 한 번만 만들고 다시 시드해도 건드리지 않습니다.
+  - 시연 사용자 입주자 A·B, 옆 건물 주민은 연결 기능과 함께 추가합니다(아직 구현 전).
+  - 여러 번 실행해도 같은 상태가 됩니다. 햇살빌라의 시드 행(건물·안내 4개·공지)은 시드 내용으로 되돌리고, 그 밖의 행은 지우지 않습니다.
+- 시연 사용자의 `kakao_user_id`는 실제 카카오 회원번호(숫자)와 겹치지 않는 값(예: `demo-landlord`)을 씁니다.
+- 시드는 로컬·dev·시연 환경에서만 실행합니다. `NODE_ENV=production`이면 `DEMO_MODE=true`가 아닐 때 실행을 거부합니다. prod에서는 실행하지 않습니다.
+- 시연 초기화(LF-20)는 시연용 건물 데이터만 되돌립니다. `pnpm --filter @wolgyeham/api db:seed -- --reset-demo`(이미지에서는 `node seed.mjs --reset-demo`)는 고정 id의 시연 건물 두 곳(햇살빌라·새봄하우스)만 한 트랜잭션에서 지우고(cascade: 안내·공지·관리자·초대) 처음 시드한 상태로 다시 만든 뒤, 건물마다 지운 행 수를 출력합니다. 새봄하우스는 다시 preparing·안내 없음·관리자 없음이 됩니다. 다른 건물과 사용자(시연 집주인 포함)는 지우지 않습니다. production 거부 규칙은 시드와 같습니다.
 
 ## 9. 백업과 보관
 
