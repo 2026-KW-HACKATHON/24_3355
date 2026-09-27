@@ -6,6 +6,21 @@
 - 리전: 서울 `ap-northeast-2`. 모든 리소스에 `Project=wolgyeham` 태그를 붙입니다.
 - 정책 파일: [infra/aws/](../infra/aws/). `<ACCOUNT_ID>`, `<OPS_BUCKET>`, `<ALERT_EMAIL>` 같은 자리는 실행 전에 바꿉니다.
 
+## 스크립트로 한 번에
+
+아래 단계는 스크립트 세 개로 묶여 있습니다. 관리자가 저장소 루트에서 직접 실행합니다. 이미 있는 리소스는 건너뛰므로 다시 실행해도 됩니다.
+
+```bash
+aws login                                                     # 처음 한 번은 루트로
+bash infra/aws/setup-iam.sh <관리자 이름> <개발자 이름> <개발자 이름>   # 3단계 (3-B 방식)
+aws login                                                     # 이제 관리자 IAM 사용자로
+bash infra/aws/setup-infra.sh <예산 알림 이메일>                # 2·4~8단계
+# 콘솔에서 Amplify 앱 두 개를 GitHub에 연결 (9단계 표)
+bash infra/aws/setup-amplify.sh <dev 앱 ID> <prod 앱 ID>        # 9단계 나머지
+```
+
+아래는 각 단계가 무엇을 하는지와 수동으로 할 때의 명령입니다.
+
 ## 0. 준비
 
 ```bash
@@ -37,9 +52,9 @@ aws budgets create-budget --account-id $ACCOUNT_ID \
   --notifications-with-subscribers file://infra/aws/budget-notifications.json
 ```
 
-## 3. 팀원 계정 — IAM Identity Center
+## 3. 팀원 계정
 
-사람마다 IAM 사용자와 액세스 키를 만들지 않고 Identity Center(SSO)를 씁니다. 무료이고, CLI도 짧게 쓰는 자격증명을 받습니다.
+지금은 **3-B(IAM 사용자 + 콘솔 비밀번호 + MFA, 액세스 키 없음)**로 합니다. 이 계정은 Organizations를 쓰지 않아 Identity Center를 켜려면 조직부터 만들어야 하기 때문입니다. 나중에 조직을 만들면 아래 Identity Center 방식으로 옮길 수 있습니다.
 
 1. 콘솔 → IAM Identity Center → 활성화. AWS Organizations를 만들라고 하면 만듭니다(무료).
 2. 사용자 3명을 추가하고 각자 이메일로 초대합니다. 설정에서 **MFA를 필수**로 합니다.
@@ -143,10 +158,7 @@ aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[0].
 
 서버 설정 파일을 만듭니다(비밀값 아님, [server.env.example](../infra/server/server.env.example)).
 
-```bash
-aws ssm send-command --instance-ids $INSTANCE_ID --document-name AWS-RunShellScript --parameters \
-  "commands=[\"printf 'AWS_REGION=$AWS_REGION\\nAPI_IMAGE=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/wolgyeham-api\\nOPS_BUCKET=$OPS_BUCKET\\n' > /opt/wolgyeham/server.env\"]"
-```
+`setup-infra.sh`의 "서버 설정 파일" 단계가 SSM Run Command로 이 파일을 씁니다.
 
 ## 7. API용 CloudFront (dev, prod 두 개)
 
