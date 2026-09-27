@@ -1,0 +1,111 @@
+/* 처음 오셨나요 (lofi 36·46) */
+.fg-spacer {
+  display: block;
+  width: var(--wh-touch);
+}
+.fg-skip {
+  display: inline-flex;
+  align-items: center;
+}
+.fg-hello {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-1_5);
+  padding: 0 var(--wh-gutter);
+}
+.fg-hello .wh-hami {
+  flex: none;
+  width: 72px;
+  margin: -10px -6px -10px -10px;
+}
+.fg-hello .wh-bubble {
+  padding: var(--wh-space-2_5) var(--wh-space-3);
+  font-size: var(--wh-type-small);
+}
+
+.fg-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--wh-space-2);
+  margin-top: var(--wh-space-1);
+}
+.fg-dots {
+  display: flex;
+  gap: var(--wh-space-1_5);
+}
+.fg-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--wh-gray-300);
+  transition: background-color var(--seed-duration-color-transition)
+    var(--seed-timing-function-easing);
+}
+.fg-dot--on {
+  width: 18px;
+  background: var(--wh-primary);
+}
+
+/* 한 장씩: CSS scroll-snap (interaction.md §4) */
+.fg-track {
+  display: flex;
+  align-items: flex-start;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  touch-action: pan-x pan-y;
+}
+.fg-track::-webkit-scrollbar {
+  display: none;
+}
+.fg-slide {
+  flex: 0 0 100%;
+  min-width: 0;
+  padding: var(--wh-space-1) var(--wh-gutter) var(--wh-space-2);
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+}
+.fg-card {
+  padding: var(--wh-space-5);
+  border-radius: var(--wh-radius-sheet);
+  background: var(--wh-surface);
+  box-shadow: var(--wh-shadow-card);
+}
+.fg-more {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--wh-touch);
+  margin-bottom: calc(var(--wh-space-2_5) * -1);
+  font-size: var(--wh-type-small);
+  font-weight: 600;
+  color: var(--wh-primary);
+}
+.fg-next {
+  margin-top: var(--wh-space-3);
+  padding: var(--wh-space-4) var(--wh-space-4_5);
+  border: 1px solid var(--wh-primary-line);
+  border-radius: 18px;
+  background: var(--wh-primary-soft);
+}
+.fg-next__title {
+  font-size: var(--wh-type-body);
+  font-weight: 700;
+  line-height: var(--wh-leading-snug);
+}
+.fg-next__text {
+  margin: var(--wh-space-1) 0 var(--wh-space-1_5);
+  font-size: var(--wh-type-small);
+  line-height: 1.5;
+  color: var(--wh-text-subtle);
+}
+
+.fg-skeleton {
+  display: grid;
+  gap: var(--wh-space-4);
+  padding: 0 var(--wh-gutter);
+}
+.fg-empty {
+  padding-top: var(--wh-space-16);
+}

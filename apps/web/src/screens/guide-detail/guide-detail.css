@@ -1,0 +1,127 @@
+/* LF-02 기본 안내 상세 (lofi 11) */
+.gd-article {
+  padding-top: var(--wh-space-5);
+}
+
+/* 읽어주기 막대 */
+.gd-tts {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-2_5);
+  margin: 0 var(--wh-gutter);
+  padding: var(--wh-space-2_5) var(--wh-space-3) var(--wh-space-2_5) var(--wh-space-3_5);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-primary);
+  color: var(--wh-gray-0);
+  font-size: calc(0.90625rem * var(--wh-font-scale));
+  animation: wh-fade-in var(--seed-duration-d4) var(--seed-timing-function-enter) both;
+}
+.gd-tts__wave {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 16px;
+}
+.gd-tts__wave i {
+  display: block;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--wh-moon);
+}
+.gd-tts__wave i:nth-child(1) {
+  height: 6px;
+}
+.gd-tts__wave i:nth-child(2) {
+  height: 14px;
+}
+.gd-tts__wave i:nth-child(3) {
+  height: 9px;
+}
+.gd-tts__wave i:nth-child(4) {
+  height: 16px;
+}
+.gd-tts__wave i:nth-child(5) {
+  height: 7px;
+}
+.gd-tts__text {
+  flex: 1;
+  min-width: 0;
+}
+.gd-tts__stop {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--wh-touch);
+  margin-block: calc((var(--wh-touch) - 32px) / -2);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--wh-gray-0);
+}
+.gd-tts__stop-face {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--wh-space-1);
+  min-height: 32px;
+  padding: 0 var(--wh-space-3);
+  border-radius: 10px;
+  background: var(--wh-on-primary-weak);
+  font-size: var(--wh-type-small);
+  font-weight: 600;
+}
+.gd-tts__stop-face svg {
+  width: 14px;
+  height: 14px;
+}
+.gd-tts-off {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-1_5);
+  margin: 0 var(--wh-gutter);
+  padding: var(--wh-space-2_5) var(--wh-space-3_5);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-soft);
+  font-size: var(--wh-type-caption);
+  color: var(--wh-text-subtle);
+}
+.gd-tts-off svg {
+  width: var(--wh-icon-s);
+  height: var(--wh-icon-s);
+  flex: none;
+}
+
+/* 내용이 달라요 → 메모 (LF-02 12·44는 다음 업데이트) */
+.gd-memo {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-3);
+  margin-top: var(--wh-space-6);
+  padding: var(--wh-space-3_5) var(--wh-space-4);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-soft);
+}
+.gd-memo__text {
+  flex: 1;
+  min-width: 0;
+}
+.gd-memo__title {
+  font-size: var(--wh-type-label);
+  font-weight: 700;
+  color: var(--wh-text);
+}
+.gd-memo__sub {
+  margin-bottom: var(--wh-space-1);
+  font-size: var(--wh-type-caption);
+  color: var(--wh-text-muted);
+}
+
+.gd-skeleton {
+  display: grid;
+  gap: var(--wh-space-3_5);
+  padding-top: var(--wh-space-5);
+}
+.gd-missing {
+  padding-top: var(--wh-space-16);
+}
+.gd-missing__home.seed-action-button {
+  margin-top: var(--wh-space-5);
+}

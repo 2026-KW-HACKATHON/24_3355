@@ -1,0 +1,65 @@
+.guide-body__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--wh-space-2);
+}
+.guide-body__title {
+  margin-top: var(--wh-space-3);
+  font-size: var(--wh-type-title);
+  line-height: 1.4;
+  font-weight: 700;
+  letter-spacing: var(--wh-tracking-tight);
+}
+.guide-body__photo {
+  width: 100%;
+  height: auto;
+  max-height: 60vh;
+  margin-top: var(--wh-space-4);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-muted);
+  object-fit: cover;
+}
+.guide-body__text {
+  margin-top: var(--wh-space-4);
+  font-size: var(--wh-type-body);
+  line-height: var(--wh-leading-read);
+  color: var(--wh-text-body);
+  white-space: pre-line;
+}
+
+/* 첫날 카드(36): 네 줄까지만 */
+.guide-body--card .guide-body__title {
+  margin-top: var(--wh-space-2_5);
+  line-height: var(--wh-leading-tight);
+}
+.guide-body--card .guide-body__photo {
+  margin-top: var(--wh-space-3_5);
+  max-height: 128px;
+}
+.guide-body--card .guide-body__text {
+  margin-top: var(--wh-space-3);
+  line-height: 1.6;
+}
+.guide-body__text--clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  overflow: hidden;
+}
+
+/* 미리 보기 틀(43) */
+.guide-body--frame .guide-body__title {
+  margin-top: var(--wh-space-2);
+  font-size: calc(1.1875rem * var(--wh-font-scale));
+}
+.guide-body--frame .guide-body__photo {
+  margin-top: var(--wh-space-3);
+}
+.guide-body--frame .guide-body__text {
+  margin-top: var(--wh-space-3);
+  font-size: var(--wh-type-label);
+  line-height: 1.6;
+}
