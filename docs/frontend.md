@@ -14,8 +14,8 @@
 | 언어 | TypeScript strict (`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes` 포함) | 사용 중 |
 | 컴포넌트 | SEED Design `@seed-design/react` 2.5, `@seed-design/css` 2.8 | 사용 중 (`ActionButton`) |
 | HTTP·계약 | `ky` 2.1, `@wolgyeham/contracts`의 zod 스키마·타입 | 사용 중 (`HealthResponse`) |
-| 라우팅 | `react-router` data mode (`createBrowserRouter`) | (아직 구현 전) |
-| 서버 상태 | `@tanstack/react-query` (로딩·오류·재시도·캐시) | (아직 구현 전) |
+| 라우팅 | `react-router` 8.4 data mode (`createBrowserRouter`) | 사용 중 (`app/router.tsx`) |
+| 서버 상태 | `@tanstack/react-query` 5.104 (로딩·오류·재시도·캐시) | 사용 중 |
 
 - 화면 안 상태는 `useState`·`useReducer`로, 서버 데이터는 query 캐시로 다룹니다. 전역 스토어는 여러 화면이 같은 클라이언트 상태를 써야 할 때만 [decisions.md](decisions.md)에 이유를 남기고 추가합니다.
 - 의존성 추가와 `pnpm-lock.yaml` 갱신은 통합 담당자 한 명이 합니다(CONTRIBUTING.md 2. 담당 영역).
@@ -59,7 +59,7 @@ apps/web/src/
 └── assets/hami/        화면에서 실제로 쓰는 함이 사본만
 ```
 
-지금 있는 것은 `main.tsx`, `app/App.tsx`(개발 연결 확인 화면), `lib/api.ts`, `styles/`뿐이고 나머지는 (아직 구현 전)입니다.
+구현 현황은 코드가 기준입니다. 폴더를 새로 만들 때 이 구조를 따릅니다.
 
 - 화면 폴더는 kebab-case, 컴포넌트 파일은 PascalCase(`GuideDetailScreen.tsx`), 훅·유틸은 camelCase(`useGuide.ts`)로 짓습니다. 화면 컴포넌트 첫 줄에 LF ID와 lofi 번호를 적습니다: `// LF-02 기본 안내 상세 · lofi 11 12 13 14 44`
 - 화면끼리는 서로 import하지 않습니다. 두 화면이 같이 쓰면 `features/`나 `components/`로 옮깁니다.
@@ -69,7 +69,7 @@ apps/web/src/
 **기본 스타일 (결정, [decisions.md](decisions.md) D-10)**
 
 - lofi를 기준으로 합니다. 주 색은 남색 `#25355a`(lofi `--navy-600`), 보조는 달빛 `#c9a45c`(`--moon`), 글꼴은 Pretendard입니다. `styles/tokens.css`의 `--wh-*` 값을 lofi 값으로 맞춥니다.
-- SEED 브랜드 색 기본값(당근 주황)은 `:root`에서 `--seed-color-bg-brand-solid` 등을 한 번 덮어써 남색으로 바꿉니다.
+- SEED 브랜드 색 기본값(당근 주황)은 `--seed-color-bg-brand-solid` 등을 덮어써 남색으로 바꿉니다. SEED가 브랜드 값을 `:root[data-seed-color-mode="light-only"]`에 두므로 `:root, :root[data-seed-color-mode="light-only"]` 선택자로 뒤에서 덮습니다(`styles/tokens.css`).
 - 다크 모드는 설계하지 않았으므로 `<html data-seed-color-mode="light-only">`로 고정합니다.
 
 **결정 필요**
@@ -91,7 +91,9 @@ apps/web/src/
 | `/b/:buildingId/report` | `report-compose` | LF-10 직접 적기(05). 자주 쓰는 말 확인 시트 20은 01 안 | 누구나 |
 | `/r/:reportId#t=<token>` | `report-status` | LF-11(06·31) | 확인 링크를 가진 사람 |
 | `/me`, `/me/reports` | `me`, `sent-reports` | LF-09(45, 시트 40·08, 완료 09), LF-08(21) | 로그인 사용자 |
-| `/invite#t=<inviteToken>` | `landlord-invite` | LF-12(41·23·38) | 초대받은 사람 |
+| `/invite#t=<inviteToken>` | `landlord-invite` | LF-12(41·23) | 초대받은 사람 |
+| `/manage` | `manage-index` | 관리하는 건물의 관리 홈으로 이동(여러 건물 선택은 파일럿 이후) | 집주인 |
+| `/manage/:buildingId/ready` | `setup-done` | LF-12 준비 완료(38) | 집주인 |
 | `/manage/:buildingId` | `landlord-home` | LF-13(42·24) | 집주인 |
 | `/manage/:buildingId/guides/new`, `…/:guideId/edit`, `…/:guideId/preview` | `guide-write`, `guide-preview` | LF-14(33, 43) | 집주인 |
 | `/manage/:buildingId/notices/new` | `notice-write` | LF-15(34·37) | 집주인 |
@@ -103,9 +105,10 @@ apps/web/src/
 
 - `/`(홈 화면 아이콘으로 여는 주소)는 화면 없이 나누기만 합니다. 거주자는 스플래시(00) 뒤 `/b/:buildingId`, 집주인은 `/manage/:buildingId`로 보냅니다. 둘 다 아닌 사람에게 보여줄 화면은 결정 필요입니다.
 - 하단 탭은 거주자 `우리 건물`·`내 정보`, 집주인 `건물 관리`·`받은 내용`·`설정`입니다. 설정 화면은 lofi에 없으므로 그린 뒤 라우트를 추가합니다.
-- 화면 폴더마다 `route.tsx`에서 `Component`를 export하고, 라우터가 `lazy`로 불러옵니다(아직 구현 전).
+- 화면 폴더마다 `route.tsx`에서 `Component`를 export하고, `app/router.tsx`가 `lazy`로 불러옵니다. 새 화면은 이 표와 라우터에 함께 추가합니다.
 - 시트(08·12·13·17·20·40·44)에는 URL을 만들지 않습니다. 작성 중인 시트가 열린 채 뒤로 가면 `useBlocker`로 확인을 받습니다.
 - 권한은 서버가 판정합니다. 라우트 guard는 로그인 이동과 권한 없음 표시에만 쓰고, 버튼 숨김으로 권한을 대신하지 않습니다.
+- lofi에 있지만 아직 만들지 않은 행동은 숨기지 않고 비활성으로 두며, `aria-describedby`로 “다음 업데이트에서 열려요”를 연결합니다.
 - `/demo`는 시연용 건물 데이터만 쓰고 실제 화면과 상태를 공유하지 않습니다. 실제 첫 화면에 `/demo` 링크를 두지 않습니다.
 
 ## 5. 데이터와 화면 상태
@@ -124,8 +127,20 @@ apps/web/src/
 
 **로그인과 연결 뒤에는 보던 화면으로 돌아옵니다.**
 
-- 로그인은 `/api/auth/kakao/start?returnTo=<지금 경로>`로 이동합니다. `returnTo`는 `/`로 시작하고 `//`로 시작하지 않는 경로만 넘깁니다. 취소하면 `?login=cancelled`가 붙어 돌아옵니다(쿼리 이름은 정할 것, [backend.md](backend.md)).
-- 떠나기 전 입력(가입코드, 초대 토큰, 쓰던 메모·팁·제보)은 `sessionStorage`에 두었다가 돌아오면 채웁니다. `#t=` 토큰은 로그인을 거치면 사라지므로 이동 전에 옮겨 둡니다. **자동으로 보내지 않고** 사용자가 다시 눌러야 보냅니다.
+- 로그인은 `/api/auth/kakao/start?returnTo=<지금 경로>`로 이동합니다. `returnTo`는 contracts의 `ReturnTo` 규칙(`/`로 시작, `//`·`\`·`#`·공백 없음, 512자 이하)을 지켜야 하고, 어기면 400 `VALIDATION_FAILED`입니다.
+- 취소하면 `?login=cancelled`, 실패하면 `?login=failed`가 붙어 돌아옵니다(`LOGIN_RESULT_PARAM`, `LoginResult`). state 쿠키를 잃은 실패는 `/`로 돌아옵니다. 결과를 안내한 뒤 이 쿼리는 주소에서 지웁니다.
+- 떠나기 전 입력(가입코드, 초대 토큰, 쓰던 메모·팁·제보)은 저장해 두었다가 돌아오면 채웁니다. `#t=` 토큰은 로그인을 거치면 사라지므로 이동 전에 옮기고 주소창에서 지웁니다. **자동으로 보내지 않고** 사용자가 다시 눌러야 보냅니다.
+- 집주인이 쓰던 안내는 기기에 남아야 하므로 localStorage에 두고, 서버에는 ‘미리 보기’를 누를 때만 초안으로 저장합니다. 쓰기↔미리 보기 이동은 `replace`라 뒤로 가면 관리 홈으로 갑니다.
+
+| 저장소 | 키 | 내용 |
+|---|---|---|
+| localStorage | `wh.size` | 크게 보기 |
+| localStorage | `wh.visited.<buildingId>` | 첫 방문 여부 (LF-01 함이) |
+| localStorage | `wh.guideDraft.<buildingId>.<guideId\|new>` | 쓰던 안내 |
+| localStorage | `wh.reportAccess` | 제보 조회 권한 (아직 구현 전) |
+| sessionStorage | `wh.inviteToken` | 로그인을 거치는 동안의 초대 토큰 |
+
+- 키는 `wh.`로 시작하고 새 키는 이 표에 추가합니다. 읽기·쓰기는 모두 try/catch로 감쌉니다.
 - 이미 로그인했으면 16을 건너뜁니다. 연결 뒤 알림 선택(17)은 한 번만 보여주고, 환영·첫날 안내를 연달아 띄우지 않습니다.
 
 **이 브라우저에서 다시 보기**
@@ -161,28 +176,15 @@ export function loadReportAccess(): ReportAccess[] {
 
 ## 6. 오류 처리
 
-API 오류 본문은 `{ error: { code, message?, fields? } }`입니다. HTTP 상태가 아니라 `code`로 분기합니다. `message`는 개발용 영어라 화면에 쓰지 않습니다. 코드 목록은 [backend.md](backend.md)를 따릅니다.
+API 오류 본문은 contracts의 `ErrorResponse`(`{ error: { code, message?, fields? } }`)입니다. HTTP 상태가 아니라 `code`로 분기합니다. `message`는 개발용 영어라 화면에 쓰지 않습니다. 코드 목록은 contracts의 `ERROR_CODES`, 설명은 [backend.md](backend.md)를 따릅니다.
 
-```ts
-// lib/errors.ts
-import type { ErrorCode } from "@wolgyeham/contracts"; // (아직 구현 전)
-import { isHTTPError, isNetworkError, isTimeoutError } from "ky";
-
-export type AppError = { code: ErrorCode | "NETWORK"; fields?: Record<string, string> };
-
-export function toAppError(error: unknown): AppError {
-  if (isNetworkError(error) || isTimeoutError(error)) return { code: "NETWORK" };
-  if (!isHTTPError(error)) return { code: "INTERNAL_ERROR" };
-  const body = error.data as { error?: Partial<AppError> } | undefined;
-  const fields = body?.error?.fields;
-  return { code: body?.error?.code ?? "INTERNAL_ERROR", ...(fields ? { fields } : {}) };
-}
-```
+`lib/errors.ts`의 `toAppError`가 ky 오류를 `AppError`(`code`·`fields`·`retryAfterSeconds`)로 바꿉니다. 응답은 contracts `ErrorResponse`로 파싱하고, 네트워크·시간 초과는 `NETWORK`, 계약과 다른 응답은 `INTERNAL_ERROR`입니다.
 
 - 코드를 문구로 바꾸는 곳은 `lib/errors.ts` 하나입니다. lofi·README에 있는 문구를 먼저 쓰고, 없으면 PR에 초안이라고 적습니다.
 - `VALIDATION_FAILED`의 `fields`는 각 입력 아래(`Field.ErrorMessage`)에 보여줍니다. `JOIN_CODE_INVALID`·`JOIN_CODE_LOCKED`도 코드 칸 아래에 두고, 대기 시간은 `Retry-After`로 계산합니다.
 - 쓰기 실패(`NETWORK`·`INTERNAL_ERROR`·`REPORT_TOO_FREQUENT`)는 입력을 그대로 두고 버튼 위에 “저장하지 못했어요. 다시 눌러 주세요” 같은 문구를 띄웁니다.
 - `NOTICE_ENDED`(“종료된 공지예요”)와 `REPORT_LINK_EXPIRED`(“보관 기간이 지나 더 이상 확인할 수 없어요”)는 토스트가 아니라 화면 상태로 보여줍니다.
+- 로그인 시작 전에 `fetch(…, { redirect: "manual" })`로 확인하고, 503 `KAKAO_NOT_CONFIGURED`면 화면 안에서 안내합니다(카카오 키가 없는 PR 미리보기·로컬). 그 밖에는 `/api/auth/kakao/start`로 이동합니다(`features/auth/session.ts`의 `startKakaoLogin`).
 - 오류는 해결될 때까지 화면에 남깁니다. SEED `Snackbar`(토스트)는 저장됨·링크 복사처럼 막히지 않는 결과에만 씁니다([interaction.md](interaction.md)).
 
 ## 7. 접근성 (세부 주제 04)
@@ -201,13 +203,14 @@ export function toAppError(error: unknown): AppError {
 /* styles/tokens.css — SEED 글자 토큰이 :root에서 계산되므로 html에 둡니다 */
 html[data-size="large"] {
   --seed-font-size-multiplier: 1.25; /* SEED 본문 16px → 20px, 최대 1.5배 */
-  --wh-type-body: 1.25rem;
-  --wh-type-title: 2.125rem;
-  --wh-control-height: 60px;
+  --wh-font-scale: 1.25; /* --wh-type-* = calc(Nrem * var(--wh-font-scale)) */
+  --wh-control-height: 64px; /* lofi 28 버튼 */
+  --wh-control-height-s: 48px;
 }
 ```
 
-- 크게 보기 설정은 localStorage에 저장합니다(try/catch). 저장이 안 돼도 이번 방문에는 적용합니다.
+- 크게 보기 설정은 localStorage `wh.size`에 저장하고(try/catch), 첫 렌더 전에 `main.tsx`에서 적용합니다(`lib/largeMode.ts`). 저장이 안 돼도 이번 방문에는 적용합니다.
+- 공개 화면(`/b/:buildingId`)은 크게 보기에서 lofi 28 배치(목록형 행, 건물 그림 없음, 알리기를 하단 주요 버튼으로)로 그립니다.
 - 읽어주기는 사용자가 누른 이벤트 안에서 시작합니다. iOS는 그 밖에서 소리를 내지 않습니다. 한국어 음성이 없는 기기의 동작은 실제 기기에서 확인합니다.
 
 ## 8. PWA와 웹 푸시 (아직 구현 전)
