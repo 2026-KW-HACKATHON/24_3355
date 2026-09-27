@@ -9,6 +9,23 @@ jobs:
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # DB 테스트용. 값은 CI 전용이고 비밀이 아닙니다.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: wolgyeham
+          POSTGRES_PASSWORD: ci-only
+          POSTGRES_DB: wolgyeham_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U wolgyeham -d wolgyeham_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      TEST_DATABASE_URL: postgres://wolgyeham:ci-only@127.0.0.1:5432/wolgyeham_test
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
