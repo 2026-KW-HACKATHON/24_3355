@@ -1,7 +1,7 @@
-import { sql } from "drizzle-orm";
+import { inArray, sql } from "drizzle-orm";
 import { createDatabase, type Database } from "../lib/db.ts";
 import { EnvFields } from "../lib/env.ts";
-import { buildingManagers, buildings, guides, notices, users } from "./schema.ts";
+import { buildingManagers, buildings, guides, managerInvites, notices, users } from "./schema.ts";
 
 /** 로파이의 가상 건물 ‘햇살빌라’. 실제 사람·주소·가입코드는 넣지 않습니다(database.md §8). */
 export const DEMO_BUILDING_ID = "5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f01";
@@ -11,6 +11,11 @@ export const DEMO_LANDLORD_KAKAO_ID = "demo-landlord";
 const DEMO_NOTICE_ID = "5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f21";
 const GUIDES_UPDATED_AT = new Date("2026-03-16T10:00:00+09:00");
 const DAY_MS = 24 * 60 * 60 * 1000;
+/** --reset-demo가 지우고 다시 만드는 건물. 이 두 id 밖의 데이터는 건드리지 않습니다. */
+const DEMO_BUILDINGS = [
+  { id: DEMO_BUILDING_ID, name: "햇살빌라" },
+  { id: DEMO_PREPARING_BUILDING_ID, name: "새봄하우스" },
+] as const;
 
 const DEMO_GUIDES = [
   {
@@ -56,88 +61,138 @@ const DEMO_GUIDES = [
 
 /** 여러 번 실행해도 같은 상태가 됩니다. 시연용 행만 되돌리고 다른 데이터는 건드리지 않습니다. */
 export function seedDemo(db: Database) {
+  return db.transaction((tx) => writeDemoRows(tx));
+}
+
+/**
+ * 시연 건물 두 곳(햇살빌라·새봄하우스)을 지우고(cascade) 처음 시드한 상태로 다시 만듭니다.
+ * 한 트랜잭션이라 중간에 실패하면 그대로 남습니다. 다른 건물과 사용자는 건드리지 않습니다.
+ */
+export function resetDemo(db: Database) {
   return db.transaction(async (tx) => {
-    const [landlord] = await tx
-      .insert(users)
-      .values({ kakaoUserId: DEMO_LANDLORD_KAKAO_ID })
-      .onConflictDoUpdate({ target: users.kakaoUserId, set: { updatedAt: sql`now()` } })
-      .returning({ id: users.id });
-    if (!landlord) throw new Error("demo landlord upsert returned no row");
-
-    const building = {
-      name: "햇살빌라",
-      displayAddress: "서울 노원구 월계동 OO길",
-      fullAddress: "서울 노원구 월계동 000-00",
-      status: "open" as const,
-      openedAt: GUIDES_UPDATED_AT,
+    const ids = DEMO_BUILDINGS.map((building) => building.id);
+    const deleted = {
+      guides: await tx
+        .delete(guides)
+        .where(inArray(guides.buildingId, ids))
+        .returning({ buildingId: guides.buildingId }),
+      notices: await tx
+        .delete(notices)
+        .where(inArray(notices.buildingId, ids))
+        .returning({ buildingId: notices.buildingId }),
+      managers: await tx
+        .delete(buildingManagers)
+        .where(inArray(buildingManagers.buildingId, ids))
+        .returning({ buildingId: buildingManagers.buildingId }),
+      invites: await tx
+        .delete(managerInvites)
+        .where(inArray(managerInvites.buildingId, ids))
+        .returning({ buildingId: managerInvites.buildingId }),
     };
-    await tx
-      .insert(buildings)
-      .values({ id: DEMO_BUILDING_ID, ...building })
-      .onConflictDoUpdate({ target: buildings.id, set: building });
-    await tx
-      .insert(buildingManagers)
-      .values({ buildingId: DEMO_BUILDING_ID, userId: landlord.id })
-      .onConflictDoNothing();
-
-    // 한 번 만든 뒤에는 건드리지 않습니다(시연 중 공개한 안내·관리자를 지우지 않음).
-    await tx
-      .insert(buildings)
-      .values({
-        id: DEMO_PREPARING_BUILDING_ID,
-        name: "새봄하우스",
-        displayAddress: "서울 노원구 월계동 OO길",
-        fullAddress: "서울 노원구 월계동 000-01",
-        status: "preparing",
-      })
-      .onConflictDoNothing();
-
-    for (const [index, { id, ...guide }] of DEMO_GUIDES.entries()) {
-      const values = {
-        ...guide,
-        buildingId: DEMO_BUILDING_ID,
-        photos: [],
-        position: index + 1,
-        status: "published" as const,
-        publishedAt: GUIDES_UPDATED_AT,
-        authorUserId: landlord.id,
-        updatedAt: GUIDES_UPDATED_AT,
-      };
-      await tx
-        .insert(guides)
-        .values({ id, ...values })
-        .onConflictDoUpdate({ target: guides.id, set: values });
-    }
-
-    // 시드한 시점에 현재 공지로 보이도록 기간을 지금 기준으로 잡습니다.
-    const now = Date.now();
-    const notice = {
-      buildingId: DEMO_BUILDING_ID,
-      title: "9월 28일(일) 오전 단수 안내",
-      body: [
-        "건물 물탱크 청소로 위 시간 동안 물이 나오지 않아요. 전날 밤에 필요한 물을 미리 받아 두세요.",
-        "작업이 일찍 끝나면 따로 알리지 않고 바로 물이 나와요.",
-      ].join("\n"),
-      startsAt: new Date(now - DAY_MS),
-      endsAt: new Date(now + 7 * DAY_MS),
-      status: "published" as const,
-      publishedAt: new Date(now - DAY_MS),
-      authorUserId: landlord.id,
-    };
-    await tx
-      .insert(notices)
-      .values({ id: DEMO_NOTICE_ID, ...notice })
-      .onConflictDoUpdate({ target: notices.id, set: notice });
-
-    return {
-      buildingId: DEMO_BUILDING_ID,
-      preparingBuildingId: DEMO_PREPARING_BUILDING_ID,
-      landlordUserId: landlord.id,
-    };
+    // 남은 관계(나중에 생길 테이블 포함)는 buildings의 ON DELETE cascade로 함께 지워집니다.
+    await tx.delete(buildings).where(inArray(buildings.id, ids));
+    await writeDemoRows(tx);
+    const count = (rows: { buildingId: string }[], id: string) =>
+      rows.filter((row) => row.buildingId === id).length;
+    return DEMO_BUILDINGS.map(({ id, name }) => ({
+      id,
+      name,
+      guides: count(deleted.guides, id),
+      notices: count(deleted.notices, id),
+      managers: count(deleted.managers, id),
+      invites: count(deleted.invites, id),
+    }));
   });
 }
 
+async function writeDemoRows(tx: Database) {
+  const [landlord] = await tx
+    .insert(users)
+    .values({ kakaoUserId: DEMO_LANDLORD_KAKAO_ID })
+    .onConflictDoUpdate({ target: users.kakaoUserId, set: { updatedAt: sql`now()` } })
+    .returning({ id: users.id });
+  if (!landlord) throw new Error("demo landlord upsert returned no row");
+
+  const building = {
+    name: "햇살빌라",
+    displayAddress: "서울 노원구 월계동 OO길",
+    fullAddress: "서울 노원구 월계동 000-00",
+    status: "open" as const,
+    openedAt: GUIDES_UPDATED_AT,
+  };
+  await tx
+    .insert(buildings)
+    .values({ id: DEMO_BUILDING_ID, ...building })
+    .onConflictDoUpdate({ target: buildings.id, set: building });
+  await tx
+    .insert(buildingManagers)
+    .values({ buildingId: DEMO_BUILDING_ID, userId: landlord.id })
+    .onConflictDoNothing();
+
+  // 한 번 만든 뒤에는 건드리지 않습니다(시연 중 공개한 안내·관리자를 지우지 않음).
+  await tx
+    .insert(buildings)
+    .values({
+      id: DEMO_PREPARING_BUILDING_ID,
+      name: "새봄하우스",
+      displayAddress: "서울 노원구 월계동 OO길",
+      fullAddress: "서울 노원구 월계동 000-01",
+      status: "preparing",
+    })
+    .onConflictDoNothing();
+
+  for (const [index, { id, ...guide }] of DEMO_GUIDES.entries()) {
+    const values = {
+      ...guide,
+      buildingId: DEMO_BUILDING_ID,
+      photos: [],
+      position: index + 1,
+      status: "published" as const,
+      publishedAt: GUIDES_UPDATED_AT,
+      authorUserId: landlord.id,
+      updatedAt: GUIDES_UPDATED_AT,
+    };
+    await tx
+      .insert(guides)
+      .values({ id, ...values })
+      .onConflictDoUpdate({ target: guides.id, set: values });
+  }
+
+  // 시드한 시점에 현재 공지로 보이도록 기간을 지금 기준으로 잡습니다.
+  const now = Date.now();
+  const notice = {
+    buildingId: DEMO_BUILDING_ID,
+    title: "9월 28일(일) 오전 단수 안내",
+    body: [
+      "건물 물탱크 청소로 위 시간 동안 물이 나오지 않아요. 전날 밤에 필요한 물을 미리 받아 두세요.",
+      "작업이 일찍 끝나면 따로 알리지 않고 바로 물이 나와요.",
+    ].join("\n"),
+    startsAt: new Date(now - DAY_MS),
+    endsAt: new Date(now + 7 * DAY_MS),
+    status: "published" as const,
+    publishedAt: new Date(now - DAY_MS),
+    authorUserId: landlord.id,
+  };
+  await tx
+    .insert(notices)
+    .values({ id: DEMO_NOTICE_ID, ...notice })
+    .onConflictDoUpdate({ target: notices.id, set: notice });
+
+  return {
+    buildingId: DEMO_BUILDING_ID,
+    preparingBuildingId: DEMO_PREPARING_BUILDING_ID,
+    landlordUserId: landlord.id,
+  };
+}
+
 if (import.meta.main) {
+  // pnpm이 넘기는 `--`는 무시합니다. 사용: db:seed [--reset-demo]
+  const args = process.argv.slice(2).filter((arg) => arg !== "--");
+  const reset = args.includes("--reset-demo");
+  if (args.some((arg) => arg !== "--reset-demo")) {
+    console.error("사용: db:seed [--reset-demo]");
+    process.exit(2);
+  }
   const env = EnvFields.pick({ DATABASE_URL: true, NODE_ENV: true, DEMO_MODE: true }).parse(
     process.env,
   );
@@ -149,12 +204,20 @@ if (import.meta.main) {
   }
   const database = createDatabase(env.DATABASE_URL, { max: 1 });
   try {
-    const result = await seedDemo(database.db);
+    if (reset) {
+      for (const building of await resetDemo(database.db)) {
+        console.info(
+          `초기화: ${building.name} (${building.id}) — 안내 ${building.guides}·공지 ${building.notices}·관리자 ${building.managers}·초대 ${building.invites}건을 지우고 처음 시드 상태로 다시 만들었습니다.`,
+        );
+      }
+    } else {
+      await seedDemo(database.db);
+    }
     console.info(
-      `시드 완료: 햇살빌라 /b/${result.buildingId} (시연 집주인 kakao_user_id=demo-landlord)`,
+      `시드 완료: 햇살빌라 /b/${DEMO_BUILDING_ID} (시연 집주인 kakao_user_id=demo-landlord)`,
     );
     console.info(
-      `준비 중 건물: 새봄하우스 /b/${result.preparingBuildingId} (초대: db:invite ${result.preparingBuildingId})`,
+      `준비 중 건물: 새봄하우스 /b/${DEMO_PREPARING_BUILDING_ID} (초대: db:invite ${DEMO_PREPARING_BUILDING_ID})`,
     );
   } finally {
     await database.close();
