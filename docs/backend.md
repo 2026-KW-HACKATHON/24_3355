@@ -13,13 +13,30 @@
 | `GET /api/health` (프로세스 응답만 확인하고 DB는 보지 않음) | 있음 |
 | `/api/openapi.json` 스펙, `/api/swagger` (Swagger UI), `/api/docs` (Scalar) | 있음. 로컬은 `http://127.0.0.1:3001/api/swagger` |
 | `{ "error": { "code": "NOT_FOUND" } }` 404, `INTERNAL_ERROR` 500 | 있음 (`app.ts`) |
-| 환경 변수 파싱 | `server.ts`가 `API_HOST`, `API_PORT`만 읽음. `lib/env.ts`로 옮김 (아직 구현 전) |
-| `lib/`, `modules/`, DB, 카카오 로그인, 세션, 웹 푸시 | 아직 구현 전 |
+| 환경 변수 파싱 (`lib/env.ts`), `lib/`, DB (Drizzle), 세션, 카카오 로그인 | 있음 (구현 순서 A) |
+| `modules/` buildings·guides·notices(현재 공지)·manage·me·auth | 있음 (구현 순서 A). 아래 표 |
+| 가입코드·연결·수정 메모·공지 작성·제보·팁, `requireOccupancy`, 웹 푸시 | 아직 구현 전 |
+
+구현 순서 A(초대 → 안내 작성·공개 → 비회원이 공개 화면에서 읽기)의 경로입니다. 요청·응답 스키마는 `packages/contracts`와 `/api/swagger`가 기준입니다.
+
+| 경로 (`/api` 생략) | 누가 | 응답 |
+|---|---|---|
+| `GET /buildings/:buildingId` | 누구나 | 건물(이름·도로명 주소·상태). preparing도 돌려줌, 없으면 404 |
+| `GET /buildings/:buildingId/guides` | 누구나 | 공개된 안내만 `position` 순 |
+| `GET /guides/:guideId` | 누구나 / 초안은 그 건물 집주인 | 볼 수 없는 초안은 404 |
+| `GET /buildings/:buildingId/notices/current` | 누구나 | 끝나지 않은 공지 중 가장 최근 것 또는 `null` |
+| `GET /manage/buildings`, `GET /manage/buildings/:buildingId` | 집주인 | 관리하는 건물(팀 확인 주소 포함)과 안내 개수 / 초안 포함 전체 안내 |
+| `POST /buildings/:buildingId/guides`, `PATCH /guides/:guideId` | 집주인 | 초안 만들기·고치기. 공개된 안내 수정은 409 (구현 순서 C에서 정할 것) |
+| `POST /guides/:guideId/publish` | 집주인 | 공개 + 첫 공개면 건물 open, `buildingOpened` |
+| `POST /manager-invites/preview`, `POST /manager-invites/accept` | 누구나 / 로그인 | 초대받은 건물 이름 / 수락 |
+| `GET /me`, `POST /auth/logout`, `GET /auth/kakao/start`, `GET /auth/kakao/callback` | — | §5 |
+| `GET·POST /dev/login` | 시연 모드만 | §6. `DEMO_MODE=true`가 아니면 경로가 없어 404 |
 
 ```bash
+pnpm db:up && pnpm db:migrate && pnpm db:seed   # 로컬 DB 준비 (database.md)
 pnpm dev:api   # API만 실행 (127.0.0.1:3001). apps/api/.env가 있으면 읽음
 pnpm dev       # 웹(5173)과 API를 함께 실행. 웹의 /api 요청은 Vite 프록시가 API로 넘김
-pnpm test      # 루트에서 vitest run
+pnpm test      # 루트에서 vitest run (DB 테스트는 wolgyeham_test, §10)
 ```
 
 ## 2. 구조
@@ -35,8 +52,14 @@ apps/api/src/
 │  ├─ db.ts             Drizzle 클라이언트 (database.md)
 │  ├─ auth.ts           세션 읽기, requireUser·requireManager·requireOccupancy
 │  ├─ errors.ts         AppError, 검증 실패 변환, 오류 응답 문서화
+│  ├─ context.ts        Hono 환경 타입 AppEnv (db·env·user·requestId)
 │  └─ log.ts            JSON 한 줄 로거
-├─ db/schema.ts         Drizzle 스키마
+├─ db/
+│  ├─ schema.ts         Drizzle 스키마
+│  ├─ migrate.ts        마이그레이션 실행 (이미지에서는 migrate.mjs)
+│  ├─ seed.ts           시연 데이터 (db:seed)
+│  └─ invite.ts         집주인 초대 발급 (db:invite)
+├─ test/helpers.ts      테스트 DB 연결과 픽스처
 └─ modules/<domain>/
    ├─ routes.ts         HTTP만: describeRoute, validator, 서비스 호출, 응답
    ├─ service.ts        업무 규칙, 권한 확인, 상태 전이, 트랜잭션
@@ -50,7 +73,8 @@ apps/api/src/
 | `service.ts` | `require*` 권한 확인, 상태 전이, 트랜잭션, `AppError` 던지기 | Hono `Context` 사용 |
 | `repo.ts` | 쿼리, DB 행(snake_case) ↔ 계약 객체(camelCase) 변환 | 권한·상태 규칙 |
 
-- 다른 모듈의 데이터가 필요하면 그 모듈의 `service.ts`를 부릅니다. 남의 `repo.ts`를 직접 가져오지 않습니다.
+- 다른 모듈의 데이터가 필요하면 그 모듈의 `service.ts`를 부릅니다. 남의 `repo.ts`를 직접 가져오지 않습니다. 여러 모듈을 묶는 화면(관리 홈)은 `modules/manage`가 두 서비스를 부릅니다.
+- 서비스·repo 함수는 첫 인자로 `Database`(라우트의 `c.var.db` 또는 트랜잭션 `tx`)를 받습니다. `createApp({ env, db })`가 요청마다 `c.var.env`·`c.var.db`를 넣습니다.
 - 프론트엔드는 `apps/api` 코드를 가져오지 않고 `@wolgyeham/contracts`만 씁니다.
 
 | 모듈 | 다루는 것 | 경로 초안 (`/api` 생략, 계약에서 확정) |
@@ -120,7 +144,7 @@ export const guideRoutes = new Hono<AppEnv>().post(
   async (c) => {
     const user = requireUser(c);
     const { guideId } = c.req.valid("param");
-    return c.json(await guideService.publish(user.id, guideId, c.req.valid("json")), 200);
+    return c.json(await guideService.publish(c.var.db, user.id, guideId, c.req.valid("json")), 200);
   },
 );
 ```
@@ -146,7 +170,7 @@ export const guideRoutes = new Hono<AppEnv>().post(
 | 429 | `RATE_LIMITED`, `JOIN_CODE_LOCKED`, `REPORT_TOO_FREQUENT` | 반복 제한. `Retry-After` 헤더를 붙임 |
 | 500 | `INTERNAL_ERROR` | 예상하지 못한 오류. 원인은 로그에만 남김 |
 
-- 코드는 contracts의 `ErrorCode` zod enum 하나에서 관리하고, 응답 스키마는 `ErrorResponse`입니다(아직 구현 전). 새 코드는 계약에 먼저 추가합니다.
+- 코드는 contracts의 `ErrorCode` zod enum 하나에서 관리하고, 응답 스키마는 `ErrorResponse`입니다(`packages/contracts/src/errors.ts`). 새 코드는 계약에 먼저 추가합니다. 카카오 키가 없는 환경의 로그인 요청은 503 `KAKAO_NOT_CONFIGURED`입니다.
 - 프론트엔드는 HTTP 상태가 아니라 `code`로 분기해 한국어 문구를 고릅니다. API는 사용자에게 보일 한국어 문장을 유일한 신호로 보내지 않습니다. `message`는 개발자용 설명이고 화면에 쓰지 않습니다.
 - 서비스는 `throw new AppError(403, "NOT_BUILDING_MANAGER")`로 끝냅니다. `AppError(status, code, fields?)`는 `lib/errors.ts`에 두고, `app.onError`가 응답 모양을 만듭니다.
 
@@ -170,7 +194,7 @@ app.onError((error, c) => {
 
 1. 웹이 `GET /api/auth/kakao/start?returnTo=<경로>`로 이동합니다. API는 `state`를 만들어 짧은 수명(10분)의 HttpOnly 쿠키에 `returnTo`와 함께 넣고 `SESSION_SECRET`으로 서명한 뒤(`hono/cookie`의 `setSignedCookie`) 카카오 인가 주소로 302 응답합니다. `returnTo`는 `/`로 시작하는 같은 사이트 경로만 받습니다(`//`로 시작하면 거부).
 2. 카카오가 `GET /api/auth/kakao/callback?code&state`로 돌려보냅니다. API는 `state`를 확인하고 코드를 토큰으로 바꾼 뒤 카카오 회원번호만 조회합니다. 카카오 액세스 토큰은 저장하지 않습니다.
-3. `users`를 upsert하고 세션을 만든 뒤 `returnTo`로 302 응답합니다. 사용자가 취소하면 취소 표시를 붙여 `returnTo`로 보냅니다(쿼리 이름은 계약에서 정할 것).
+3. `users`를 upsert하고 세션을 만든 뒤 `APP_ORIGIN + returnTo`로 302 응답합니다. 사용자가 취소하면 `?login=cancelled`, state 불일치·카카오 오류면 `?login=failed`를 붙여 `returnTo`로 보냅니다(contracts `LOGIN_RESULT_PARAM`, `LOGIN_RESULTS`). state 쿠키가 없으면 `/`로 보냅니다.
 
 | 세션 쿠키 `wh_session` | 값 |
 |---|---|
@@ -187,17 +211,18 @@ app.onError((error, c) => {
 
 권한은 로그인 여부가 아니라 이 건물과의 관계로 판단하고, 요청마다 서비스에서 확인합니다. 버튼을 숨기는 것으로 대신하지 않습니다. 행동별 허용 범위는 [screens.md §1 권한](../lofi/screens.md#1-권한) 표를 따릅니다.
 
-| 헬퍼 (`lib/auth.ts`, 아직 구현 전) | 통과 조건 | 실패 |
+| 헬퍼 (`lib/auth.ts`) | 통과 조건 | 실패 |
 |---|---|---|
 | `requireUser(c)` | 유효한 세션 | 401 `UNAUTHENTICATED` |
-| `requireManager(userId, buildingId)` | `building_managers`에 행이 있음 | 403 `NOT_BUILDING_MANAGER` |
-| `requireOccupancy(userId, buildingId, { allow })` | 연결 상태가 `allow` 안에 있음 | 403 `NOT_CONNECTED`(연결 없음·`inactive`), `RECONFIRM_NEEDED`(`reconfirm_needed`인데 허용 안 됨) |
+| `requireManager(db, userId, buildingId)` | `building_managers`에 행이 있음 | 403 `NOT_BUILDING_MANAGER` |
+| `requireOccupancy(userId, buildingId, { allow })` (아직 구현 전) | 연결 상태가 `allow` 안에 있음 | 403 `NOT_CONNECTED`(연결 없음·`inactive`), `RECONFIRM_NEEDED`(`reconfirm_needed`인데 허용 안 됨) |
 
 - `allow: ["active"]`: 팁·메모 쓰기, 공지 알림 구독.
 - `allow: ["active", "reconfirm_needed"]`: 팁·메모 읽기, 본인 팁 고치기·지우기, 팁 신고. 집주인은 `requireManager`로 따로 허용합니다.
 - `buildingId`는 요청 경로를 믿지 않고 대상 자원에서 꺼냅니다. `/guides/:guideId`라면 `guide.buildingId`로 확인합니다.
-- 집주인 권한은 팀이 발급한 `manager_invites`를 수락했을 때만 생깁니다. 초대 발급 방법(스크립트 또는 운영 API)과 운영자(LF-19) 권한 모델은 정할 것입니다.
-- 시연 모드(LF-20)는 dev·데모 데이터에서만 열고, 역할 전환은 시드된 시연 사용자로 바꾸는 것일 뿐 실제 권한을 만들지 않습니다. 켜는 방법은 정할 것입니다.
+- 집주인 권한은 팀이 발급한 `manager_invites`를 수락했을 때만 생깁니다. 지금은 팀이 스크립트로 발급합니다: `pnpm --filter @wolgyeham/api db:invite <buildingId> [유효 일수]`가 `${APP_ORIGIN}/invite#t=<토큰>`을 한 번만 출력하고 DB에는 해시만 저장합니다. 유효 기간(기본 7일), 건물 등록 방법, 운영자(LF-19) 권한 모델은 정할 것입니다.
+- 시연 모드(LF-20)는 dev·데모 데이터에서만 엽니다. 역할 전환은 시드된 시연 사용자로 바꾸는 것일 뿐 실제 권한을 만들지 않습니다.
+- **시연 로그인 (dev·시연 전용):** 환경 변수 `DEMO_MODE=true`일 때만 `app.ts`가 `GET /api/dev/login`(쓸 수 있으면 204, 부작용 없음)과 `POST /api/dev/login`(`{ "as": "demo-landlord" }` → 시드된 시연 집주인 세션)을 붙입니다. 꺼져 있으면 경로 자체가 없어 404입니다. 시연 집주인은 시연 건물(햇살빌라)만 관리합니다. prod는 `DEMO_MODE=false`로 둡니다.
 
 ## 7. 도메인 규칙
 
@@ -216,7 +241,8 @@ app.onError((error, c) => {
 
 - 이벤트마다 JSON 한 줄을 남깁니다: `{ level, event, time, requestId, ... }`.
 - `app.use(requestId())`(`hono/request-id`)로 요청 ID를 정합니다. 들어온 `X-Request-Id`가 있으면 그대로 쓰고, 없으면 UUID를 만들며, 응답 헤더에도 붙입니다.
-- 요청 로그에는 `c.req.routePath`(예: `/api/reports/:reportId`)를 남깁니다. 실제 URL과 쿼리는 토큰이 섞일 수 있으므로 남기지 않습니다.
+- 요청 로그(`event: "request"`, 테스트에서는 끔)에는 등록된 경로 패턴(`hono/route`의 `routePath(c, -1)`, 예: `/api/reports/:reportId`)을 남깁니다. 실제 URL과 쿼리는 토큰이 섞일 수 있으므로 남기지 않습니다.
+- `/api` 응답에는 모두 `Cache-Control: no-store`를 붙입니다. 문서 경로(`/api/docs`, `/api/swagger`, `/api/openapi.json`)만 뺍니다.
 - **남기지 않는 것:** 이름·닉네임, 카카오 회원번호, 세션·초대·제보 토큰, 가입코드, 안내·제보·팁·메모 본문, 반복 제한 계산에 필요한 범위를 넘는 IP, DB 오류 메시지(값이 섞임. 오류 이름과 코드만).
 
 ```ts
@@ -231,16 +257,18 @@ export function log(level: Level, event: string, fields: Record<string, Field> =
 
 ## 9. 환경 변수
 
-`lib/env.ts`가 zod로 파싱하는 `parseEnv(process.env)`를 두고, `server.ts`가 시작할 때 한 번 호출해 `createApp`에 넘깁니다. 다른 모듈은 `process.env`를 직접 읽지 않습니다(아직 구현 전).
+`lib/env.ts`가 zod로 파싱하는 `parseEnv(process.env)`를 두고, `server.ts`가 시작할 때 한 번 호출해 `createApp`에 넘깁니다. 다른 모듈은 `process.env`를 직접 읽지 않습니다. 값이 틀리면 키 이름만 적은 오류로 시작을 멈춥니다(값은 출력하지 않음). `db:*` 스크립트는 필요한 키만 읽습니다.
 
 | 키 | 용도 |
 |---|---|
+| `NODE_ENV` | `development`(기본)·`test`·`production` |
 | `API_HOST`, `API_PORT` | 바인드 주소 (기본 `127.0.0.1:3001`) |
-| `DATABASE_URL` | Postgres 연결 문자열 ([database.md](database.md)) |
-| `APP_ORIGIN` | 웹 주소. 로그인 후 이동, 확인 링크, 푸시 URL, 쿠키 `Secure` 판단 |
-| `SESSION_SECRET` | 로그인 중에 쓰는 짧은 쿠키(`state`·`returnTo`) 서명. 세션 토큰 자체는 해시로 저장하므로 이 값과 무관 |
-| `KAKAO_REST_API_KEY`, `KAKAO_CLIENT_SECRET`, `KAKAO_REDIRECT_URI` | 카카오 로그인 |
-| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | 웹 푸시 |
+| `DATABASE_URL` | Postgres 연결 문자열 ([database.md](database.md)). 필수 |
+| `APP_ORIGIN` | 웹 주소. 로그인 후 이동, 초대·확인 링크, 푸시 URL, 쿠키 `Secure` 판단. 필수 |
+| `SESSION_SECRET` | 로그인 중에 쓰는 짧은 쿠키(`state`·`returnTo`) 서명. 세션 토큰 자체는 해시로 저장하므로 이 값과 무관. 32자 이상, 카카오 키가 있으면 필수 |
+| `KAKAO_REST_API_KEY`, `KAKAO_CLIENT_SECRET`, `KAKAO_REDIRECT_URI` | 카카오 로그인. 키가 없으면 503 `KAKAO_NOT_CONFIGURED`. `KAKAO_REDIRECT_URI`를 비우면 `${APP_ORIGIN}/api/auth/kakao/callback` |
+| `DEMO_MODE` | `true`면 시연 로그인(§6)을 엽니다. 기본 `false`. dev는 `true`, prod는 `false` |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | 웹 푸시 (아직 구현 전) |
 
 - 로컬 값은 `apps/api/.env`(gitignore)에, 배포 값은 AWS SSM Parameter Store에 둡니다([deploy.md](deploy.md)).
 - 키를 추가하면 같은 PR에서 `.env.example`(샘플 값), `lib/env.ts`, deploy.md를 함께 고칩니다.
@@ -250,13 +278,14 @@ export function log(level: Level, event: string, fields: Record<string, Field> =
 
 | 종류 | 대상 | 방법 |
 |---|---|---|
-| 라우트 | 상태 코드, 오류 형식, 입력 검증, 인증 경계 | `createApp().request()` (지금 `app.test.ts`와 같은 방식) |
-| 서비스 | 권한, 상태 전이, 트랜잭션 롤백 | 로컬 Postgres의 `wolgyeham_test` DB (아직 구현 전) |
+| 라우트 | 상태 코드, 오류 형식, 입력 검증, 인증 경계 | `createApp({ env, db }).request()`. DB가 필요 없으면 `app.test.ts`처럼 |
+| 서비스·DB | 권한, 상태 전이, 트랜잭션 | `src/test/helpers.ts`의 `useTestApp()`: `wolgyeham_test`에 마이그레이션을 적용하고, 테스트마다 새 건물·사용자·세션을 만듦(행을 지우지 않음) |
 
 - 기능마다 성공, 실패, 권한 경계 테스트를 하나 이상 둡니다. 예: 안내 공개는 집주인 성공, 없는 안내 404, 거주자 403 `NOT_BUILDING_MANAGER`, 공개 실패 시 메모 `pending` 유지.
 - 기존 테스트처럼 `// Given`, `// When`, `// Then`으로 나눕니다. 한국어 문구가 일치하는지만 보는 테스트는 만들지 않습니다.
 - 스펙에 새 경로가 들어갔는지 `/api/openapi.json` 테스트에 한 줄 추가합니다.
-- CI에는 아직 Postgres가 없습니다. DB 테스트를 넣는 PR에서 워크플로에 Postgres 서비스를 추가합니다.
+- DB 테스트는 `TEST_DATABASE_URL`(없으면 로컬 `postgres://wolgyeham:local-development-only@127.0.0.1:54329/wolgyeham_test`)에 연결합니다. 로컬은 `pnpm db:up` 후 테스트 DB를 한 번 만듭니다([database.md §1](database.md#1-현재-상태)). CI(`ci.yml`, `deploy-api.yml`의 check)는 Postgres 17 서비스로 `wolgyeham_test`를 띄웁니다.
+- 카카오 API는 테스트에서 `vi.stubGlobal("fetch", ...)`로 대신합니다. 실제 카카오 호출은 테스트하지 않습니다.
 
 ## 바꿀 때
 
