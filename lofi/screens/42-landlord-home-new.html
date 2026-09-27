@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-13 건물 관리 홈 · 처음 공개한 뒤</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .name { padding-left: 12px; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  .open { margin: 4px var(--gutter) 0; border-radius: 16px; background: var(--navy-50); padding: 16px; }
+  .open .t { display: flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 700; color: var(--navy-700); }
+  .open .t svg { width: 20px; height: 20px; color: var(--st-done); }
+  .open p { font-size: 14px; line-height: 1.5; color: var(--gray-700); margin-top: 6px; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 var(--gutter); }
+  .stat { border-radius: 14px; background: var(--gray-50); padding: 12px 16px; }
+  .stat .n { font-size: 21px; font-weight: 700; margin-top: 2px; }
+  .stat .l { font-size: 13.5px; color: var(--gray-600); display: flex; align-items: center; gap: 6px; }
+  .stat .l svg { width: 15px; height: 15px; }
+  .todo { margin: 0 var(--gutter); border-radius: 16px; border: 1px solid var(--gray-200); overflow: hidden; }
+  .todo .row-i { display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
+  .todo .row-i + .row-i { border-top: 1px solid var(--gray-100); }
+  .todo .ic { width: 36px; height: 36px; border-radius: 10px; background: var(--gray-100); color: var(--navy-600); display: grid; place-items: center; flex: none; }
+  .todo .ic svg { width: 18px; height: 18px; }
+  .todo .t { font-size: 15.5px; font-weight: 600; }
+  .todo .s { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
+  .todo .chev { color: var(--gray-400); width: 20px; margin-left: auto; flex: none; }
+  .todo .warn .ic { background: var(--st-hard-bg); color: var(--st-hard); }
+</style>
+</head>
+<body>
+<div class="phone" data-tabs="landlord:manage">
+  <div class="content">
+    <div class="topbar">
+      <span class="name">햇살빌라</span>
+      <button class="icon-btn" aria-label="QR·가입코드"><i data-lucide="qr-code"></i></button>
+    </div>
+
+    <div class="open">
+      <div class="t"><i data-lucide="circle-check"></i>햇살빌라 안내를 공개했어요</div>
+      <p>아직 확인할 것은 없어요. 세입자가 메모를 남기거나 알리면 여기에 먼저 보여요.</p>
+    </div>
+
+    <div class="section-head mt-20"><h3>지금 건물에 보이는 것</h3></div>
+    <div class="stats">
+      <div class="stat"><div class="l"><i data-lucide="book-open"></i>기본 안내</div><div class="n">1개</div></div>
+      <div class="stat"><div class="l"><i data-lucide="users"></i>월계함에 연결</div><div class="n">0명</div></div>
+    </div>
+    <p class="caption" style="padding:0 var(--gutter);margin-top:8px">연결된 사람 기준이라 실제 세입자 수와 다를 수 있어요</p>
+
+    <div class="section-head mt-20"><h3>이어서 할 것</h3></div>
+    <div class="todo">
+      <div class="row-i warn"><span class="ic"><i data-lucide="bell-off"></i></span><div><div class="t">새 메모·제보 알림 받기</div><div class="s">이 휴대폰에서 아직 설정하지 않았어요</div></div><i data-lucide="chevron-right" class="chev"></i></div>
+      <div class="row-i"><span class="ic"><i data-lucide="link"></i></span><div><div class="t">안내 링크 보내기</div><div class="s">지금 사는 분들께 카톡으로 한 번</div></div><i data-lucide="chevron-right" class="chev"></i></div>
+      <div class="row-i"><span class="ic"><i data-lucide="qr-code"></i></span><div><div class="t">현관 QR 받기</div><div class="s">인쇄해서 현관에 붙이기</div></div><i data-lucide="chevron-right" class="chev"></i></div>
+      <div class="row-i"><span class="ic"><i data-lucide="plus"></i></span><div><div class="t">기본 안내 추가하기</div><div class="s">택배 · 보일러·설비 · 공용공간</div></div><i data-lucide="chevron-right" class="chev"></i></div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

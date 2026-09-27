@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-18 입주 카드 · 집주인</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .phone { background: var(--gray-100); }
+  .card-paper { margin: 8px var(--gutter) 0; background: #fffdf8; border-radius: 18px; border: 1px solid #efe6d2; box-shadow: 0 8px 24px rgba(25,31,40,.08); padding: 22px 20px 18px; }
+  .card-paper .brand { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: var(--gray-700); }
+  .card-paper .brand span { width: 14px; height: 16px; border-radius: 2px; background: var(--navy-600); outline: 1.5px dashed #fff; outline-offset: -2px; }
+  .card-paper h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin-top: 10px; }
+  .qrbox { display: flex; gap: 14px; align-items: center; margin-top: 14px; }
+  .qrbox .qr { width: 104px; height: 104px; padding: 7px; background: #fff; border-radius: 10px; border: 1px solid var(--gray-200); flex: none; }
+  .qrbox b { font-size: 15.5px; }
+  .qrbox p { font-size: 13px; color: var(--gray-600); line-height: 1.45; margin-top: 4px; }
+  .cut { border-top: 1.5px dashed #e3d6b8; margin: 18px -20px 14px; }
+  .code-t { font-size: 13.5px; font-weight: 700; color: var(--gray-800); }
+  .code-s { font-size: 12.5px; color: var(--gray-500); margin-top: 2px; }
+  .otp { margin-top: 10px; gap: 6px; }
+  .otp .cell { height: 42px; font-size: 20px; background: #fff; border: 1px solid var(--gray-200); }
+  .foot { font-size: 12px; color: var(--gray-500); margin-top: 12px; text-align: right; }
+  .note { margin: 12px var(--gutter) 0; font-size: 13px; color: var(--gray-600); display: flex; gap: 6px; }
+  .note svg { width: 15px; height: 15px; flex: none; margin-top: 1px; }
+  .gray .cta-dock { background: linear-gradient(to bottom, rgba(242,244,246,0), var(--gray-100) 20px); }
+</style>
+</head>
+<body>
+<div class="phone gray">
+  <div class="content">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="뒤로"><i data-lucide="chevron-left"></i></button>
+      <span class="title">입주 카드</span>
+      <span style="width:44px"></span>
+    </div>
+    <div class="card-paper">
+      <div class="brand"><span></span>월계함</div>
+      <h2>햇살빌라 생활 안내</h2>
+      <div class="qrbox">
+        <div class="qr" data-qr></div>
+        <div><b>안내는 여기서 봐요</b><p>분리수거·택배·설비·공지. 가입하지 않아도 볼 수 있어요.</p></div>
+      </div>
+      <div class="cut"></div>
+      <div class="code-t">새 공지까지 받으려면 가입코드</div>
+      <div class="code-s">QR 화면의 ‘연결하기’에서 넣어 주세요</div>
+      <div class="otp"><div class="cell">W</div><div class="cell">K</div><div class="cell">7</div><div class="cell">2</div><div class="cell">P</div><div class="cell">4</div></div>
+      <div class="foot">wolgye.kr</div>
+    </div>
+    <p class="note"><i data-lucide="info"></i>가입코드가 있으니 계약한 입주자에게만 전해 주세요.</p>
+  </div>
+  <div class="cta-dock">
+    <div class="btn-row">
+      <button class="btn btn-neutral"><i data-lucide="printer"></i>인쇄</button>
+      <button class="btn btn-primary grow"><i data-lucide="message-circle"></i>카카오톡으로 보내기</button>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

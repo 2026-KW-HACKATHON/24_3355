@@ -6,10 +6,6 @@
 <title>LF-09 이사 처리 확인</title>
 <link rel="stylesheet" href="../src/lofi.css" />
 <style>
-  .profile { display: flex; align-items: center; gap: 14px; padding: 12px var(--gutter) 20px; }
-  .profile .av { width: 52px; height: 52px; border-radius: 16px; background: var(--navy-50); display: grid; place-items: center; color: var(--navy-600); }
-  .profile .av svg { width: 26px; height: 26px; }
-  .group-t { font-size: 13px; font-weight: 600; color: var(--gray-500); padding: 0 var(--gutter); margin: 18px 0 2px; }
   .sheet h2 { font-size: 21px; font-weight: 700; letter-spacing: -0.02em; }
   .cmp { margin-top: 18px; border-radius: 16px; background: var(--gray-50); padding: 14px 16px; }
   .cmp .h { font-size: 13px; font-weight: 700; color: var(--gray-500); margin-bottom: 6px; }
@@ -21,22 +17,8 @@
 </style>
 </head>
 <body>
-<div class="phone" data-tabs="resident:me">
-  <div class="content">
-    <div class="topbar"><span style="padding-left:12px;font-size:20px;font-weight:700">내 정보</span></div>
-    <div class="profile">
-      <div class="av"><i data-lucide="building-2"></i></div>
-      <div><div class="h-sub">햇살빌라</div><div class="caption">2026년 3월부터 연결 · 거주 중</div></div>
-    </div>
-    <div class="divider-thick" style="margin:0"></div>
-    <div class="group-t">보기와 알림</div>
-    <div class="list-row"><div class="txt"><div class="t">공지 알림</div></div><span class="caption">켜짐</span></div>
-    <div class="list-row"><div class="txt"><div class="t">크게 보기</div></div><span class="caption">꺼짐</span></div>
-    <div class="group-t">거주</div>
-    <div class="list-row"><div class="txt"><div class="t">아직 이 건물에 살고 있어요</div></div></div>
-    <div class="list-row"><div class="txt"><div class="t">이 건물에서 이사했어요</div></div></div>
-  </div>
-
+<div class="phone" data-bare="on">
+  <iframe class="bg" src="45-me.html" title="배경: 내 정보"></iframe>
   <div class="dim"></div>
   <div class="sheet" role="dialog" aria-labelledby="t">
     <div class="grabber"></div>
@@ -50,7 +32,10 @@
     <div class="cmp keep">
       <div class="h">건물에 그대로 남는 것</div>
       <div class="i"><i data-lucide="check-circle-2"></i>기본 안내와 남겨진 생활 팁</div>
-      <div class="i"><i data-lucide="check-circle-2"></i>보낸 내용의 처리 상태 확인</div>
+    </div>
+    <div class="cmp keep">
+      <div class="h">내가 계속 볼 수 있는 것</div>
+      <div class="i"><i data-lucide="check-circle-2"></i>보낸 내용의 처리 상태 (보관 기간 안에서)</div>
     </div>
     <div class="btn-row mt-20">
       <button class="btn btn-neutral">계속 거주해요</button>

@@ -27,6 +27,9 @@
   .recent svg { width: 18px; height: 18px; color: var(--navy-600); flex: none; }
   .recent b { color: var(--gray-900); }
   .recent .when { margin-left: auto; font-size: 12.5px; color: var(--gray-500); }
+  .linkrow { display: flex; align-items: center; gap: 8px; margin: 12px var(--gutter) 24px; font-size: 14.5px; font-weight: 600; color: var(--navy-600); }
+  .linkrow svg { width: 17px; height: 17px; }
+  .linkrow small { margin-left: auto; font-size: 12.5px; font-weight: 500; color: var(--gray-500); }
 </style>
 </head>
 <body>
@@ -55,16 +58,18 @@
     <div class="stats">
       <div class="stat"><div class="l"><i data-lucide="book-open"></i>기본 안내</div><div class="n">4개</div></div>
       <div class="stat"><div class="l"><i data-lucide="megaphone"></i>진행 중 공지</div><div class="n">1개</div></div>
-      <div class="stat"><div class="l"><i data-lucide="users"></i>연결된 거주자</div><div class="n">5명</div></div>
+      <div class="stat"><div class="l"><i data-lucide="users"></i>월계함에 연결</div><div class="n">5명</div></div>
       <div class="stat"><div class="l"><i data-lucide="sticky-note"></i>생활 팁</div><div class="n">4개</div></div>
     </div>
 
+    <p class="caption" style="padding:0 var(--gutter);margin-top:8px">연결된 사람 기준이라 실제 세입자 수와 다를 수 있어요</p>
     <div class="recent"><i data-lucide="user-plus"></i><span><b>새 거주자 1명</b>이 가입코드로 연결됐어요</span><span class="when">오늘</span></div>
 
     <div class="quick mt-16">
       <button class="btn btn-secondary"><i data-lucide="megaphone"></i>공지 쓰기</button>
       <button class="btn btn-neutral"><i data-lucide="pencil-line"></i>안내 고치기</button>
     </div>
+    <div class="linkrow"><i data-lucide="link"></i><span>건물 안내 링크 복사</span><small>알림을 받지 않는 분께도 카톡으로</small></div>
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>

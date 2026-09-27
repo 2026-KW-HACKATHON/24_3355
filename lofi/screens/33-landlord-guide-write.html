@@ -15,8 +15,6 @@
   .photo-add { display: flex; gap: 8px; margin-top: 10px; }
   .photo-add span { width: 64px; height: 64px; border-radius: 12px; border: 1.5px dashed var(--gray-300); display: grid; place-items: center; color: var(--gray-500); }
   .photo-add span svg { width: 20px; height: 20px; }
-  .preview { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 600; color: var(--navy-600); }
-  .preview svg { width: 16px; height: 16px; }
 </style>
 </head>
 <body>
@@ -45,13 +43,13 @@
 페트병은 라벨을 떼고 눌러 주세요.<span class="caret"></span></div>
       <div class="row between mt-8">
         <div class="photo-add"><span><i data-lucide="image-plus"></i></span></div>
-        <span class="preview"><i data-lucide="eye"></i>공개 화면으로 보기</span>
+        <span class="caption">쓰는 중인 내용은 따로 저장돼요</span>
       </div>
     </div>
   </div>
   <div class="cta-dock">
-    <p class="hint">저장하면 현관 QR로 누구나 읽어요</p>
-    <button class="btn btn-primary">안내 저장</button>
+    <p class="hint">공개하기 전에 세입자가 볼 화면을 확인해요</p>
+    <button class="btn btn-primary">미리 보기</button>
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>

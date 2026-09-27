@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-02 메모 남기기 · 연결이 필요할 때</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .sheet .mark { width: 52px; height: 52px; border-radius: 16px; background: var(--navy-50); color: var(--navy-600); display: grid; place-items: center; }
+  .sheet .mark svg { width: 26px; height: 26px; }
+  .sheet h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.4; }
+  .info { margin-top: 16px; border-radius: 14px; background: var(--gray-50); padding: 10px 16px; }
+  .info .i { display: flex; gap: 10px; align-items: flex-start; font-size: 14.5px; line-height: 1.5; color: var(--gray-700); padding: 5px 0; }
+  .info .i svg { width: 17px; height: 17px; color: var(--gray-500); flex: none; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="phone" data-bare="on">
+  <iframe class="bg" src="11-guide-detail.html#quiet" title="배경: 기본 안내 상세"></iframe>
+  <div class="dim"></div>
+  <div class="sheet" role="dialog" aria-labelledby="t">
+    <div class="grabber"></div>
+    <span class="mark"><i data-lucide="key-round"></i></span>
+    <h2 id="t" class="mt-12">안내 수정 메모는 이 건물에 연결한 거주자가 남길 수 있어요</h2>
+    <p class="small mt-8">연결을 마치면 이 ‘분리수거’ 안내로 돌아와 이어서 쓸 수 있어요.</p>
+    <div class="info">
+      <div class="i"><i data-lucide="ticket"></i>가입코드는 집주인이나 부동산에서 받아요</div>
+      <div class="i"><i data-lucide="mail"></i>이 건물에 살지 않는다면 ‘집주인에게 알리기’로 전할 수 있어요</div>
+    </div>
+    <div class="btn-row mt-20">
+      <button class="btn btn-neutral">안내 계속 보기</button>
+      <button class="btn btn-primary grow">우리 건물로 연결하기</button>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

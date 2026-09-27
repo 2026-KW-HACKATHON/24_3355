@@ -4,7 +4,6 @@
   const TABS = {
     resident: [
       ["building", "building-2", "우리 건물"],
-      ["sent", "send", "보낸 내용"],
       ["me", "user-round", "내 정보"],
     ],
     landlord: [

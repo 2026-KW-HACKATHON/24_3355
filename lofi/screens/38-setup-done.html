@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-12 건물 준비 완료 · 집주인</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .hero { padding-top: 24px; }
+  .hero .ok { width: 52px; height: 52px; border-radius: 26px; background: var(--navy-600); display: grid; place-items: center; color: #fff; }
+  .hero .ok svg { width: 26px; height: 26px; stroke-width: 2.6; }
+  .step { display: flex; gap: 14px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--gray-100); }
+  .step:last-child { border-bottom: 0; }
+  .step .ic { width: 44px; height: 44px; border-radius: 12px; background: var(--gray-100); display: grid; place-items: center; color: var(--navy-600); flex: none; }
+  .step .ic svg { width: 22px; height: 22px; }
+  .step .t { font-size: 16px; font-weight: 700; }
+  .step .s { font-size: 13.5px; color: var(--gray-500); margin-top: 2px; line-height: 1.45; }
+  .step .go { margin-left: auto; color: var(--gray-400); width: 20px; flex: none; }
+  .check { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 14.5px; color: var(--gray-700); }
+  .check svg { width: 17px; height: 17px; color: var(--st-done); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="content">
+    <div class="pad hero">
+      <span class="ok"><i data-lucide="check"></i></span>
+      <h1 class="h-display mt-16" style="font-size:24px">햇살빌라 월계함이<br />준비됐어요</h1>
+      <div class="check"><i data-lucide="circle-check"></i>기본 안내 1개가 현관 QR에 보여요</div>
+      <p class="caption mt-4" style="padding-left:25px">택배·보일러 안내는 관리 홈에서 이어서 추가할 수 있어요</p>
+
+      <div class="mt-24">
+        <div class="step"><span class="ic"><i data-lucide="qr-code"></i></span><div><div class="t">현관 QR 받기</div><div class="s">현관이나 분리수거함 옆에 붙여 주세요</div></div><i data-lucide="chevron-right" class="go"></i></div>
+        <div class="step"><span class="ic"><i data-lucide="id-card"></i></span><div><div class="t">입주 카드 받기</div><div class="s">새 입주자에게 계약할 때 전해 주세요</div></div><i data-lucide="chevron-right" class="go"></i></div>
+        <div class="step"><span class="ic"><i data-lucide="link"></i></span><div><div class="t">건물 안내 링크 복사</div><div class="s">지금 사는 분들께 카톡으로 한 번 보내 주세요</div></div><i data-lucide="chevron-right" class="go"></i></div>
+      </div>
+    </div>
+  </div>
+  <div class="cta-dock">
+    <button class="btn btn-primary">관리 홈으로</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="../src/lofi.css" />
 <style>
   .hero { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 4px; }
-  .hero img { width: 128px; margin: -14px 0 -18px; }
+  .hero img { width: 100px; margin: -12px 0 -14px; }
   .track { border-radius: 16px; border: 1px solid var(--gray-200); padding: 16px; }
   .step { display: flex; gap: 12px; }
   .step .rail { display: flex; flex-direction: column; align-items: center; width: 22px; }
@@ -42,7 +42,7 @@
         <p class="small mt-4">집주인은 아직 확인 전이에요.</p>
       </div>
 
-      <div class="track mt-20">
+      <div class="track mt-16">
         <div class="step">
           <div class="rail"><span class="dot on"><i data-lucide="check"></i></span><span class="line"></span></div>
           <div class="body2"><div class="row gap-8"><span class="t">접수됨</span><span class="badge received">현재</span></div><div class="s">‘건물 앞 쓰레기가 넘쳤어요’ · 9월 25일 오후 3:12</div></div>
@@ -61,22 +61,23 @@
         </div>
       </div>
 
-      <div class="field-label mt-20">나중에 다시 보려면</div>
+      <div class="field-label mt-16">나중에 다시 보려면</div>
       <div class="link">
-        <i data-lucide="smartphone" style="width:18px;color:var(--gray-500)"></i>
-        <span class="u">이 휴대폰은 기억해요<small>같은 QR을 다시 찍으면 보낸 내용이 보여요</small></span>
+        <i data-lucide="globe" style="width:18px;color:var(--gray-500)"></i>
+        <span class="u">이 브라우저에서 다시 보기<small>같은 브라우저로 QR을 다시 열면 보여요</small></span>
       </div>
       <div class="link mt-8">
         <i data-lucide="link" style="width:18px;color:var(--gray-500)"></i>
-        <span class="u">다른 기기에서는 링크로<small>30일 동안 볼 수 있어요 · 링크 복사</small></span>
+        <span class="u">다른 브라우저·기기에서는 확인 링크로<small>30일 동안 볼 수 있어요 · 본인만 보관해 주세요</small></span>
       </div>
     </div>
   </div>
 
   <div class="cta-dock">
+    <p class="hint">나와의 채팅에 보내 두면 다시 찾기 쉬워요</p>
     <div class="btn-row">
-      <button class="btn btn-neutral">건물로</button>
-      <button class="btn btn-primary grow"><i data-lucide="message-circle"></i>카카오톡에 보관</button>
+      <button class="btn btn-neutral"><i data-lucide="copy"></i>링크 복사</button>
+      <button class="btn btn-primary grow"><i data-lucide="message-circle"></i>카카오톡으로 공유</button>
     </div>
   </div>
 </div>

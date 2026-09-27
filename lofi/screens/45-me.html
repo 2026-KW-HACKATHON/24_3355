@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-09 내 정보 · 거주자</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .profile { display: flex; align-items: center; gap: 14px; padding: 8px var(--gutter) 18px; }
+  .profile .av { width: 52px; height: 52px; border-radius: 16px; background: var(--navy-50); display: grid; place-items: center; color: var(--navy-600); }
+  .profile .av svg { width: 26px; height: 26px; }
+  .group-t { font-size: 13px; font-weight: 600; color: var(--gray-500); padding: 0 var(--gutter); margin: 16px 0 0; }
+  .list-row { min-height: 54px; padding-top: 10px; padding-bottom: 10px; }
+  .list-row .v { font-size: 14px; color: var(--gray-500); display: flex; align-items: center; gap: 2px; }
+  .list-row .v svg { width: 18px; height: 18px; color: var(--gray-400); }
+</style>
+</head>
+<body>
+<div class="phone" data-tabs="resident:me">
+  <div class="content">
+    <div class="topbar"><span style="padding-left:12px;font-size:20px;font-weight:700">내 정보</span></div>
+    <div class="profile">
+      <div class="av"><i data-lucide="building-2"></i></div>
+      <div><div class="h-sub">햇살빌라</div><div class="caption">2026년 3월부터 연결 · 거주 중</div></div>
+    </div>
+    <div class="divider-thick" style="margin:0"></div>
+
+    <div class="list-row"><div class="txt"><div class="t">보낸 내용</div></div><span class="v">4건<i data-lucide="chevron-right"></i></span></div>
+    <div class="list-row"><div class="txt"><div class="t">내가 남긴 팁</div><div class="s">나에게만 보여요 · 고치거나 지울 수 있어요</div></div><span class="v">1개<i data-lucide="chevron-right"></i></span></div>
+
+    <div class="group-t">보기와 알림</div>
+    <div class="list-row"><div class="txt"><div class="t">공지 알림</div><div class="s">홈 화면의 월계함에서 받아요</div></div><span class="v">켜짐<i data-lucide="chevron-right"></i></span></div>
+    <div class="list-row"><div class="txt"><div class="t">크게 보기</div></div><span class="v">꺼짐<i data-lucide="chevron-right"></i></span></div>
+
+    <div class="group-t">거주</div>
+    <div class="list-row"><div class="txt"><div class="t">다음 거주 확인</div><div class="s">1년에 한 번 ‘아직 살고 있나요?’를 물어요</div></div><span class="v">2027년 3월</span></div>
+    <div class="list-row"><div class="txt"><div class="t">이 건물에서 이사했어요</div></div><i data-lucide="chevron-right" class="chev"></i></div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>
