@@ -1,0 +1,6 @@
+{
+  "BudgetName": "wolgyeham-monthly",
+  "BudgetLimit": { "Amount": "5", "Unit": "USD" },
+  "TimeUnit": "MONTHLY",
+  "BudgetType": "COST"
+}

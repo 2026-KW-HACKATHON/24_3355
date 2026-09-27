@@ -22,6 +22,8 @@
 | 로파이 제작 방법 | [lofi/README.md](lofi/README.md) |
 | 함이 외형·사용 규칙 / 생성 프롬프트와 검토 상태 | [design/characters/hami/README.md](design/characters/hami/README.md) / [PROMPTS.md](design/characters/hami/PROMPTS.md) |
 | 프론트엔드·백엔드가 공유하는 API 계약 | `packages/contracts` |
+| 개발 방법 (구조·백엔드·DB·프론트·인터랙션·배포) | [docs/](docs/README.md) |
+| 구조·도구를 정한 이유 | [docs/decisions.md](docs/decisions.md) |
 | 작업 단위·담당·완료 조건 | GitHub 이슈 |
 | AI 도구 공통 지침 | [AGENTS.md](AGENTS.md) |
 
@@ -31,17 +33,18 @@
 
 ## 2. 담당 영역
 
-세 명은 이슈에 담당자·검토자·수정할 파일을 적고 진행합니다. 영역은 필요에 따라 나누되 **같은 파일을 동시에 수정하지 않습니다.**
+세 명은 이슈에 담당자·검토자·수정할 파일을 적고 진행합니다. **같은 파일을 동시에 수정하지 않습니다.**
 
-| 영역 | 경로 |
-|---|---|
-| 프론트엔드 | `apps/web` |
-| 백엔드 | `apps/api` |
-| 공통 계약·인프라·통합 | `packages/contracts`, `infra`, `.github`, 루트 설정 |
-| 캐릭터·디자인 자산 | `design/` |
-| 화면설계·로파이 | `lofi/` |
+| 영역 | 경로 | 담당 | 먼저 읽을 문서 |
+|---|---|---|---|
+| 프론트엔드 | `apps/web` | @bborang | [frontend.md](docs/frontend.md), [interaction.md](docs/interaction.md) |
+| 백엔드 | `apps/api` | @dlwldn4824 | [backend.md](docs/backend.md), [database.md](docs/database.md) |
+| 공통 계약 | `packages/contracts` | 프론트·백엔드 담당 함께 | [backend.md](docs/backend.md) |
+| 인프라·배포·통합 | `infra`, `.github`, `amplify.yml`, 루트 설정 | @kyowon1108 | [architecture.md](docs/architecture.md), [deploy.md](docs/deploy.md) |
+| 제안서·화면설계·디자인 | `README.md`, `lofi/`, `design/` | @kyowon1108 | [lofi/screens.md](lofi/screens.md) |
 
-- 공통 API 계약과 패키지·잠금 파일(`pnpm-lock.yaml`)은 그 작업의 통합 담당자 한 명이 반영합니다.
+- 검토자는 담당이 아닌 사람 중 한 명입니다. `packages/contracts`를 바꾸는 PR은 프론트·백엔드 담당이 모두 확인합니다.
+- 잠금 파일(`pnpm-lock.yaml`)과 루트 설정은 @kyowon1108이 합쳐서 반영합니다.
 - 프론트엔드는 백엔드 내부 코드 대신 `packages/contracts`를 사용합니다.
 
 ## 3. 시작하기
@@ -57,7 +60,7 @@ pnpm dev       # 웹과 API 동시 실행
 pnpm check     # lint → typecheck → test → build (CI와 같음)
 ```
 
-로파이 PNG는 `python3 lofi/scripts/export.py`로 다시 만듭니다(Python Playwright와 로컬 Chrome 필요).
+로파이 PNG는 `python3 lofi/scripts/export.py`로 다시 만듭니다(Python Playwright와 로컬 Chrome 필요). 각 영역의 개발 방법은 [docs/](docs/README.md)에 있습니다.
 
 ---
 
@@ -87,6 +90,8 @@ pnpm check     # lint → typecheck → test → build (CI와 같음)
 | `chore` | 설정·의존성·CI | `chore/5-biome-rules` |
 | `hotfix` | 본선·시연 중 긴급 수정 | `hotfix/31-demo-reset` |
 
+`release`는 prod 배포용 특별 브랜치입니다. 작업하지 않고, @kyowon1108이 `main`의 검증된 상태를 올릴 때만 바뀝니다([docs/deploy.md](docs/deploy.md)).
+
 - 이름은 `타입/이슈번호-짧은-설명`, 영문 소문자·숫자·하이픈만 씁니다.
 - 1~2일 안에 병합할 크기로 자릅니다. 큰 기능은 [구현 순서](lofi/screens.md)처럼 세로로 잘라 여러 PR로 나눕니다.
 - **한 브랜치 = 한 이슈 = 한 AI 세션**입니다.
@@ -106,7 +111,7 @@ Refs #12
 | 항목 | 규칙 |
 |---|---|
 | 타입 | `feat` `fix` `refactor` `test` `docs` `design` `chore` `ci` `build` |
-| 범위 | `web` `api` `contracts` `infra` `lofi` `hami` `proposal` `repo` |
+| 범위 | `web` `api` `contracts` `infra` `lofi` `hami` `proposal` `repo`. `docs/` 문서는 다루는 영역을 범위로 씁니다(예: `docs(api)`) |
 | 요약 | 한국어, 50자 안팎, 마침표 없이, 바뀐 결과를 씁니다. "수정함", "업데이트" 같은 말만 쓰지 않습니다 |
 | 본문 | 이유와 확인 방법. 한 줄 요약으로 충분하면 생략합니다 |
 | 이슈 | 관련 커밋은 `Refs #번호`, 이슈를 끝내는 PR은 `Closes #번호` |
@@ -122,6 +127,7 @@ chore(repo): pnpm 잠금 파일 갱신
 - **한 커밋에는 한 가지 변경만** 담습니다. 서식 정리와 기능 변경을 섞지 않습니다.
 - 생성물은 원본과 같은 커밋에 넣습니다(예: `lofi/screens/*.html`을 고치면 `lofi/out/` PNG도 함께).
 - 이미 `main`에 들어간 커밋은 `git revert`로 되돌립니다. amend와 rebase는 내 브랜치에서만 씁니다.
+- **커밋 작성자는 실제로 작업한 사람입니다.** 다른 팀원 이름으로 커밋하지 않습니다. 함께 작업했으면 본문 끝에 `Co-authored-by: 이름 <GitHub noreply 메일>`을 적습니다.
 - **커밋하지 않는 것:** `.env`·키·토큰, 설문 원본·실명·연락처·실제 가입코드, `node_modules`·`dist`, 도구 상태 폴더(`.omc`, `.omx`, `.codegraph`), `.DS_Store`
 
 ## 7. PR과 리뷰
@@ -151,7 +157,7 @@ AI는 작업을 빠르게 하는 도구이고, **변경에 대한 책임은 PR �
 | 검토 | AI가 만든 diff는 사람이 모두 읽고 설명할 수 있어야 커밋합니다. "AI가 통과했다고 했다"는 검증이 아닙니다. 직접 실행한 결과를 PR에 붙입니다. |
 | 결정 기록 | AI와 정한 화면·정책·용어는 기준 문서나 이슈로 옮깁니다. 대화 기록에만 있으면 다른 팀원과 다른 AI 세션이 알 수 없습니다. |
 | 상태 구분 | AI 제안은 제안 → 검토 → 확정 순서로 다룹니다. 기준 문서와 다르면 차이와 이유를 남기고, 로컬 수정만으로 Notion·Manyfast에 반영됐다고 표시하지 않습니다. |
-| 사람이 할 일 | `main` 병합, force push, 배포, DB 초기화, 외부 서비스에 게시하는 일은 사람이 직접 하거나 명시적으로 승인합니다. |
+| 사람이 할 일 | `main` 병합, force push, `release` 올리기, DB 초기화, 외부 서비스에 게시하는 일은 사람이 직접 하거나 명시적으로 승인합니다. AWS 계정·권한·비용을 바꾸는 명령은 AI가 실행하지 않고 관리자가 [절차서](docs/aws-setup.md)대로 실행합니다. |
 | 보안 | 비밀키·토큰·설문 원본·실명·실제 가입코드를 프롬프트나 첨부로 넣지 않습니다. AI가 추가한 의존성은 이름·버전·라이선스를 확인합니다. |
 | 공개 | PR의 "AI 사용" 칸에 어떤 도구로 무엇을 만들었는지 한 줄 적습니다. |
 
@@ -191,6 +197,6 @@ AI는 작업을 빠르게 하는 도구이고, **변경에 대한 책임은 PR �
 | 시점 | 규칙 |
 |---|---|
 | 9.28 중간발표 | 발표 자료와 README의 문제 정의를 맞추고 `main`에 태그 |
-| ~10.7 개발·파일럿 | CORE 구현 순서(A→D)를 먼저. 매일 `main`에서 시연 흐름을 한 번 돌려 봄 |
+| ~10.7 개발·파일럿 | CORE 구현 순서(A→D)를 먼저. 매일 dev에서 시연 흐름을 한 번 돌려 봄. 파일럿 전에 `release`로 prod 첫 배포 |
 | 10.8~9 본선 | 시연 2시간 전부터 `main` 동결. `hotfix/`만 받고 두 명이 확인한 뒤 병합. 최종 제출 커밋에 태그 |
 | 10.11~13 전시 | 시연 데이터 초기화는 시연 모드에서만 |

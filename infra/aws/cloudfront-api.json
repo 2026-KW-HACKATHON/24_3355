@@ -1,0 +1,36 @@
+{
+  "CallerReference": "wolgyeham-api-dev",
+  "Comment": "wolgyeham api dev (prod: CallerReference·Comment를 prod로, HTTPPort를 8082로)",
+  "Enabled": true,
+  "PriceClass": "PriceClass_200",
+  "HttpVersion": "http2",
+  "Origins": {
+    "Quantity": 1,
+    "Items": [
+      {
+        "Id": "ec2-api",
+        "DomainName": "<EC2_PUBLIC_DNS>",
+        "CustomOriginConfig": {
+          "HTTPPort": 8081,
+          "HTTPSPort": 443,
+          "OriginProtocolPolicy": "http-only",
+          "OriginReadTimeout": 30,
+          "OriginKeepaliveTimeout": 5,
+          "OriginSslProtocols": { "Quantity": 1, "Items": ["TLSv1.2"] }
+        }
+      }
+    ]
+  },
+  "DefaultCacheBehavior": {
+    "TargetOriginId": "ec2-api",
+    "ViewerProtocolPolicy": "redirect-to-https",
+    "AllowedMethods": {
+      "Quantity": 7,
+      "Items": ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"],
+      "CachedMethods": { "Quantity": 2, "Items": ["GET", "HEAD"] }
+    },
+    "CachePolicyId": "4135ea2d-6df8-44a3-9df3-4b5a84be39ad",
+    "OriginRequestPolicyId": "b689b0a8-53d0-40ab-baf2-68738e2966ac",
+    "Compress": true
+  }
+}
