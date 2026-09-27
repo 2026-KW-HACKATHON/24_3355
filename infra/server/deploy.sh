@@ -76,6 +76,11 @@ if compose run --rm --no-deps --entrypoint sh "api-$ENV_NAME" -c 'test -f migrat
   compose run --rm --no-deps "api-$ENV_NAME" node migrate.mjs
 fi
 
+# dev는 DEMO_MODE=true일 때 시연 데이터(가상 건물)를 넣습니다. 시드는 여러 번 실행해도 결과가 같습니다.
+if [ "$ENV_NAME" = dev ] && grep -q '^DEMO_MODE=true' env/dev.env; then
+  compose run --rm --no-deps api-dev node seed.mjs
+fi
+
 compose up -d "api-$ENV_NAME"
 
 for _ in $(seq 1 30); do

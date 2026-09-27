@@ -91,7 +91,9 @@ docker compose --env-file server.env --env-file .deploy.env ps
 ## DB 마이그레이션
 
 - 마이그레이션 파일은 [database.md](database.md)의 규칙대로 PR에 함께 올립니다.
-- 배포 때 새 API가 뜨기 전에 자동으로 실행됩니다. 이미지 안의 `migrate.mjs`를 실행하는 구조이며, 마이그레이션을 구현할 때 Dockerfile에 이 파일과 SQL 폴더를 추가합니다(아직 구현 전).
+- 배포 때 새 API가 뜨기 전에 이미지 안의 `migrate.mjs`가 `drizzle/`의 SQL을 적용합니다.
+- dev는 `DEMO_MODE=true`라서 마이그레이션 뒤 `seed.mjs`로 시연 데이터(가상 건물 햇살빌라·새봄하우스)를 넣습니다. prod에는 넣지 않습니다.
+- 집주인 초대는 관리자가 SSM 세션에서 발급합니다. 토큰이 한 번만 출력되므로 Run Command가 아니라 세션 안에서 실행합니다: `docker compose --env-file server.env --env-file .deploy.env run --rm api-prod node invite.mjs <건물 ID>`
 - 컬럼 삭제·이름 변경처럼 되돌리기 어려운 변경은 두 번에 나눠 배포하고, PR에 적습니다.
 
 ## 되돌리기
