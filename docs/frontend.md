@@ -66,11 +66,14 @@ apps/web/src/
 - 디자인 값은 `--wh-*`와 SEED 토큰(`--seed-*`)만 씁니다. 색·간격 숫자를 컴포넌트에 직접 적지 않습니다.
 - 함이는 `design/characters/hami/images/`에서 같은 파일명으로 복사하고 `cmp`로 원본과 같은지 확인합니다.
 
+**기본 스타일 (결정, [decisions.md](decisions.md) D-10)**
+
+- lofi를 기준으로 합니다. 주 색은 남색 `#25355a`(lofi `--navy-600`), 보조는 달빛 `#c9a45c`(`--moon`), 글꼴은 Pretendard입니다. `styles/tokens.css`의 `--wh-*` 값을 lofi 값으로 맞춥니다.
+- SEED 브랜드 색 기본값(당근 주황)은 `:root`에서 `--seed-color-bg-brand-solid` 등을 한 번 덮어써 남색으로 바꿉니다.
+- 다크 모드는 설계하지 않았으므로 `<html data-seed-color-mode="light-only">`로 고정합니다.
+
 **결정 필요**
 
-- `--wh-primary`(#4255c7)·시스템 글꼴과 lofi의 `--navy-600`(#25355a)·Pretendard 중 어느 쪽을 기준으로 할지 정합니다.
-- SEED 브랜드 색 기본값은 당근 주황이고 지금은 `.primary-action`에서만 덮어씁니다. 공통 CTA를 만들 때 `--seed-color-bg-brand-solid` 등을 `:root`에서 한 번 덮어씁니다(아직 구현 전).
-- 다크 모드는 설계하지 않았으므로 `<html data-seed-color-mode="light-only">`로 고정합니다(아직 구현 전). 지금은 기기가 다크 모드면 `color-scheme: light dark`가 적용되어 입력창 같은 기본 컨트롤이 어둡게 보일 수 있습니다.
 - 함이 원본은 1254×1254 PNG(540~860KB)입니다. 표시 폭(40~300px)에 맞춘 파생본을 둘지 정합니다. 정하기 전에는 사본에 `width`·`height`를 지정해 씁니다.
 
 ## 4. 라우트 (결정)
