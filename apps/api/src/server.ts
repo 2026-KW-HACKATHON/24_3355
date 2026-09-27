@@ -1,22 +1,22 @@
 import { serve } from "@hono/node-server";
-import { z } from "zod";
 import { createApp } from "./app.ts";
+import { createDatabase } from "./lib/db.ts";
+import { parseEnv } from "./lib/env.ts";
+import { log } from "./lib/log.ts";
 
-const env = z
-  .object({
-    API_HOST: z.string().default("127.0.0.1"),
-    API_PORT: z.coerce.number().int().min(1).max(65535).default(3001),
-  })
-  .parse(process.env);
+const env = parseEnv(process.env);
+const database = createDatabase(env.DATABASE_URL);
 
 const server = serve(
-  { fetch: createApp().fetch, hostname: env.API_HOST, port: env.API_PORT },
-  (info) => console.info(JSON.stringify({ level: "info", event: "api_started", port: info.port })),
+  { fetch: createApp({ env, db: database.db }).fetch, hostname: env.API_HOST, port: env.API_PORT },
+  (info) => log("info", "api_started", { port: info.port, demoMode: env.DEMO_MODE }),
 );
 
 function shutdown() {
   server.close((error) => {
-    process.exitCode = error ? 1 : 0;
+    void database.close().finally(() => {
+      process.exitCode = error ? 1 : 0;
+    });
   });
 }
 
