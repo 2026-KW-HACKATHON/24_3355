@@ -1,0 +1,12 @@
+[
+  {
+    "source": "/api/<*>",
+    "target": "https://<DEV_API_CLOUDFRONT_DOMAIN>/api/<*>",
+    "status": "200"
+  },
+  {
+    "source": "</^[^.]+$|\\.(?!(css|gif|ico|jpg|jpeg|js|mjs|png|svg|txt|webp|woff|woff2|ttf|map|json|webmanifest)$)([^.]+$)/>",
+    "target": "/index.html",
+    "status": "200"
+  }
+]

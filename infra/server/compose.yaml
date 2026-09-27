@@ -1,0 +1,60 @@
+# EC2 서버에서 돌리는 구성. 로컬 개발은 infra/compose.yaml을 씁니다.
+# deploy.sh가 /opt/wolgyeham/.deploy.env(이미지 주소·태그)와 env/*.env(SSM 비밀값)를 만든 뒤 실행합니다.
+name: wolgyeham
+
+x-api: &api
+  restart: unless-stopped
+  depends_on:
+    db:
+      condition: service_healthy
+  mem_limit: 256m
+  environment:
+    NODE_ENV: production
+    API_HOST: 0.0.0.0
+    API_PORT: "3001"
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    env_file: env/db.env
+    command: >-
+      postgres -c shared_buffers=64MB -c max_connections=40 -c work_mem=4MB
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    mem_limit: 320m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api-dev:
+    <<: *api
+    image: ${API_IMAGE:-wolgyeham-api}:${DEV_TAG:-none}
+    env_file: env/dev.env
+    ports:
+      - "8081:3001"
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${AWS_REGION:-ap-northeast-2}
+        awslogs-group: /wolgyeham/dev
+        awslogs-create-group: "false"
+
+  api-prod:
+    <<: *api
+    image: ${API_IMAGE:-wolgyeham-api}:${PROD_TAG:-none}
+    env_file: env/prod.env
+    ports:
+      - "8082:3001"
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${AWS_REGION:-ap-northeast-2}
+        awslogs-group: /wolgyeham/prod
+        awslogs-create-group: "false"
+
+volumes:
+  postgres-data:

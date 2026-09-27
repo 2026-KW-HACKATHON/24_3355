@@ -1,0 +1,55 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams",
+        "logs:GetLogEvents",
+        "logs:FilterLogEvents",
+        "logs:StartQuery",
+        "logs:GetQueryResults",
+        "logs:StopQuery"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "SeeDeployments",
+      "Effect": "Allow",
+      "Action": [
+        "amplify:Get*",
+        "amplify:List*",
+        "ec2:DescribeInstances",
+        "ecr:DescribeImages",
+        "ecr:DescribeRepositories",
+        "ssm:ListCommands",
+        "ssm:ListCommandInvocations",
+        "cloudfront:GetDistribution",
+        "cloudfront:ListDistributions",
+        "budgets:ViewBudget"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ShellOnAppInstance",
+      "Effect": "Allow",
+      "Action": "ssm:StartSession",
+      "Resource": "arn:aws:ec2:ap-northeast-2:<ACCOUNT_ID>:instance/*",
+      "Condition": { "StringEquals": { "aws:ResourceTag/Project": "wolgyeham" } }
+    },
+    {
+      "Sid": "ShellDocument",
+      "Effect": "Allow",
+      "Action": "ssm:StartSession",
+      "Resource": "arn:aws:ssm:ap-northeast-2:<ACCOUNT_ID>:document/SSM-SessionManagerRunShell"
+    },
+    {
+      "Sid": "ManageOwnSessions",
+      "Effect": "Allow",
+      "Action": ["ssm:TerminateSession", "ssm:ResumeSession"],
+      "Resource": "arn:aws:ssm:*:*:session/${aws:userid}-*"
+    }
+  ]
+}
