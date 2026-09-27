@@ -52,10 +52,7 @@
     {
       "Sid": "ManageOwnSessions",
       "Effect": "Allow",
-      "Action": [
-        "ssm:TerminateSession",
-        "ssm:ResumeSession"
-      ],
+      "Action": ["ssm:TerminateSession", "ssm:ResumeSession"],
       "Resource": [
         "arn:aws:ssm:*:*:session/${aws:username}-*",
         "arn:aws:ssm:*:*:session/${aws:userid}-*"
@@ -80,10 +77,7 @@
     {
       "Sid": "ReadPasswordPolicy",
       "Effect": "Allow",
-      "Action": [
-        "iam:GetAccountPasswordPolicy",
-        "iam:ListVirtualMFADevices"
-      ],
+      "Action": ["iam:GetAccountPasswordPolicy", "iam:ListVirtualMFADevices"],
       "Resource": "*"
     }
   ]
