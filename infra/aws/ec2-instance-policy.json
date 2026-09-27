@@ -10,7 +10,11 @@
     {
       "Sid": "PullApiImageLayers",
       "Effect": "Allow",
-      "Action": ["ecr:BatchCheckLayerAvailability", "ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer"],
+      "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+      ],
       "Resource": "arn:aws:ecr:ap-northeast-2:<ACCOUNT_ID>:repository/wolgyeham-api"
     },
     {
