@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>처음 오셨나요 · 마지막 장 (연결 전)</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .phone { background: var(--gray-100); }
+  .skip { font-size: 15px; font-weight: 600; color: var(--gray-600); padding: 0 12px; }
+  .hello { display: flex; align-items: center; gap: 6px; padding: 0 var(--gutter); }
+  .hello img { width: 72px; margin: -10px -6px -10px -10px; }
+  .hello .bubble { font-size: 14px; padding: 10px 12px; }
+  .dots { display: flex; gap: 6px; justify-content: center; margin-top: 14px; }
+  .dots span { width: 6px; height: 6px; border-radius: 3px; background: var(--gray-300); }
+  .dots span.on { width: 18px; background: var(--navy-600); }
+  .slide { margin: 14px var(--gutter) 0; background: #fff; border-radius: 22px; padding: 20px; box-shadow: 0 2px 12px rgba(25,31,40,.06); }
+  .slide h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.35; margin-top: 10px; }
+  .slide .text { margin-top: 12px; font-size: 16px; line-height: 1.6; color: var(--gray-800); white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .next { margin: 12px var(--gutter) 0; padding: 16px 18px; border-radius: 18px; background: var(--navy-50); border: 1px solid var(--navy-100); }
+  .next .t { font-size: 16px; font-weight: 700; color: var(--gray-900); }
+  .next .s { font-size: 14px; line-height: 1.5; color: var(--gray-600); margin-top: 4px; }
+  .gray .cta-dock { background: linear-gradient(to bottom, rgba(242,244,246,0), var(--gray-100) 20px); }
+</style>
+</head>
+<body>
+<div class="phone gray">
+  <div class="content">
+    <div class="topbar">
+      <span style="width:44px"></span>
+      <span class="title">처음 오셨나요?</span>
+      <span class="skip">건너뛰기</span>
+    </div>
+    <div class="hello">
+      <img src="../assets/hami/guide.png" alt="" />
+      <div class="bubble tail-left">마지막 안내예요.</div>
+    </div>
+    <div class="dots" aria-label="4장 중 4번째"><span></span><span></span><span></span><span class="on"></span></div>
+
+    <div class="slide">
+      <span class="badge navy"><i data-lucide="door-open"></i>공용공간 · 4 / 4</span>
+      <h2>현관과 복도에<br />물건을 두지 말아 주세요</h2>
+      <p class="text">현관과 계단은 함께 쓰는 통로예요.
+자전거와 택배 상자는 각 호실 안에 보관해 주세요.
+현관문은 드나들 때 꼭 닫아 주세요.</p>
+    </div>
+
+    <div class="next">
+      <div class="t">다음 공지도 받아보려면</div>
+      <p class="s">이 건물에 살고 있다면 가입코드로 연결해요. 연결하지 않아도 안내는 언제든 볼 수 있어요.</p>
+    </div>
+  </div>
+  <div class="cta-dock">
+    <div class="btn-row">
+      <button class="btn btn-neutral">지금은 안내만 보기</button>
+      <button class="btn btn-primary grow">연결하기</button>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

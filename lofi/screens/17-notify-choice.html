@@ -3,16 +3,19 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=390" />
-<title>LF-04 연결 뒤 알림 선택</title>
+<title>LF-04 연결 뒤 알림 선택 · iPhone 홈 화면 추가 필요</title>
 <link rel="stylesheet" href="../src/lofi.css" />
 <style>
   .sheet .hami { display: flex; justify-content: center; }
-  .sheet .hami img { width: 140px; margin: -16px 0 -18px; }
+  .sheet .hami img { width: 112px; margin: -14px 0 -16px; }
   .sheet h2 { font-size: 20px; font-weight: 700; text-align: center; letter-spacing: -0.02em; }
   .sheet .lead { text-align: center; }
-  .what { margin-top: 18px; border-radius: 14px; background: var(--gray-50); padding: 12px 16px; }
-  .what .i { display: flex; gap: 10px; align-items: center; font-size: 14.5px; color: var(--gray-700); padding: 4px 0; }
-  .what .i svg { width: 17px; height: 17px; color: var(--gray-500); flex: none; }
+  .how { margin-top: 16px; border-radius: 14px; background: var(--gray-50); padding: 8px 16px; }
+  .how .i { display: flex; gap: 12px; align-items: center; font-size: 15px; color: var(--gray-800); padding: 7px 0; }
+  .how .i b { width: 22px; height: 22px; border-radius: 11px; background: var(--navy-600); color: #fff; display: grid; place-items: center; font-size: 12px; flex: none; }
+  .how .i svg { width: 18px; height: 18px; color: var(--gray-500); margin-left: auto; flex: none; }
+  .kakao-note { display: flex; gap: 8px; align-items: flex-start; margin-top: 10px; font-size: 13.5px; line-height: 1.5; color: var(--gray-600); }
+  .kakao-note svg { width: 16px; height: 16px; flex: none; margin-top: 2px; color: var(--gray-500); }
 </style>
 </head>
 <body>
@@ -22,17 +25,16 @@
   <div class="sheet" role="dialog" aria-labelledby="t">
     <div class="grabber"></div>
     <div class="hami"><img src="../assets/hami/bell.png" alt="함이가 작은 종을 안고 있어요" /></div>
-    <h2 id="t" class="mt-8">햇살빌라 공지를 알림으로 받을까요?</h2>
-    <p class="small lead mt-4">지금 받지 않아도 내 정보에서 언제든 바꿀 수 있어요.</p>
-    <div class="what">
-      <div class="i"><i data-lucide="megaphone"></i>단수·점검처럼 기간이 있는 공지만 보내요</div>
-      <div class="i"><i data-lucide="bell-off"></i>생활 팁과 다른 사람의 메모는 보내지 않아요</div>
+    <h2 id="t" class="mt-8">새 공지를 알림으로 받으려면</h2>
+    <p class="small lead mt-4">iPhone은 월계함을 홈 화면에 추가한 뒤<br />알림을 켤 수 있어요.</p>
+    <div class="how">
+      <div class="i"><b>1</b>아래 공유 버튼 누르기<i data-lucide="share"></i></div>
+      <div class="i"><b>2</b>‘홈 화면에 추가’ 고르기<i data-lucide="square-plus"></i></div>
+      <div class="i"><b>3</b>홈 화면의 월계함에서 ‘알림 받기’<i data-lucide="bell"></i></div>
     </div>
-    <div class="btn-row mt-20">
-      <button class="btn btn-neutral">나중에</button>
-      <button class="btn btn-primary grow">알림 받기</button>
-    </div>
-    <p class="caption center mt-8">‘알림 받기’를 누르면 브라우저가 한 번 더 물어봐요</p>
+    <div class="kakao-note"><i data-lucide="info"></i><span>카카오톡 안에서 열었다면 먼저 ‘Safari로 열기’를 눌러 주세요.</span></div>
+    <button class="btn btn-primary mt-16">알겠어요</button>
+    <p class="caption center mt-8">연결은 끝났어요. 알림 없이도 공지는 우리 건물 화면에서 볼 수 있어요.</p>
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>

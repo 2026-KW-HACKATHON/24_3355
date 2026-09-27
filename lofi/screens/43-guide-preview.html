@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-14 기본 안내 · 공개 전 확인</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .warn { display: flex; gap: 10px; padding: 14px 16px; border-radius: 14px; background: var(--st-hard-bg); }
+  .warn svg { width: 20px; height: 20px; color: var(--st-hard); flex: none; margin-top: 1px; }
+  .warn b { display: block; font-size: 15px; color: var(--gray-900); line-height: 1.45; }
+  .warn span { display: block; font-size: 13.5px; line-height: 1.5; color: var(--gray-700); margin-top: 4px; }
+  .frame { margin-top: 10px; border-radius: 18px; border: 1.5px solid var(--gray-200); padding: 16px; }
+  .frame .h-title { font-size: 19px; }
+  .frame .photo { height: 110px; }
+  .frame p { font-size: 15px; line-height: 1.6; color: var(--gray-800); white-space: pre-line; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="content">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="뒤로"><i data-lucide="chevron-left"></i></button>
+      <span class="title">공개 전 확인</span>
+      <span style="width:44px"></span>
+    </div>
+    <div class="pad">
+      <div class="warn mt-4">
+        <i data-lucide="shield-alert"></i>
+        <div><b>이 안내는 QR이나 링크를 가진 누구나 볼 수 있어요</b><span>공동현관 비밀번호, 세입자 이름·연락처, 계약 정보는 넣지 마세요. 사진에 보이는 것도 같아요.</span></div>
+      </div>
+
+      <div class="field-label mt-20">세입자에게 이렇게 보여요</div>
+      <div class="frame">
+        <div class="row between"><span class="badge navy"><i data-lucide="recycle"></i>분리수거</span><span class="caption">집주인 안내 · 2026년 3월</span></div>
+        <h2 class="h-title mt-8">분리수거함은 주차장 안쪽에 있어요</h2>
+        <div class="photo mt-12"><span><i data-lucide="image"></i>수거함 위치 사진</span></div>
+        <p>안녕하세요 햇살빌라입니다.
+분리수거함은 주차장 안쪽에 있어요.
+일반 쓰레기는 매일 저녁 7시 이후, 재활용은 화·금, 음식물은 목·일 저녁에 내놓아 주세요.
+페트병은 라벨을 떼고 눌러 주세요.</p>
+      </div>
+    </div>
+  </div>
+  <div class="cta-dock">
+    <div class="btn-row">
+      <button class="btn btn-neutral">돌아가서 수정</button>
+      <button class="btn btn-primary grow">안내 공개하기</button>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

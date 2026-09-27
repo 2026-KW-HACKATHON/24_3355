@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-15 공지를 올린 뒤 · 링크 공유</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<style>
+  .done { display: flex; align-items: center; gap: 8px; }
+  .done span { width: 28px; height: 28px; border-radius: 14px; background: var(--st-done); display: grid; place-items: center; color: #fff; }
+  .done svg { width: 16px; height: 16px; stroke-width: 3; }
+  .sum { margin-top: 16px; border-radius: 14px; background: var(--moon-50); padding: 14px 16px; }
+  .sum .t { font-size: 16px; font-weight: 700; }
+  .sum .s { font-size: 13px; color: #8a6a24; margin-top: 2px; }
+  .row-i { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--gray-100); }
+  .row-i .ic { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; flex: none; }
+  .row-i .ic svg { width: 18px; height: 18px; }
+  .row-i .t { font-size: 15.5px; font-weight: 600; }
+  .row-i .s { font-size: 13px; color: var(--gray-500); margin-top: 2px; line-height: 1.45; }
+  .share { display: flex; gap: 8px; margin-top: 10px; }
+  .share .btn { height: 44px; font-size: 14.5px; border-radius: 12px; }
+  .also { display: flex; align-items: center; gap: 6px; margin-top: 18px; font-size: 14px; color: var(--gray-600); }
+  .also b { color: var(--navy-600); font-weight: 600; }
+  .also svg { width: 16px; height: 16px; color: var(--navy-600); }
+</style>
+</head>
+<body>
+<div class="phone" data-tabs="landlord:manage">
+  <div class="content">
+    <div class="topbar">
+      <span style="width:44px"></span>
+      <span class="title">공지</span>
+      <button class="icon-btn" aria-label="닫기"><i data-lucide="x"></i></button>
+    </div>
+    <div class="pad">
+      <div class="done mt-8"><span><i data-lucide="check"></i></span><h1 class="h-title">공지를 올렸어요</h1></div>
+      <div class="sum">
+        <div class="t">9월 28일(일) 오전 단수 안내</div>
+        <div class="s">현관 QR 화면에 9월 28일까지 보여요</div>
+      </div>
+
+      <div class="row-i">
+        <span class="ic" style="background:var(--navy-50);color:var(--navy-600)"><i data-lucide="bell"></i></span>
+        <div><div class="t">알림 대상 3명에게 발송을 시도했어요</div><div class="s">알림을 켠 연결 거주자 기준이에요. 도착과 열람은 기기마다 달라요.</div></div>
+      </div>
+      <div class="row-i" style="border-bottom:0">
+        <span class="ic" style="background:var(--gray-100);color:var(--gray-700)"><i data-lucide="link"></i></span>
+        <div style="flex:1">
+          <div class="t">알림을 받지 않는 분에게도 같은 링크로</div>
+          <div class="s">누가 연결했는지는 보여주지 않아요. 평소 연락하던 카톡으로 링크만 보내면 모두 같은 공지를 봐요.</div>
+          <div class="share">
+            <button class="btn btn-secondary"><i data-lucide="copy"></i>공지 링크 복사</button>
+            <button class="btn btn-neutral"><i data-lucide="message-circle"></i>카카오톡 공유</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="also"><i data-lucide="pencil-line"></i>계속 바뀌는 규칙이라면 <b>기본 안내도 고치기</b></div>
+    </div>
+  </div>
+  <div class="cta-dock">
+    <button class="btn btn-neutral">관리 홈으로</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

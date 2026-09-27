@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=390" />
-<title>처음 오셨나요 · 안내를 한 장씩</title>
+<title>처음 오셨나요 · 안내를 한 장씩 (공개·연결 직후 공통)</title>
 <link rel="stylesheet" href="../src/lofi.css" />
 <style>
   .phone { background: var(--gray-100); }
@@ -17,10 +17,8 @@
   .slide { margin: 14px var(--gutter) 0; background: #fff; border-radius: 22px; padding: 20px; box-shadow: 0 2px 12px rgba(25,31,40,.06); }
   .slide h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.35; margin-top: 10px; }
   .photo { height: 128px; margin-top: 14px; }
-  .facts { margin-top: 12px; }
-  .facts .f { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--gray-100); font-size: 16px; }
-  .facts .f:last-child { border-bottom: 0; }
-  .facts .f span:last-child { font-weight: 600; }
+  .slide .text { margin-top: 12px; font-size: 16px; line-height: 1.6; color: var(--gray-800); white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .slide .more { margin-top: 6px; font-size: 14px; font-weight: 600; color: var(--navy-600); }
   .gray .cta-dock { background: linear-gradient(to bottom, rgba(242,244,246,0), var(--gray-100) 20px); }
 </style>
 </head>
@@ -36,16 +34,17 @@
       <img src="../assets/hami/guide.png" alt="" />
       <div class="bubble tail-left">햇살빌라에서 먼저 알아두면 좋은 안내예요.</div>
     </div>
-    <div class="dots" aria-label="5장 중 1번째"><span class="on"></span><span></span><span></span><span></span><span></span></div>
+    <div class="dots" aria-label="4장 중 1번째"><span class="on"></span><span></span><span></span><span></span></div>
 
     <div class="slide">
-      <span class="badge navy"><i data-lucide="recycle"></i>분리수거 · 1 / 5</span>
+      <span class="badge navy"><i data-lucide="recycle"></i>분리수거 · 1 / 4</span>
       <h2>분리수거함은<br />주차장 안쪽에 있어요</h2>
       <div class="photo"><span><i data-lucide="image"></i>수거함 위치 사진</span></div>
-      <div class="facts">
-        <div class="f"><span>재활용</span><span>화 · 금</span></div>
-        <div class="f"><span>음식물</span><span>목 · 일 저녁</span></div>
-      </div>
+      <p class="text">안녕하세요 햇살빌라입니다.
+분리수거함은 주차장 안쪽에 있어요.
+일반 쓰레기는 매일 저녁 7시 이후, 재활용은 화·금, 음식물은 목·일 저녁에 내놓아 주세요.
+페트병은 라벨을 떼고 눌러 주세요.</p>
+      <p class="more">이 안내 끝까지 보기</p>
     </div>
   </div>
   <div class="cta-dock">

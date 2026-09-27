@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390" />
+<title>LF-12 집주인 시작 · 초대 링크로 들어왔을 때</title>
+<link rel="stylesheet" href="../src/lofi.css" />
+<link rel="stylesheet" href="../src/building.css" />
+<style>
+  .invite { display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--navy-50); }
+  .invite .ic { width: 36px; height: 36px; border-radius: 10px; background: #fff; display: grid; place-items: center; color: var(--navy-600); flex: none; }
+  .invite .ic svg { width: 19px; height: 19px; }
+  .invite b { display: block; font-size: 15px; color: var(--gray-900); }
+  .invite span { font-size: 13px; color: var(--gray-600); }
+  .mini { margin-top: 20px; border-radius: 18px; border: 1px solid var(--gray-200); padding: 14px 14px 12px; background: #fff; }
+  .mini .cap { font-size: 12.5px; font-weight: 700; color: var(--gray-500); }
+  .mini .nm { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; margin-top: 8px; }
+  .mini .tiles { padding: 0; margin-top: 10px; gap: 6px; }
+  .mini .tile { height: 58px; font-size: 12px; gap: 5px; }
+  .mini .tile .ic { width: 24px; height: 24px; border-radius: 8px; }
+  .mini .tile .ic svg { width: 14px; height: 14px; }
+  .flow { display: flex; gap: 6px; margin-top: 18px; }
+  .flow .s { flex: 1; border-radius: 12px; background: var(--gray-50); padding: 10px 10px; font-size: 13px; line-height: 1.4; color: var(--gray-700); }
+  .flow .s b { display: block; font-size: 12px; color: var(--navy-600); margin-bottom: 2px; }
+  .kakao { height: 56px; border-radius: 16px; background: #fee500; color: rgba(0,0,0,.88); font-size: 17px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+  .kakao svg { width: 20px; height: 20px; fill: #000; stroke: none; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="content">
+    <div class="topbar">
+      <div class="brand"><span class="stamp"><i data-lucide="moon"></i></span>월계함</div>
+      <span class="badge gray" style="margin-right:12px">집주인용</span>
+    </div>
+    <div class="pad">
+      <div class="invite mt-8">
+        <span class="ic"><i data-lucide="building-2"></i></span>
+        <div><b>햇살빌라 관리자로 초대받았어요</b><span>월계함 팀이 확인한 건물이에요</span></div>
+      </div>
+
+      <h1 class="h-title mt-20">새 세입자에게 보내던 안내를<br />한곳에 정리하세요</h1>
+      <p class="body mt-8" style="color:var(--gray-600)">지금 카톡으로 보내는 내용을 옮겨 두면 다음 입주자도 같은 안내를 볼 수 있어요. 카톡은 계속 쓰셔도 돼요.</p>
+
+      <div class="mini">
+        <div class="cap">세입자는 현관 QR로 이렇게 봐요</div>
+        <div class="nm">햇살빌라</div>
+        <div class="tiles">
+          <div class="tile"><span class="ic"><i data-lucide="recycle"></i></span>분리수거</div>
+          <div class="tile"><span class="ic"><i data-lucide="package"></i></span>택배</div>
+          <div class="tile"><span class="ic"><i data-lucide="flame"></i></span>보일러·설비</div>
+          <div class="tile"><span class="ic"><i data-lucide="door-open"></i></span>공용공간</div>
+        </div>
+      </div>
+
+      <div class="flow">
+        <div class="s"><b>1</b>카톡 문구 붙여넣기</div>
+        <div class="s"><b>2</b>공개 전에 확인</div>
+        <div class="s"><b>3</b>현관 QR·입주 카드 받기</div>
+      </div>
+    </div>
+  </div>
+  <div class="cta-dock">
+    <p class="hint">관리 권한은 초대받은 카카오 계정에만 생겨요</p>
+    <button class="kakao"><svg viewBox="0 0 24 24"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7l-1 3.6c-.1.3.3.6.6.4l4.2-2.8c.5.1 1 .1 1.5.1 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>카카오로 시작하기</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../src/chrome.js"></script>
+</body>
+</html>

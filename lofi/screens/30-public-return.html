@@ -13,6 +13,11 @@
   .mine .t { font-size: 15.5px; font-weight: 700; color: var(--gray-900); }
   .mine .s { font-size: 13px; color: var(--navy-600); margin-top: 2px; }
   .scene { height: 120px; }
+  .first { display: flex; align-items: center; gap: 12px; min-height: 48px; margin: 10px var(--gutter) 0; padding: 6px 12px 6px 14px; border-radius: 14px; background: var(--navy-50); }
+  .first > svg { width: 20px; height: 20px; color: var(--navy-600); flex: none; }
+  .first .t { font-size: 15px; font-weight: 700; line-height: 1.3; color: var(--gray-900); }
+  .first .s { font-size: 13px; line-height: 1.3; color: var(--gray-600); margin-top: 1px; }
+  .first > svg.chev { width: 18px; height: 18px; margin-left: auto; color: var(--navy-500); }
 </style>
 </head>
 <body>
@@ -37,7 +42,7 @@
 
     <div class="bld">
       <div class="row between"><h1 class="h-display">햇살빌라</h1><span class="badge navy"><i data-lucide="qr-code"></i>현관 QR</span></div>
-      <p class="small mt-4">서울 노원구 월계동 · 집주인이 관리하는 건물</p>
+      <p class="small mt-4">서울 노원구 월계동 OO길 · 집주인이 관리하는 건물</p>
     </div>
 
     <div class="notice">
@@ -57,22 +62,28 @@
       <div class="tile"><span class="ic"><i data-lucide="door-open"></i></span>공용공간</div>
     </div>
 
+    <div class="first">
+      <i data-lucide="book-open"></i>
+      <div><div class="t">처음 오셨나요?</div><div class="s">이 건물 안내 4개를 한 장씩 볼 수 있어요</div></div>
+      <i data-lucide="chevron-right" class="chev"></i>
+    </div>
+
+    <div class="connect">
+      <div class="ic"><i data-lucide="key-round"></i></div>
+      <div style="flex:1">
+        <div class="strong" style="font-size:15.5px">새 공지를 알림으로 받으려면</div>
+        <div class="caption mt-4" style="color:var(--gray-600)">이 건물에 살고 있다면 가입코드로 연결해요</div>
+      </div>
+      <span style="font-size:14px;font-weight:600;color:var(--navy-600);white-space:nowrap">연결하기</span>
+    </div>
+
     <div class="section-head mt-24"><h3>집주인에게 바로 알리기</h3><span class="more">직접 적기<i data-lucide="chevron-right"></i></span></div>
     <div class="quick">
       <div class="q"><span class="em"><i data-lucide="trash-2"></i></span>건물 앞 쓰레기가 넘쳤어요<span class="send">보내기<i data-lucide="chevron-right"></i></span></div>
       <div class="q"><span class="em"><i data-lucide="ban"></i></span>통로를 막는 물건이 있어요<span class="send">보내기<i data-lucide="chevron-right"></i></span></div>
       <div class="q"><span class="em"><i data-lucide="droplets"></i></span>물이 새거나 고장 났어요<span class="send">보내기<i data-lucide="chevron-right"></i></span></div>
     </div>
-    <p class="quick-note"><i data-lucide="eye-off"></i>가입하지 않아도 보낼 수 있어요 · 집주인만 봐요</p>
-
-    <div class="connect" style="margin-bottom:24px">
-      <div class="ic"><i data-lucide="key-round"></i></div>
-      <div style="flex:1">
-        <div class="strong" style="font-size:15.5px">이 건물에 살고 있나요?</div>
-        <div class="caption mt-4" style="color:var(--gray-600)">생활 팁·공지 알림은 가입코드로 연결 후</div>
-      </div>
-      <span style="font-size:14px;font-weight:600;color:var(--navy-600);white-space:nowrap">연결하기</span>
-    </div>
+    <p class="quick-note" style="margin-bottom:24px"><i data-lucide="eye-off"></i>가입하지 않아도 보낼 수 있어요 · 집주인만 봐요</p>
   </div>
 
 </div>

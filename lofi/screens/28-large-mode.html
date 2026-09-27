@@ -11,15 +11,21 @@
   .scene { height: 120px; }
   .bld .h-display { font-size: 32px; }
   .bld .small { font-size: 17px; }
-  .notice { padding: 18px; }
+  .notice { padding: 14px 16px; margin-top: 12px; }
   .notice .t { font-size: 19px; }
   .notice .s { font-size: 16px; }
   .big-list { margin: 20px var(--gutter) 0; border-radius: 18px; border: 1px solid var(--gray-200); overflow: hidden; }
-  .big-list .r { display: flex; align-items: center; gap: 14px; min-height: 68px; padding: 0 18px; font-size: 19px; font-weight: 600; }
+  .big-list .r { display: flex; align-items: center; gap: 14px; min-height: 58px; padding: 0 18px; font-size: 19px; font-weight: 600; }
+  .big-list .r small { display: block; font-size: 15px; font-weight: 500; color: var(--gray-600); margin-top: 2px; }
+  .big-list + .big-list { margin-top: 10px; }
+  .cta-dock { padding-top: 14px; }
+  .big-list .r:has(small) { min-height: 76px; }
   .big-list .r + .r { border-top: 1px solid var(--gray-100); }
   .big-list .r svg { width: 24px; height: 24px; color: var(--navy-600); }
   .big-list .r .chev { margin-left: auto; color: var(--gray-400); }
   .section-head h3 { font-size: 21px; }
+  .section-head .more { font-size: 16px; font-weight: 600; color: var(--navy-600); }
+  .section-head .more svg { width: 18px; height: 18px; }
   .cta-dock .btn { height: 64px; font-size: 20px; }
   .cta-dock .hint { font-size: 15px; }
 </style>
@@ -31,20 +37,23 @@
       <div class="brand" style="font-size:19px"><span class="stamp"><i data-lucide="moon"></i></span>월계함</div>
       <div class="right" style="padding-right:8px"><button class="pill-btn on" aria-pressed="true"><i data-lucide="type"></i>크게 보기 켜짐</button></div>
     </div>
-    <div class="scene" data-city data-scale="8" data-oy="0.6" data-pin="off"></div>
-    <div class="bld">
+    <div class="bld" style="padding-top:4px">
       <h1 class="h-display">햇살빌라</h1>
-      <p class="small mt-4">서울 노원구 월계동</p>
+      <p class="small mt-4">서울 노원구 월계동 OO길</p>
     </div>
     <div class="notice">
       <div class="ic"><i data-lucide="megaphone"></i></div>
       <div style="flex:1"><div class="t">9월 28일(일) 오전 단수</div><div class="s">공지 · 9월 28일까지</div></div>
     </div>
-    <div class="section-head mt-24"><h3>건물 안내</h3></div>
+    <div class="section-head mt-16"><h3>건물 안내</h3><span class="more">한 장씩 보기<i data-lucide="chevron-right"></i></span></div>
     <div class="big-list" style="margin-top:0">
       <div class="r"><i data-lucide="recycle"></i>분리수거<i data-lucide="chevron-right" class="chev"></i></div>
       <div class="r"><i data-lucide="package"></i>택배<i data-lucide="chevron-right" class="chev"></i></div>
       <div class="r"><i data-lucide="flame"></i>보일러·설비<i data-lucide="chevron-right" class="chev"></i></div>
+      <div class="r"><i data-lucide="door-open"></i>공용공간<i data-lucide="chevron-right" class="chev"></i></div>
+    </div>
+    <div class="big-list">
+      <div class="r"><i data-lucide="key-round"></i><span>새 공지 알림 받기<small>이 건물에 산다면 연결하기</small></span><i data-lucide="chevron-right" class="chev"></i></div>
     </div>
   </div>
   <div class="cta-dock">
