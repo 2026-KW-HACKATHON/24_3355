@@ -18,6 +18,7 @@
     "lint": "biome check .",
     "format": "biome check --write .",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "e2e": "playwright test",
     "db:up": "docker compose -f infra/compose.yaml up -d --wait",
     "db:down": "docker compose -f infra/compose.yaml down",
     "db:migrate": "pnpm --filter @wolgyeham/api db:migrate",
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.14",
+    "@playwright/test": "1.63.0",
     "@types/node": "24.13.6",
     "esbuild": "0.28.2",
     "typescript": "7.0.2",

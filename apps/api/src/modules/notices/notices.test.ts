@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { DEMO_BUILDING_ID, seedDemo } from "../../db/demo.ts";
 import { notices } from "../../db/schema.ts";
-import { DEMO_BUILDING_ID, seedDemo } from "../../db/seed.ts";
-import { createBuilding, useTestApp } from "../../test/helpers.ts";
+import {
+  createBuilding,
+  createManagedBuilding,
+  jsonRequest,
+  useTestApp,
+} from "../../test/helpers.ts";
 
 const t = useTestApp();
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -65,5 +70,75 @@ describe("current notice", () => {
     // Then
     expect(await empty.json()).toEqual({ notice: null });
     expect(unknown.status).toBe(404);
+  });
+});
+
+describe("public notice list and detail", () => {
+  it("lists only running notices and answers 410 NOTICE_ENDED for an ended one", async () => {
+    // Given
+    const building = await createBuilding(t.db, "open");
+    const now = Date.now();
+    const [ended, running] = await t.db
+      .insert(notices)
+      .values([
+        {
+          buildingId: building.id,
+          title: "끝난 공지",
+          body: "본문",
+          startsAt: new Date(now - 3 * DAY_MS),
+          endsAt: new Date(now - DAY_MS),
+          publishedAt: new Date(now - 3 * DAY_MS),
+        },
+        {
+          buildingId: building.id,
+          title: "진행 중인 공지",
+          body: "본문",
+          startsAt: new Date(now),
+          endsAt: new Date(now + DAY_MS),
+        },
+      ])
+      .returning();
+    if (!ended || !running) throw new Error("notice insert failed");
+    // When
+    const list = await t.app.request(`/api/buildings/${building.id}/notices`);
+    const endedDetail = await t.app.request(`/api/notices/${ended.id}`);
+    const runningDetail = await t.app.request(`/api/notices/${running.id}`);
+    const unknown = await t.app.request(`/api/notices/${crypto.randomUUID()}`);
+    // Then
+    expect(list.status).toBe(200);
+    expect((await list.json()).notices.map((notice: { id: string }) => notice.id)).toEqual([
+      running.id,
+    ]);
+    expect(endedDetail.status).toBe(410);
+    expect(await endedDetail.json()).toEqual({ error: { code: "NOTICE_ENDED" } });
+    expect(runningDetail.status).toBe(200);
+    expect(await runningDetail.json()).toMatchObject({ id: running.id, title: "진행 중인 공지" });
+    expect(unknown.status).toBe(404);
+  });
+});
+
+describe("notice without web push configured", () => {
+  it("creates the notice and delivery rows but attempts nothing", async () => {
+    // Given
+    const { building, managerCookie } = await createManagedBuilding(t.db, "open");
+    // When
+    const response = await t.app.request(
+      `/api/buildings/${building.id}/notices`,
+      jsonRequest(
+        "POST",
+        {
+          title: "엘리베이터 점검",
+          body: "오전 10시부터 1시간",
+          startsAt: new Date().toISOString(),
+          endsAt: new Date(Date.now() + DAY_MS).toISOString(),
+        },
+        managerCookie,
+      ),
+    );
+    const key = await t.app.request("/api/push-subscriptions/public-key");
+    // Then
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject({ attemptedCount: 0 });
+    expect(await key.json()).toEqual({ publicKey: null });
   });
 });

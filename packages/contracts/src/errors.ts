@@ -10,6 +10,7 @@ export const ERROR_CODES = [
   "NOT_FOUND",
   "CONFLICT",
   "JOIN_CODE_INVALID",
+  "ALREADY_CONNECTED",
   "REPORT_LINK_EXPIRED",
   "NOTICE_ENDED",
   "INVITE_EXPIRED",
@@ -17,6 +18,7 @@ export const ERROR_CODES = [
   "JOIN_CODE_LOCKED",
   "REPORT_TOO_FREQUENT",
   "KAKAO_NOT_CONFIGURED",
+  "PAYLOAD_TOO_LARGE",
   "INTERNAL_ERROR",
 ] as const;
 export const ErrorCode = z.enum(ERROR_CODES);

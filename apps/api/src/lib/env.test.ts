@@ -16,6 +16,8 @@ describe("parseEnv", () => {
       API_PORT: 3001,
       APP_ORIGIN: "https://example.invalid",
       DEMO_MODE: false,
+      // lofi 45 ‘1년에 한 번 아직 살고 있나요?를 물어요’
+      RECONFIRM_INTERVAL_DAYS: 365,
     });
     expect(env.KAKAO_REDIRECT_URI).toBeUndefined();
   });
@@ -31,5 +33,21 @@ describe("parseEnv", () => {
   it("rejects a missing DATABASE_URL", () => {
     // Then
     expect(() => parseEnv({ APP_ORIGIN: base.APP_ORIGIN })).toThrow("DATABASE_URL");
+  });
+
+  it("requires the three VAPID keys together and defaults to no trusted proxy", () => {
+    // When
+    const partial = () => parseEnv({ ...base, VAPID_PUBLIC_KEY: "public-key-value" });
+    const complete = parseEnv({
+      ...base,
+      VAPID_PUBLIC_KEY: "public-key-value",
+      VAPID_PRIVATE_KEY: "private-key-value",
+      VAPID_SUBJECT: "mailto:team@example.invalid",
+    });
+    // Then
+    expect(partial).toThrow("Invalid environment variables: VAPID_PRIVATE_KEY, VAPID_SUBJECT");
+    expect(partial).not.toThrow(/public-key-value/);
+    expect(complete.VAPID_SUBJECT).toBe("mailto:team@example.invalid");
+    expect(parseEnv(base).TRUSTED_PROXY_HOPS).toBe(0);
   });
 });

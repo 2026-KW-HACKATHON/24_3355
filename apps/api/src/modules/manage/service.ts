@@ -2,21 +2,27 @@ import type { ManagedBuildingDetail, ManagedBuildingSummary } from "@wolgyeham/c
 import type { Database } from "../../lib/db.ts";
 import * as buildingService from "../buildings/service.ts";
 import * as guideService from "../guides/service.ts";
+import * as reportService from "../reports/service.ts";
+import * as tipService from "../tips/service.ts";
 
-/** 관리 화면은 건물과 안내를 함께 보여주므로 두 모듈의 서비스를 묶습니다. */
+/** 관리 화면은 건물과 안내·메모·제보·팁을 함께 보여주므로 여러 모듈의 서비스를 묶습니다. */
 export async function listManagedBuildings(
   db: Database,
   userId: string,
 ): Promise<ManagedBuildingSummary[]> {
   const buildings = await buildingService.listManagedBuildings(db, userId);
-  const counts = await guideService.countGuides(
-    db,
-    buildings.map((building) => building.id),
-  );
+  const ids = buildings.map((building) => building.id);
+  const counts = await guideService.countGuides(db, ids);
+  const pendingMemos = await guideService.countPendingMemos(db, ids);
+  const newReports = await reportService.countNewReports(db, ids);
+  const tips = await tipService.countVisibleTips(db, ids);
   return buildings.map((building) => ({
     ...building,
     publishedGuideCount: counts.get(building.id)?.published ?? 0,
     draftGuideCount: counts.get(building.id)?.draft ?? 0,
+    pendingMemoCount: pendingMemos.get(building.id) ?? 0,
+    newReportCount: newReports.get(building.id) ?? 0,
+    tipCount: tips.get(building.id) ?? 0,
   }));
 }
 
