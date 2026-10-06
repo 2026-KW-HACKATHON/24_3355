@@ -1,0 +1,138 @@
+/* LF-14 기본 안내 쓰기 (lofi 33) */
+.gw-paste {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-2_5);
+  margin-top: var(--wh-space-1);
+  padding: var(--wh-space-1) var(--wh-space-1) var(--wh-space-1) var(--wh-space-3_5);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-moon-50);
+}
+.gw-paste > svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--wh-moon-ink);
+}
+.gw-paste__text {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--wh-type-small);
+  line-height: var(--wh-leading-snug);
+  color: var(--wh-text-body);
+}
+.gw-paste__btn {
+  flex: none;
+  min-height: var(--wh-touch);
+  padding: 0 var(--wh-space-2_5);
+  border: 0;
+  border-radius: var(--wh-radius-m);
+  background: none;
+  font-size: var(--wh-type-small);
+  font-weight: 700;
+  color: var(--wh-moon-ink);
+  white-space: nowrap;
+}
+.gw-paste__btn:active {
+  background: var(--wh-moon-pressed);
+}
+
+.gw-fieldset {
+  margin: var(--wh-space-5) 0 0;
+  padding: 0;
+  border: 0;
+}
+.gw-fieldset legend {
+  padding: 0;
+}
+.gw-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--wh-space-2);
+}
+.gw-chip {
+  position: relative;
+  display: inline-flex;
+}
+.gw-chip input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.gw-chip span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 var(--wh-space-3);
+  border: 1px solid var(--wh-border);
+  border-radius: var(--wh-radius-pill);
+  background: var(--wh-surface);
+  font-size: var(--wh-type-small);
+  font-weight: 500;
+  color: var(--wh-text-strong-subtle);
+  transition:
+    background-color var(--seed-duration-color-transition) var(--seed-timing-function-easing),
+    border-color var(--seed-duration-color-transition) var(--seed-timing-function-easing),
+    color var(--seed-duration-color-transition) var(--seed-timing-function-easing);
+}
+/* 누를 자리는 44px, 모양은 lofi 칩(34px) */
+.gw-chip::before {
+  content: "";
+  position: absolute;
+  inset: -4px 0;
+}
+.gw-chip input:checked + span {
+  border-color: var(--wh-primary);
+  background: var(--wh-primary-soft);
+  color: var(--wh-primary);
+  font-weight: 600;
+}
+.gw-chip input:focus-visible + span {
+  outline: 3px solid var(--wh-focus);
+  outline-offset: 2px;
+}
+
+.gw-field {
+  margin-top: var(--wh-space-5);
+}
+.gw-field--body {
+  margin-top: var(--wh-space-4);
+}
+.gw-field .wh-textarea {
+  font-size: calc(0.96875rem * var(--wh-font-scale));
+}
+.gw-paste-hint {
+  margin-top: var(--wh-space-1_5);
+}
+
+.gw-extra {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-3);
+  margin-top: var(--wh-space-2_5);
+}
+.gw-photo-add {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border: 1.5px dashed var(--wh-gray-300);
+  border-radius: var(--wh-radius-m);
+  background: none;
+  color: var(--wh-text-muted);
+}
+.gw-photo-add:disabled {
+  cursor: not-allowed;
+  color: var(--wh-text-disabled);
+}
+.gw-photo-add svg {
+  width: var(--wh-icon-m);
+  height: var(--wh-icon-m);
+}
+.gw-extra__notes {
+  display: grid;
+  gap: var(--wh-space-1);
+}

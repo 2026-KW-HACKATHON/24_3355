@@ -1,0 +1,37 @@
+/* LF-14 공개 전 확인 (lofi 43) */
+.gp-warn {
+  display: flex;
+  gap: var(--wh-space-2_5);
+  margin-top: var(--wh-space-1);
+  padding: var(--wh-space-3_5) var(--wh-space-4);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-st-hard-bg);
+}
+.gp-warn > svg {
+  flex: none;
+  width: var(--wh-icon-m);
+  height: var(--wh-icon-m);
+  margin-top: 1px;
+  color: var(--wh-st-hard);
+}
+.gp-warn__title {
+  font-size: var(--wh-type-label);
+  font-weight: 700;
+  line-height: var(--wh-leading-snug);
+  color: var(--wh-text);
+}
+.gp-warn__text {
+  margin-top: var(--wh-space-1);
+  font-size: calc(0.84375rem * var(--wh-font-scale));
+  line-height: 1.5;
+  color: var(--wh-text-strong-subtle);
+}
+.gp-label {
+  margin-top: var(--wh-space-5);
+}
+.gp-frame {
+  margin-top: var(--wh-space-2_5);
+  padding: var(--wh-space-4);
+  border: 1.5px solid var(--wh-border);
+  border-radius: 18px;
+}

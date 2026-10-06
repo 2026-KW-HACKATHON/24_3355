@@ -1,7 +1,45 @@
-import { HealthResponse } from "@wolgyeham/contracts";
-import ky from "ky";
+import ky, { type StandardSchemaV1, type StandardSchemaV1InferOutput } from "ky";
+import { toAppError } from "./errors";
 
-export async function checkApi() {
-  const response = await ky.get("/api/health", { timeout: 5000, retry: 0 }).json<unknown>();
-  return HealthResponse.parse(response);
+/** 같은 출처의 `/api`만 부릅니다. 재시도는 react-query 한 곳에서만 합니다(frontend.md §2). */
+export const http = ky.create({ timeout: 10_000, retry: 0, credentials: "same-origin" });
+
+type Output<S extends StandardSchemaV1> = StandardSchemaV1InferOutput<S>;
+
+async function run<S extends StandardSchemaV1>(
+  send: () => ReturnType<typeof http.get>,
+  schema: S,
+): Promise<Output<S>> {
+  try {
+    return await send().json(schema);
+  } catch (error) {
+    throw toAppError(error);
+  }
+}
+
+/** 응답은 contracts의 zod 스키마로 검증합니다. 다르면 INTERNAL_ERROR로 다룹니다. */
+export function getJson<S extends StandardSchemaV1>(path: string, schema: S) {
+  return run(() => http.get(path), schema);
+}
+
+export function postJson<S extends StandardSchemaV1>(path: string, body: unknown, schema: S) {
+  return run(() => http.post(path, { json: body }), schema);
+}
+
+export function patchJson<S extends StandardSchemaV1>(path: string, body: unknown, schema: S) {
+  return run(() => http.patch(path, { json: body }), schema);
+}
+
+/** 응답 본문이 없는 요청(204). */
+export async function postEmpty(path: string): Promise<void> {
+  try {
+    await http.post(path);
+  } catch (error) {
+    throw toAppError(error);
+  }
+}
+
+/** URL 조각에 들어갈 id를 안전하게 넣습니다. */
+export function seg(value: string): string {
+  return encodeURIComponent(value);
 }

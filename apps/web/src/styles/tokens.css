@@ -1,33 +1,165 @@
+/* 월계함 웹 토큰. 값은 lofi/src/lofi.css와 같습니다(D-10). 컴포넌트에는 이 --wh-*와 SEED 토큰만 씁니다. */
 :root {
-  --wh-bg: #f8f9fc;
-  --wh-surface: #ffffff;
-  --wh-text: #202738;
-  --wh-text-subtle: #626b7a;
-  --wh-primary: #4255c7;
-  --wh-primary-hover: #3445a8;
-  --wh-primary-soft: #eef1ff;
-  --wh-border: #d5dae5;
-  --wh-field-border: #7a8496;
-  --wh-success: #16704a;
-  --wh-danger: #b42335;
-  --wh-warning: #825800;
-  --wh-letter: #f2d58a;
-  --wh-type-title: 1.75rem;
-  --wh-type-section: 1.25rem;
-  --wh-type-body: 1rem;
-  --wh-type-note: 0.875rem;
+  /* 회색조 (lofi --gray-*) */
+  --wh-gray-0: #ffffff;
+  --wh-gray-50: #f9fafb;
+  --wh-gray-100: #f2f4f6;
+  --wh-gray-200: #e5e8eb;
+  --wh-gray-300: #d1d6db;
+  --wh-gray-400: #b0b8c1;
+  --wh-gray-500: #8b95a1;
+  --wh-gray-600: #6b7684;
+  --wh-gray-700: #4e5968;
+  --wh-gray-800: #333d4b;
+  --wh-gray-900: #191f28;
+
+  /* 브랜드: 함이 우표의 남색과 달빛 */
+  --wh-navy-50: #eef1f7;
+  --wh-navy-100: #dde3ef;
+  --wh-navy-500: #34466f;
+  --wh-navy-600: #25355a;
+  --wh-navy-700: #1c2945;
+  --wh-moon: #c9a45c;
+  --wh-moon-50: #faf4e6;
+  --wh-moon-ink: #8a6a24;
+  --wh-cream: #f6efe1;
+
+  /* 상태 (색과 글자를 함께 씀) */
+  --wh-st-received-bg: #f2f4f6;
+  --wh-st-received: #4e5968;
+  --wh-st-checked-bg: #e8eefb;
+  --wh-st-checked: #2b4fa8;
+  --wh-st-done-bg: #e6f4ec;
+  --wh-st-done: #1b7a4b;
+  --wh-st-hard-bg: #fdf1e3;
+  --wh-st-hard: #9a5a00;
+  --wh-danger: #d8323c;
+  --wh-danger-soft: #fdecee;
+  --wh-kakao: #fee500;
+  --wh-kakao-ink: rgb(0 0 0 / 88%);
+
+  /* 의미 */
+  --wh-bg: var(--wh-gray-0);
+  --wh-bg-outside: #e9ebee;
+  --wh-surface: var(--wh-gray-0);
+  --wh-surface-soft: var(--wh-gray-50);
+  --wh-surface-muted: var(--wh-gray-100);
+  --wh-text: var(--wh-gray-900);
+  --wh-text-body: var(--wh-gray-800);
+  --wh-text-strong-subtle: var(--wh-gray-700);
+  --wh-text-subtle: var(--wh-gray-600);
+  --wh-text-muted: var(--wh-gray-500);
+  --wh-text-disabled: var(--wh-gray-400);
+  --wh-primary: var(--wh-navy-600);
+  --wh-primary-hover: var(--wh-navy-700);
+  --wh-primary-soft: var(--wh-navy-50);
+  --wh-primary-line: var(--wh-navy-100);
+  --wh-border: var(--wh-gray-200);
+  --wh-border-soft: var(--wh-gray-100);
+  --wh-border-field: var(--wh-gray-200);
+  --wh-focus: var(--wh-navy-500);
+  --wh-success: var(--wh-st-done);
+  --wh-warning: var(--wh-st-hard);
+  --wh-shadow-card: 0 2px 12px rgb(25 31 40 / 6%);
+  --wh-shadow-bubble: 0 2px 10px rgb(25 31 40 / 8%);
+  --wh-shadow-tile: 0 1px 2px rgb(0 0 0 / 5%);
+  --wh-dim: rgb(0 0 0 / 48%);
+  --wh-focus-halo: rgb(37 53 90 / 12%);
+  --wh-on-primary-weak: rgb(255 255 255 / 14%);
+  --wh-moon-pressed: rgb(138 106 36 / 8%);
+
+  /* 건물 정적 그림 (lofi chrome.js 등각 투영과 같은 색) */
+  --wh-scene-bg: #f3f4f6;
+  --wh-scene-ground: #eef0f2;
+  --wh-scene-road: var(--wh-gray-0);
+  --wh-scene-edge: rgb(0 0 0 / 4%);
+  --wh-scene-g-top: #f4f5f7;
+  --wh-scene-g-left: #dfe2e6;
+  --wh-scene-g-right: #e9ebee;
+  --wh-scene-g2-top: #eceef1;
+  --wh-scene-g2-left: #d3d7dc;
+  --wh-scene-g2-right: #dfe2e6;
+  --wh-scene-hl-top: #3d5286;
+  --wh-scene-hl-left: var(--wh-navy-700);
+  --wh-scene-hl-right: var(--wh-navy-600);
+
+  /* 글자. 크게 보기에서 --wh-font-scale만 바꾸면 함께 커집니다 */
+  --wh-font-scale: 1;
+  --wh-font-family:
+    "Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo", sans-serif;
+  --wh-type-display: calc(1.625rem * var(--wh-font-scale));
+  --wh-type-title: calc(1.375rem * var(--wh-font-scale));
+  --wh-type-section: calc(1.125rem * var(--wh-font-scale));
+  --wh-type-sub: calc(1.0625rem * var(--wh-font-scale));
+  --wh-type-body: calc(1rem * var(--wh-font-scale));
+  --wh-type-label: calc(0.9375rem * var(--wh-font-scale));
+  --wh-type-small: calc(0.875rem * var(--wh-font-scale));
+  --wh-type-caption: calc(0.8125rem * var(--wh-font-scale));
+  --wh-type-tiny: calc(0.78125rem * var(--wh-font-scale));
+  --wh-type-note: var(--wh-type-small);
+  --wh-leading-tight: 1.35;
+  --wh-leading-snug: 1.45;
+  --wh-leading-body: 1.55;
+  --wh-leading-read: 1.65;
+  --wh-tracking-tight: -0.02em;
+  --wh-tracking: -0.01em;
+
+  /* 간격 */
+  --wh-space-0_5: 2px;
   --wh-space-1: 4px;
+  --wh-space-1_5: 6px;
   --wh-space-2: 8px;
+  --wh-space-2_5: 10px;
   --wh-space-3: 12px;
+  --wh-space-3_5: 14px;
   --wh-space-4: 16px;
+  --wh-space-4_5: 18px;
   --wh-space-5: 20px;
   --wh-space-6: 24px;
   --wh-space-8: 32px;
+  --wh-space-12: 48px;
+  --wh-space-16: 64px;
+  --wh-gutter: 20px;
   --wh-content-width: 480px;
-  --wh-control-height: 52px;
-  --wh-radius-control: 12px;
-  --wh-radius-card: 20px;
-  --wh-motion-fast: 120ms;
-  --wh-motion-standard: 220ms;
-  --wh-shadow-card: 0 4px 20px #2027380a;
+
+  /* 모양 */
+  --wh-radius-s: 8px;
+  --wh-radius-m: 12px;
+  --wh-radius-card: 14px;
+  --wh-radius-l: 16px;
+  --wh-radius-xl: 20px;
+  --wh-radius-sheet: 22px;
+  --wh-radius-pill: 999px;
+  --wh-radius-control: 16px;
+  --wh-control-height: 56px;
+  --wh-control-height-s: 44px;
+  --wh-touch: 44px;
+  --wh-topbar-height: 52px;
+  --wh-icon-s: 16px;
+  --wh-icon-m: 20px;
+  --wh-icon-l: 24px;
+}
+
+/* SEED 브랜드 색(당근 주황)을 월계함 남색으로 한 번 덮어씁니다.
+   SEED가 :root[data-seed-color-mode="light-only"]에 값을 두므로 같은 선택자로 뒤에서 덮습니다. */
+:root,
+:root[data-seed-color-mode="light-only"] {
+  --seed-color-bg-brand-solid: var(--wh-navy-600);
+  --seed-color-bg-brand-solid-pressed: var(--wh-navy-700);
+  --seed-color-bg-brand-weak: var(--wh-navy-50);
+  --seed-color-bg-brand-weak-pressed: var(--wh-navy-100);
+  --seed-color-fg-brand: var(--wh-navy-600);
+  --seed-color-fg-brand-contrast: var(--wh-navy-700);
+  --seed-color-stroke-brand-solid: var(--wh-navy-600);
+  --seed-color-stroke-brand-weak: var(--wh-navy-100);
+  --seed-color-stroke-focus-ring: var(--wh-navy-500);
+}
+
+/* 크게 보기(lofi 28). SEED 글자 토큰이 :root에서 계산되므로 html에 둡니다 */
+html[data-size="large"] {
+  --seed-font-size-multiplier: 1.25;
+  --wh-font-scale: 1.25;
+  --wh-control-height: 64px;
+  --wh-control-height-s: 48px;
+  --wh-icon-m: 24px;
 }

@@ -1,0 +1,126 @@
+/* LF-12 집주인 시작 (lofi 41) */
+.li-badge {
+  margin-right: var(--wh-space-3);
+}
+.li-invite {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-3);
+  margin-top: var(--wh-space-2);
+  padding: var(--wh-space-3) var(--wh-space-3_5);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-primary-soft);
+}
+.li-invite__ic {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--wh-surface);
+  color: var(--wh-primary);
+}
+.li-invite__ic svg {
+  width: 19px;
+  height: 19px;
+}
+.li-invite__text {
+  display: grid;
+  gap: var(--wh-space-0_5);
+  flex: 1;
+  min-width: 0;
+}
+.li-invite__title {
+  font-size: var(--wh-type-label);
+  font-weight: 700;
+  color: var(--wh-text);
+}
+.li-invite__sub {
+  font-size: var(--wh-type-caption);
+  color: var(--wh-text-subtle);
+}
+.li-title {
+  margin-top: var(--wh-space-5);
+}
+.li-lead {
+  margin-top: var(--wh-space-2);
+  color: var(--wh-text-subtle);
+}
+
+/* 세입자 화면 예시 (그림) */
+.li-mini {
+  margin-top: var(--wh-space-5);
+  padding: var(--wh-space-3_5) var(--wh-space-3_5) var(--wh-space-3);
+  border: 1px solid var(--wh-border);
+  border-radius: 18px;
+  background: var(--wh-surface);
+}
+.li-mini__cap {
+  font-size: var(--wh-type-tiny);
+  font-weight: 700;
+  color: var(--wh-text-muted);
+}
+.li-mini__name {
+  margin-top: var(--wh-space-2);
+  font-size: var(--wh-type-sub);
+  font-weight: 800;
+  letter-spacing: var(--wh-tracking-tight);
+}
+.li-mini__tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--wh-space-1_5);
+  margin-top: var(--wh-space-2_5);
+}
+.li-mini__tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 58px;
+  border: 1px solid var(--wh-border-soft);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-soft);
+  font-size: calc(0.75rem * var(--wh-font-scale));
+  font-weight: 600;
+  color: var(--wh-text-body);
+  text-align: center;
+}
+.li-mini__ic {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--wh-radius-s);
+  background: var(--wh-surface);
+  color: var(--wh-primary);
+  box-shadow: var(--wh-shadow-tile);
+}
+.li-mini__ic svg {
+  width: 14px;
+  height: 14px;
+}
+
+.li-flow {
+  display: flex;
+  gap: var(--wh-space-1_5);
+  margin-top: var(--wh-space-4_5);
+}
+.li-flow li {
+  flex: 1;
+  min-width: 0;
+  padding: var(--wh-space-2_5);
+  border-radius: var(--wh-radius-m);
+  background: var(--wh-surface-soft);
+  font-size: var(--wh-type-caption);
+  line-height: 1.4;
+  color: var(--wh-text-strong-subtle);
+}
+.li-flow b {
+  display: block;
+  margin-bottom: var(--wh-space-0_5);
+  font-size: calc(0.75rem * var(--wh-font-scale));
+  color: var(--wh-primary);
+}
