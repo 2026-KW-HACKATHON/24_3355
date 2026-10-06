@@ -1,0 +1,48 @@
+/* 다시 동의 받기 시트(D-28). 공통 모양은 global.css의 .wh-sheet__* */
+.wh-terms-sheet-content {
+  max-height: 90dvh;
+  word-break: keep-all;
+}
+.wh-terms-sheet {
+  padding-top: var(--wh-space-4);
+  padding-bottom: calc(var(--wh-space-3) + env(safe-area-inset-bottom));
+}
+.wh-terms-sheet__links {
+  margin-top: var(--wh-space-4);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-soft);
+  overflow: hidden;
+}
+.wh-terms-sheet__links .wh-list-row {
+  padding-inline: var(--wh-space-4);
+}
+.wh-terms-sheet__links li + li {
+  border-top: 1px solid var(--wh-border-soft);
+}
+.wh-terms-sheet__links a.wh-list-row:active {
+  background: var(--wh-surface-muted);
+}
+.wh-terms-sheet .wh-dock__error {
+  margin-top: var(--wh-space-3);
+}
+/* 앞 판에 동의한 분께 보여주는 ‘바뀐 점’(약관 6조, content/terms/version.ts) */
+.wh-terms-sheet__changes {
+  margin-top: var(--wh-space-4);
+  padding: var(--wh-space-3) var(--wh-space-4);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-soft);
+  font-size: var(--wh-type-small);
+  line-height: 1.55;
+  color: var(--wh-text-strong-subtle);
+}
+.wh-terms-sheet__changes-title {
+  font-weight: 700;
+  color: var(--wh-text);
+}
+.wh-terms-sheet__changes ul {
+  display: grid;
+  gap: var(--wh-space-1);
+  margin-top: var(--wh-space-1_5);
+  padding-left: var(--wh-space-4);
+  list-style: disc;
+}

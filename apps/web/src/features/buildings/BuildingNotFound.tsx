@@ -3,7 +3,7 @@ import { Icon } from "../../components/Icon";
 import { Brand, Dock, LargeModeToggle, Screen, TopBar } from "../../components/Screen";
 import { EmptyState } from "../../components/ScreenState";
 
-// 건물 없음 · lofi 22. QR 건물을 찾지 못했거나 주소가 잘못 열림. 문구는 screens.md §8.
+// 건물 없음 · lofi 22. QR 건물을 찾지 못했거나 주소가 잘못 열림. 제목은 lofi 22를 따릅니다.
 export function BuildingNotFound({
   onRetry,
   retrying = false,
@@ -32,7 +32,7 @@ export function BuildingNotFound({
       <div className="wh-pad wh-state-top">
         <EmptyState
           hami="lost"
-          title="이 건물 페이지를 찾을 수 없어요"
+          title="건물 정보를 찾을 수 없어요"
           description="QR이 바뀌었거나 주소가 잘못 열렸을 수 있어요."
         />
         <ul className="wh-tips">

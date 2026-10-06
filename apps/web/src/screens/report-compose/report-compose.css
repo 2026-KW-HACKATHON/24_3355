@@ -1,0 +1,107 @@
+/* LF-10 직접 적기 (lofi 05) */
+.rc-form {
+  display: contents;
+}
+.rc-skeleton {
+  display: grid;
+  gap: var(--wh-space-4);
+  padding-top: var(--wh-space-4);
+}
+.rc-body {
+  padding-bottom: var(--wh-space-6);
+}
+.rc-to {
+  position: relative;
+  margin-top: var(--wh-space-4);
+  padding: var(--wh-space-3_5) var(--wh-space-4);
+  padding-right: 84px;
+  border-radius: var(--wh-radius-l);
+  background: var(--wh-surface-soft);
+}
+.rc-to__hami.wh-hami {
+  position: absolute;
+  top: -30px;
+  right: 0;
+  width: 80px;
+}
+.rc-to__row {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-2_5);
+  font-size: calc(0.90625rem * var(--wh-font-scale));
+  line-height: 1.45;
+  color: var(--wh-text-strong-subtle);
+}
+.rc-to__row + .rc-to__row {
+  margin-top: var(--wh-space-2);
+}
+.rc-to__row svg {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  color: var(--wh-text-muted);
+}
+.rc-to__row b {
+  font-weight: 600;
+  color: var(--wh-text);
+}
+.rc-title {
+  margin-top: var(--wh-space-6);
+}
+.rc-field {
+  margin-top: var(--wh-space-5);
+}
+.rc-title + .rc-field {
+  margin-top: var(--wh-space-4);
+}
+.rc-opt {
+  font-weight: 500;
+  color: var(--wh-text-muted);
+}
+.rc-body-label {
+  align-items: center;
+}
+.rc-polish__btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--wh-space-1_5);
+  min-height: 30px;
+  padding: 0 var(--wh-space-2_5);
+  border: 1px solid var(--wh-border);
+  border-radius: var(--wh-radius-icon);
+  background: var(--wh-surface);
+  font-size: var(--wh-type-caption);
+  font-weight: 600;
+  color: var(--wh-text-muted);
+  cursor: not-allowed;
+}
+/* 모양은 lofi 30px, 누를 자리는 위아래로 넓혀 44px(테두리 안쪽 기준 28 + 8 + 8) */
+.rc-polish__btn::before {
+  content: "";
+  position: absolute;
+  inset: -8px 0;
+}
+.rc-polish__btn svg {
+  width: var(--wh-icon-s);
+  height: var(--wh-icon-s);
+}
+.rc-textarea {
+  position: relative;
+}
+.rc-textarea__input.wh-textarea {
+  min-height: 104px;
+  padding-bottom: var(--wh-space-8);
+}
+.rc-textarea__count {
+  position: absolute;
+  right: var(--wh-space-3_5);
+  bottom: var(--wh-space-2_5);
+  font-size: var(--wh-type-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--wh-text-disabled);
+  pointer-events: none;
+}
+.rc-soon {
+  margin-top: var(--wh-space-2);
+}

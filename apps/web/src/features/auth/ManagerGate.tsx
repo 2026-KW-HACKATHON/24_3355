@@ -7,7 +7,7 @@ import { Delayed, EmptyState, LoadError } from "../../components/ScreenState";
 import { toAppError } from "../../lib/errors";
 import { useManagedBuilding } from "../buildings/queries";
 import { LoginActions } from "./LoginActions";
-import { useMe } from "./queries";
+import { useLogout, useMe } from "./queries";
 
 function GateShell({ busy = false, children }: { busy?: boolean; children: ReactNode }) {
   return (
@@ -59,6 +59,42 @@ export function LoginRequired({ returnTo }: { returnTo: string }) {
         />
       </div>
     </Screen>
+  );
+}
+
+/**
+ * 관리하는 건물이 없는 계정의 나갈 길(권한 없음·관리 건물 없음). 연결한 건물이 있으면 그 건물 화면으로,
+ * 없으면 첫 화면으로 가고, 다른 카카오 계정으로 다시 로그인할 수 있게 로그아웃을 둡니다.
+ */
+export function NoManageActions({ me }: { me: Me }) {
+  const logout = useLogout();
+  const home = me.occupancy ? `/b/${me.occupancy.buildingId}` : "/";
+  return (
+    <div className="wh-gate-actions">
+      <ActionButton
+        asChild
+        className="wh-btn wh-btn--secondary wh-btn--sm"
+        size="large"
+        variant="neutralWeak"
+      >
+        <Link to={home}>
+          {me.occupancy ? `${me.occupancy.buildingName} 화면으로` : "첫 화면으로"}
+        </Link>
+      </ActionButton>
+      <button
+        type="button"
+        className="wh-demo-login"
+        disabled={logout.isPending}
+        onClick={() => logout.mutate()}
+      >
+        다른 계정으로 로그인
+      </button>
+      {logout.isError ? (
+        <p className="wh-field-error" role="alert">
+          로그아웃하지 못했어요. 다시 눌러 주세요
+        </p>
+      ) : null}
+    </div>
   );
 }
 
@@ -133,7 +169,10 @@ function ManagedBuildingLoader({
                 >
                   <Link to={`/manage/${mine.id}`}>{mine.name} 관리 홈으로</Link>
                 </ActionButton>
-              ) : null}
+              ) : (
+                // 관리하는 건물이 없으면 여기서 막히지 않도록 돌아갈 곳과 다른 계정 로그인을 둡니다.
+                <NoManageActions me={me} />
+              )}
             </EmptyState>
           </div>
         </GateShell>

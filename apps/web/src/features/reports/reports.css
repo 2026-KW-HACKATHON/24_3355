@@ -1,0 +1,319 @@
+/* 제보 공통 모양: 확인 시트(20), 상태 배지, 재방문 배너(30), 목록 행(21·받은 내용) */
+
+/* ---------- 상태 배지 (접수됨·확인함은 여기, 처리 완료·처리가 어려움은 global의 done·hard) ---------- */
+.wh-badge.rp-badge--received {
+  background: var(--wh-st-received-bg);
+  color: var(--wh-st-received);
+}
+.wh-badge.rp-badge--checked {
+  background: var(--wh-st-checked-bg);
+  color: var(--wh-st-checked);
+}
+
+/* ---------- 보내기 전 확인 (lofi 20) ---------- */
+.rp-sheet {
+  max-height: 90dvh;
+}
+.rp-sheet__body {
+  padding-top: var(--wh-space-3);
+  padding-bottom: calc(var(--wh-space-3) + env(safe-area-inset-bottom));
+}
+.rp-sheet__body--discard {
+  padding-top: var(--wh-space-4);
+  animation: wh-rise-in var(--seed-duration-d4) var(--seed-timing-function-enter) both;
+}
+.rp-sheet__close {
+  display: flex;
+  justify-content: flex-end;
+  margin: calc(var(--wh-space-2) * -1) calc(var(--wh-space-3) * -1) 0 0;
+}
+/* SEED 제목은 머리 안에서 쓰는 좌우 여백이 있어 본문 안에서는 지웁니다 */
+.rp-sheet__title.seed-bottom-sheet__title {
+  padding-inline: 0;
+}
+.rp-sheet__title {
+  font-size: calc(1.25rem * var(--wh-font-scale));
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: var(--wh-tracking-tight);
+}
+.rp-sheet__lead {
+  margin-top: var(--wh-space-1);
+}
+.rp-sheet__actions {
+  margin-top: var(--wh-space-4);
+}
+.rp-sheet__body--discard .rp-sheet__actions {
+  margin-top: var(--wh-space-5);
+}
+.rp-sheet__error {
+  margin-top: var(--wh-space-4);
+  text-align: center;
+}
+.rp-sheet__error .wh-dock__error {
+  margin-bottom: 0;
+}
+.rp-sheet__error-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--wh-space-0_5);
+  min-height: var(--wh-touch);
+  font-size: var(--wh-type-small);
+  font-weight: 600;
+  color: var(--wh-primary);
+}
+.rp-sheet__error-link svg {
+  width: var(--wh-icon-s);
+  height: var(--wh-icon-s);
+}
+
+.rp-rows {
+  margin-top: var(--wh-space-4);
+}
+.rp-rows__row {
+  display: flex;
+  padding: var(--wh-space-2_5) 0;
+  border-bottom: 1px solid var(--wh-border-soft);
+  font-size: var(--wh-type-label);
+  line-height: 1.5;
+}
+.rp-rows__row:last-child {
+  border-bottom: 0;
+}
+.rp-rows dt {
+  flex: none;
+  width: calc(4.875rem * var(--wh-font-scale));
+  color: var(--wh-text-muted);
+}
+.rp-rows dd {
+  min-width: 0;
+  margin: 0;
+  color: var(--wh-text);
+}
+.rp-quote {
+  margin-top: var(--wh-space-1);
+  padding: var(--wh-space-3) var(--wh-space-3_5);
+  border-radius: var(--wh-radius-m);
+  background: var(--wh-surface-soft);
+  font-size: var(--wh-type-label);
+  line-height: var(--wh-leading-body);
+  color: var(--wh-text-body);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.rp-quote--strong {
+  font-weight: 600;
+  color: var(--wh-text);
+}
+.rp-add {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-1_5);
+  min-height: var(--wh-touch);
+  margin-top: var(--wh-space-1_5);
+  padding: 0 var(--wh-space-0_5);
+  border: 0;
+  background: none;
+  font-size: calc(0.90625rem * var(--wh-font-scale));
+  font-weight: 600;
+  color: var(--wh-primary);
+}
+.rp-add svg {
+  width: var(--wh-icon-s);
+  height: var(--wh-icon-s);
+}
+.rp-add__opt {
+  font-size: var(--wh-type-caption);
+  font-weight: 500;
+  color: var(--wh-text-muted);
+}
+.rp-detail {
+  margin-top: var(--wh-space-4);
+}
+.rp-detail__input.wh-textarea {
+  min-height: 96px;
+  background: var(--wh-surface);
+}
+
+/* ---------- 재방문 배너 (lofi 30) ---------- */
+.rp-mine {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-3);
+  width: calc(100% - var(--wh-space-3) * 2);
+  min-height: var(--wh-touch);
+  margin: 0 var(--wh-space-3) var(--wh-space-2_5);
+  padding: var(--wh-space-3) var(--wh-space-3_5);
+  border: 1px solid var(--wh-primary-line);
+  border-radius: var(--wh-radius-l);
+  background: var(--wh-primary-soft);
+  text-align: left;
+  animation: wh-fade-in var(--seed-duration-d4) var(--seed-timing-function-enter) both;
+  transition: var(--seed-feedback-scale-transition);
+}
+.rp-mine:active {
+  scale: var(--seed-scale-s98);
+}
+/* 조회하는 동안 잡아 두는 같은 크기의 빈 자리(글자는 보이지 않음) */
+.rp-mine--reserved {
+  visibility: hidden;
+  animation: none;
+}
+.rp-mine__ic {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--wh-radius-icon);
+  background: var(--wh-surface);
+  color: var(--wh-primary);
+}
+.rp-mine__ic svg {
+  width: 19px;
+  height: 19px;
+}
+.rp-mine__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.rp-mine__title {
+  font-size: calc(0.96875rem * var(--wh-font-scale));
+  font-weight: 700;
+  color: var(--wh-text);
+}
+.rp-mine__sub {
+  margin-top: var(--wh-space-0_5);
+  font-size: var(--wh-type-caption);
+  line-height: var(--wh-leading-snug);
+  color: var(--wh-primary);
+}
+.rp-mine__chev {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--wh-navy-500);
+}
+.rp-mine-list {
+  margin: var(--wh-space-2) calc(var(--wh-space-4) * -1) 0;
+}
+
+/* ---------- 목록 행 (lofi 21 .item) ---------- */
+.rp-item {
+  display: flex;
+  gap: var(--wh-space-3);
+  align-items: flex-start;
+  padding: var(--wh-space-4) var(--wh-gutter);
+  border-bottom: 1px solid var(--wh-border-soft);
+  transition: background-color var(--seed-duration-color-transition)
+    var(--seed-timing-function-easing);
+}
+a.rp-item:active {
+  background: var(--wh-surface-soft);
+}
+.rp-item__text {
+  display: block;
+  flex: 1;
+  min-width: 0;
+}
+.rp-item__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--wh-space-2);
+}
+.rp-item__cat {
+  min-width: 0;
+  font-size: var(--wh-type-caption);
+  color: var(--wh-text-muted);
+}
+.rp-item__badges {
+  display: flex;
+  flex: none;
+  gap: var(--wh-space-1_5);
+}
+.rp-item__body {
+  display: -webkit-box;
+  margin-top: var(--wh-space-1);
+  overflow: hidden;
+  font-size: calc(0.96875rem * var(--wh-font-scale));
+  font-weight: 500;
+  line-height: var(--wh-leading-snug);
+  color: var(--wh-text);
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.rp-item__date {
+  display: block;
+  margin-top: var(--wh-space-1_5);
+  font-size: var(--wh-type-caption);
+  color: var(--wh-text-muted);
+}
+.rp-item__chev {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: var(--wh-space-3_5);
+  color: var(--wh-text-disabled);
+}
+
+/* ---------- 알리기 입구 시트 (자주 쓰는 말 + 직접 적기) ---------- */
+.rp-choose {
+  margin-top: var(--wh-space-4);
+  overflow: hidden;
+  border: 1px solid var(--wh-border);
+  border-radius: var(--wh-radius-l);
+}
+.rp-choose li + li {
+  border-top: 1px solid var(--wh-border-soft);
+}
+.rp-choose__row {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-3);
+  width: 100%;
+  min-height: 52px;
+  padding: var(--wh-space-1_5) var(--wh-space-3_5) var(--wh-space-1_5) var(--wh-space-4);
+  border: 0;
+  background: none;
+  text-align: left;
+  font-size: var(--wh-type-body);
+  font-weight: 600;
+  color: var(--wh-text);
+  transition: background-color var(--seed-duration-color-transition)
+    var(--seed-timing-function-easing);
+}
+.rp-choose__row:active {
+  background: var(--wh-surface-soft);
+}
+.rp-choose__em {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--wh-surface-muted);
+  color: var(--wh-text-strong-subtle);
+}
+.rp-choose__em--write {
+  background: var(--wh-primary-soft);
+  color: var(--wh-primary);
+}
+.rp-choose__em svg {
+  width: var(--wh-icon-s);
+  height: var(--wh-icon-s);
+}
+.rp-choose__text {
+  flex: 1;
+  min-width: 0;
+}
+.rp-choose__chev {
+  flex: none;
+  width: var(--wh-icon-s);
+  height: var(--wh-icon-s);
+  color: var(--wh-text-disabled);
+}

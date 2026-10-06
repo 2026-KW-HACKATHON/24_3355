@@ -1,0 +1,46 @@
+/* LF-09 내가 남긴 팁 */
+.mt-info {
+  display: flex;
+  gap: var(--wh-space-2);
+  margin: var(--wh-space-1) var(--wh-gutter) var(--wh-space-2);
+  padding: var(--wh-space-2_5) var(--wh-space-3);
+  border-radius: var(--wh-radius-icon);
+  background: var(--wh-surface-soft);
+  font-size: var(--wh-type-caption);
+  line-height: 1.5;
+  color: var(--wh-text-subtle);
+}
+.mt-info svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+}
+.mt-skeleton {
+  display: grid;
+  gap: var(--wh-space-6);
+  padding-top: var(--wh-space-4);
+}
+.mt-empty {
+  padding-top: var(--wh-space-12);
+}
+.mt-list {
+  display: grid;
+  gap: var(--wh-space-4);
+  padding-top: var(--wh-space-3);
+}
+.mt-list > li {
+  animation: wh-rise-in var(--seed-duration-d4) var(--seed-timing-function-enter) both;
+}
+.mt-building {
+  margin-bottom: var(--wh-space-1_5);
+  font-size: var(--wh-type-caption);
+  font-weight: 600;
+  color: var(--wh-text-muted);
+}
+.mt-note {
+  margin-top: var(--wh-space-2);
+  font-size: calc(0.78125rem * var(--wh-font-scale));
+  line-height: 1.45;
+  color: var(--wh-text-subtle);
+}

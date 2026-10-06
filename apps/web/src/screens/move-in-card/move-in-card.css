@@ -1,0 +1,117 @@
+/* LF-18 입주 카드. lofi/screens/39 */
+.mc-skeleton {
+  padding-top: var(--wh-space-2);
+}
+.mc-go.seed-action-button {
+  margin-top: var(--wh-space-5);
+}
+.mc-card {
+  margin: var(--wh-space-2) var(--wh-gutter) 0;
+  padding: 22px var(--wh-space-5) var(--wh-space-4_5);
+  border: 1px solid var(--wh-paper-line);
+  border-radius: var(--wh-radius-frame);
+  background: var(--wh-paper);
+  box-shadow: var(--wh-shadow-paper);
+}
+.mc-card__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-1_5);
+  font-size: var(--wh-type-caption);
+  font-weight: 800;
+  color: var(--wh-text-strong-subtle);
+}
+.mc-card__stamp {
+  width: 14px;
+  height: 16px;
+  border-radius: 2px;
+  background: var(--wh-navy-600);
+  outline: 1.5px dashed var(--wh-gray-0);
+  outline-offset: -2px;
+}
+.mc-card__title {
+  margin-top: var(--wh-space-2_5);
+  font-size: var(--wh-type-title);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.mc-qrbox {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-3_5);
+  margin-top: var(--wh-space-3_5);
+}
+.mc-qr {
+  flex: none;
+  width: 110px;
+  padding: 7px;
+  border: 1px solid var(--wh-border);
+  border-radius: var(--wh-radius-icon);
+  background: var(--wh-surface);
+}
+.mc-qrbox__title {
+  font-size: calc(0.96875rem * var(--wh-font-scale));
+  font-weight: 700;
+}
+.mc-qrbox__sub {
+  margin-top: var(--wh-space-1);
+  font-size: var(--wh-type-caption);
+  line-height: var(--wh-leading-snug);
+  color: var(--wh-text-subtle);
+}
+.mc-cut {
+  margin: var(--wh-space-4_5) calc(var(--wh-space-5) * -1) var(--wh-space-3_5);
+  border-top: 1.5px dashed var(--wh-paper-cut);
+}
+.mc-code-title {
+  font-size: calc(0.84375rem * var(--wh-font-scale));
+  font-weight: 700;
+  color: var(--wh-text-body);
+}
+.mc-code-sub {
+  margin-top: var(--wh-space-0_5);
+  font-size: calc(0.78125rem * var(--wh-font-scale));
+  color: var(--wh-text-muted);
+}
+.mc-code {
+  margin-top: var(--wh-space-2_5);
+  gap: var(--wh-space-1_5);
+}
+.mc-code .wh-code__cell {
+  min-height: 42px;
+  border: 1px solid var(--wh-border);
+  background: var(--wh-surface);
+  font-size: calc(1.25rem * var(--wh-font-scale));
+}
+.mc-foot {
+  margin-top: var(--wh-space-3);
+  text-align: right;
+  font-size: 12px;
+  color: var(--wh-text-muted);
+}
+.mc-note {
+  margin: var(--wh-space-3) var(--wh-gutter) 0;
+}
+
+/* 인쇄: 카드만 종이에 */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .mc-card,
+  .mc-card * {
+    visibility: visible;
+  }
+  .mc-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 90mm;
+    margin: 0;
+    box-shadow: none;
+  }
+}
+/* 회색 화면에서 중립 버튼이 바탕과 섞이지 않게 */
+.wh-screen--gray .wh-btn--neutral.seed-action-button {
+  background: var(--wh-surface);
+}

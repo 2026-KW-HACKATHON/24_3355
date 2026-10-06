@@ -2,7 +2,7 @@
 import { Navigate } from "react-router";
 import { Brand, Screen, TopBar } from "../../components/Screen";
 import { EmptyState } from "../../components/ScreenState";
-import { SignedInGate } from "../../features/auth/ManagerGate";
+import { NoManageActions, SignedInGate } from "../../features/auth/ManagerGate";
 
 export function Component() {
   return (
@@ -17,7 +17,9 @@ export function Component() {
                 icon="building-2"
                 title="관리하는 건물이 아직 없어요"
                 description={"월계함 팀에게 받은 초대 링크로 들어오면\n그 건물을 관리할 수 있어요."}
-              />
+              >
+                <NoManageActions me={me} />
+              </EmptyState>
             </div>
           </Screen>
         );

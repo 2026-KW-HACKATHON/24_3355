@@ -1,0 +1,67 @@
+/* LF-09 연결 종료 (lofi 09) */
+.mo-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: var(--wh-space-12);
+  text-align: center;
+}
+.mo-hero .wh-hami {
+  width: 172px;
+  margin: -24px 0 -26px;
+}
+.mo-hero__title {
+  margin-top: var(--wh-space-4);
+}
+.mo-hero__lead {
+  margin-top: var(--wh-space-2);
+  color: var(--wh-text-subtle);
+}
+.mo-kept-label {
+  margin-top: var(--wh-space-8);
+}
+.mo-kept {
+  padding: var(--wh-space-1_5) 0;
+  border: 1px solid var(--wh-border);
+  border-radius: var(--wh-radius-l);
+}
+.mo-kept__row {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-3_5);
+  min-height: 56px;
+  padding: var(--wh-space-2_5) var(--wh-space-4) var(--wh-space-2_5) var(--wh-space-5);
+}
+.mo-kept__ic {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--wh-radius-m);
+  background: var(--wh-surface-muted);
+  color: var(--wh-text-strong-subtle);
+}
+.mo-kept__ic svg {
+  width: var(--wh-icon-m);
+  height: var(--wh-icon-m);
+}
+.mo-kept__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.mo-kept__title {
+  font-size: var(--wh-type-body);
+  font-weight: 600;
+  line-height: 1.4;
+}
+.mo-kept__sub {
+  margin-top: var(--wh-space-0_5);
+  font-size: var(--wh-type-caption);
+  color: var(--wh-text-muted);
+}
+.mo-note {
+  margin-top: var(--wh-space-3);
+  text-align: center;
+}

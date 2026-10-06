@@ -1,0 +1,168 @@
+/* LF-20 시연 시작 (lofi 29) */
+.dm-body {
+  padding-top: var(--wh-space-5);
+  padding-bottom: var(--wh-space-8);
+}
+.dm-skeleton {
+  display: grid;
+  gap: var(--wh-space-2);
+  padding-top: var(--wh-space-5);
+}
+.dm-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--wh-space-1_5);
+  min-height: 28px;
+  padding: 0 var(--wh-space-2_5);
+  border-radius: var(--wh-radius-s);
+  background: var(--wh-gray-900);
+  color: var(--wh-gray-0);
+  font-size: var(--wh-type-caption);
+  font-weight: 700;
+}
+.dm-tag svg {
+  width: 14px;
+  height: 14px;
+}
+.dm-banner {
+  margin-top: var(--wh-space-2_5);
+  font-size: var(--wh-type-caption);
+  line-height: 1.5;
+  color: var(--wh-text-subtle);
+}
+.dm-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--wh-space-2);
+  margin-top: var(--wh-space-3);
+}
+/* 함이 가이드 §4: 110px, 투명 여백만큼 당깁니다(lofi 29) */
+.dm-head .wh-hami {
+  flex: none;
+  width: 110px;
+  margin: -16px -12px -12px 0;
+}
+.dm-lead {
+  margin-top: var(--wh-space-2);
+}
+.dm-error {
+  margin-top: var(--wh-space-4);
+}
+.dm-roles {
+  display: grid;
+  gap: var(--wh-space-2);
+  margin-top: var(--wh-space-5);
+}
+.dm-role {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-3_5);
+  width: 100%;
+  min-height: 72px;
+  padding: var(--wh-space-3_5) var(--wh-space-4);
+  border: 0;
+  border-radius: var(--wh-radius-l);
+  background: var(--wh-surface);
+  text-align: left;
+  transition:
+    background-color var(--seed-duration-color-transition) var(--seed-timing-function-easing),
+    var(--seed-feedback-scale-transition);
+}
+.dm-role:active:not(:disabled) {
+  background: var(--wh-surface-soft);
+  scale: var(--seed-scale-s98);
+}
+.dm-role:disabled {
+  cursor: progress;
+}
+.dm-role:disabled:not([aria-busy="true"]) {
+  opacity: 0.6;
+}
+.dm-av {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--wh-radius-icon);
+  font-size: var(--wh-type-body);
+  font-weight: 800;
+}
+.dm-av svg {
+  width: 20px;
+  height: 20px;
+}
+.dm-av--navy {
+  background: var(--wh-navy-50);
+  color: var(--wh-primary);
+}
+.dm-av--gray {
+  background: var(--wh-surface-muted);
+  color: var(--wh-text-strong-subtle);
+}
+.dm-av--moon {
+  background: var(--wh-moon-50);
+  color: var(--wh-moon-ink);
+}
+.dm-role__text {
+  display: grid;
+  gap: var(--wh-space-0_5);
+  flex: 1;
+  min-width: 0;
+}
+.dm-role__title {
+  font-size: var(--wh-type-body);
+  font-weight: 700;
+  color: var(--wh-text);
+}
+.dm-role__sub {
+  font-size: var(--wh-type-caption);
+  line-height: 1.45;
+  color: var(--wh-text-muted);
+}
+.dm-role__chev {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--wh-gray-400);
+}
+.dm-role__state {
+  flex: none;
+  font-size: var(--wh-type-caption);
+  font-weight: 600;
+  color: var(--wh-primary);
+}
+.dm-reset {
+  margin-top: var(--wh-space-5);
+  padding: var(--wh-space-1) var(--wh-space-4);
+  border: 1px dashed var(--wh-gray-300);
+  border-radius: var(--wh-radius-l);
+}
+.dm-reset__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--wh-space-3);
+}
+.dm-reset__label {
+  font-size: var(--wh-type-small);
+  color: var(--wh-text-subtle);
+}
+.dm-reset__btn {
+  color: var(--wh-danger);
+}
+/* 알림 영역은 늘 두고(aria-live), 비었을 때 자리만 없앱니다 */
+.dm-reset__status {
+  padding-bottom: var(--wh-space-2);
+  font-size: var(--wh-type-small);
+  font-weight: 600;
+  color: var(--wh-st-done);
+}
+.dm-reset__status:empty {
+  padding: 0;
+}
+.dm-reset .wh-field-error {
+  margin-top: 0;
+  padding-bottom: var(--wh-space-2);
+}

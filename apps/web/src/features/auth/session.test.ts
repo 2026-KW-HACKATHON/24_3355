@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readInviteHash } from "../invites/queries";
+import { readInviteHash } from "../invites/token";
 import { kakaoStartUrl, readLoginResult, safeReturnTo } from "./session";
 
 describe("return path after login", () => {

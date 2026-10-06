@@ -1,15 +1,17 @@
-// 처음 오셨나요 · 안내를 한 장씩 · lofi 36 46 (공개 화면에서 진입, 연결 전)
+// 처음 오셨나요 · 안내를 한 장씩 · lofi 36 46 (마지막 장에서 연결 제안, 이미 연결한 사람은 ‘거주자 홈으로’)
 import { ActionButton, Skeleton } from "@seed-design/react";
 import type { Guide, PublicBuilding } from "@wolgyeham/contracts";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router";
 import { Hami } from "../../components/Hami";
 import { Icon } from "../../components/Icon";
-import { Dock, Screen, SoonNote, TopBar, useGoBack } from "../../components/Screen";
+import { Dock, Screen, TopBar, useGoBack } from "../../components/Screen";
 import { Delayed, EmptyState, LoadError } from "../../components/ScreenState";
+import { useMe } from "../../features/auth/queries";
 import { BuildingNotFound } from "../../features/buildings/BuildingNotFound";
 import { usePublicBuilding, usePublicGuides } from "../../features/buildings/queries";
 import { GuideBody } from "../../features/guides/GuideBody";
+import { connectPath } from "../../features/occupancy/connectDraft";
 import { toAppError } from "../../lib/errors";
 import "./first-guide.css";
 
@@ -31,6 +33,7 @@ export function Component() {
     return (
       <FirstShell home={home}>
         <LoadError
+          headingLevel={2}
           retrying={building.isFetching || guides.isFetching}
           onRetry={() => {
             if (building.isError) void building.refetch();
@@ -58,6 +61,7 @@ export function Component() {
         <div className="wh-pad fg-empty">
           <EmptyState
             hami="folder"
+            headingLevel={2}
             title="아직 등록된 안내가 없어요"
             description={"집주인이 안내를 등록하면\n여기에서 바로 볼 수 있어요."}
           />
@@ -116,6 +120,8 @@ function FirstGuideCards({
   const total = guides.length;
   const isLast = index === total - 1;
   const goBack = useGoBack(home);
+  const me = useMe();
+  const resident = me.data?.occupancy?.buildingId === building.id;
 
   // 손으로 넘겨도(scroll-snap) 지금 장을 따라갑니다.
   useEffect(() => {
@@ -152,7 +158,13 @@ function FirstGuideCards({
     <FirstShell
       home={home}
       dock={
-        isLast ? (
+        isLast && resident ? (
+          <Dock>
+            <ActionButton asChild className="wh-btn" size="large">
+              <Link to={home}>거주자 홈으로</Link>
+            </ActionButton>
+          </Dock>
+        ) : isLast ? (
           <Dock>
             <div className="wh-btn-row">
               <ActionButton
@@ -163,13 +175,8 @@ function FirstGuideCards({
               >
                 지금은 안내만 보기
               </ActionButton>
-              <ActionButton
-                className="wh-btn wh-grow"
-                size="large"
-                disabled
-                aria-describedby="fg-connect-soon"
-              >
-                연결하기
+              <ActionButton asChild className="wh-btn wh-grow" size="large">
+                <Link to={connectPath(building.id)}>연결하기</Link>
               </ActionButton>
             </div>
           </Dock>
@@ -254,14 +261,13 @@ function FirstGuideCards({
                 이 안내 끝까지 보기
               </Link>
             </article>
-            {i === total - 1 ? (
+            {i === total - 1 && !resident ? (
               <div className="fg-next">
                 <h2 className="fg-next__title">다음 공지도 받아보려면</h2>
                 <p className="fg-next__text">
                   이 건물에 살고 있다면 가입코드로 연결해요. 연결하지 않아도 안내는 언제든 볼 수
                   있어요.
                 </p>
-                <SoonNote id="fg-connect-soon">연결은 다음 업데이트에서 열려요</SoonNote>
               </div>
             ) : null}
           </section>

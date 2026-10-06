@@ -1,0 +1,238 @@
+/* LF-11 보낸 내용과 처리 상태 (lofi 06 · 31) */
+.rs-spacer {
+  display: block;
+  width: var(--wh-touch);
+}
+.rs-skeleton {
+  display: grid;
+  gap: var(--wh-space-3);
+  padding-top: var(--wh-space-4);
+}
+.rs-body {
+  padding-bottom: var(--wh-space-4);
+}
+
+/* 06 보낸 직후: 함이 envelope(100) */
+.rs-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: var(--wh-space-1);
+  text-align: center;
+}
+.rs-hero__hami.wh-hami {
+  width: 100px;
+  margin: -12px 0 -14px;
+}
+.rs-hero__title {
+  margin-top: var(--wh-space-2);
+}
+.rs-hero__lead {
+  margin-top: var(--wh-space-1);
+}
+
+/* 31 다시 볼 때: 상태 배지 + 제목 */
+.rs-head {
+  padding-top: var(--wh-space-2);
+}
+.rs-head__title {
+  margin-top: var(--wh-space-2);
+  white-space: pre-line;
+}
+.rs-head__sub,
+.rs-head__lead {
+  margin-top: var(--wh-space-1);
+  overflow-wrap: anywhere;
+}
+
+/* 처리 단계 */
+.rs-track {
+  margin-top: var(--wh-space-5);
+  padding: var(--wh-space-4);
+  border: 1px solid var(--wh-border);
+  border-radius: var(--wh-radius-l);
+}
+.rs-hero + .rs-track {
+  margin-top: var(--wh-space-4);
+}
+.rs-step {
+  display: flex;
+  gap: var(--wh-space-3);
+}
+.rs-step__rail {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  width: 22px;
+}
+.rs-dot {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  color: var(--wh-gray-0);
+}
+.rs-dot svg {
+  width: 13px;
+  height: 13px;
+}
+.rs-dot--on {
+  background: var(--wh-primary);
+}
+.rs-dot--done {
+  background: var(--wh-st-done);
+}
+.rs-dot--hard {
+  background: var(--wh-st-hard);
+}
+.rs-dot--wait {
+  border: 2px solid var(--wh-gray-300);
+  background: var(--wh-surface);
+}
+.rs-line {
+  flex: 1;
+  width: 2px;
+  min-height: 14px;
+  margin: var(--wh-space-1) 0;
+  background: var(--wh-border);
+}
+.rs-line--on {
+  background: var(--wh-primary-line);
+}
+.rs-step__body {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: var(--wh-space-3_5);
+}
+.rs-step--last .rs-step__body {
+  padding-bottom: 0;
+}
+.rs-step__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--wh-space-2);
+}
+.rs-step__label {
+  font-size: calc(0.96875rem * var(--wh-font-scale));
+  font-weight: 600;
+  color: var(--wh-text);
+}
+.rs-step__label--wait {
+  color: var(--wh-text-muted);
+}
+.rs-step__sub {
+  margin-top: var(--wh-space-0_5);
+  font-size: var(--wh-type-caption);
+  line-height: var(--wh-leading-snug);
+  color: var(--wh-text-muted);
+  overflow-wrap: anywhere;
+}
+.rs-outcomes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--wh-space-2);
+  margin-top: var(--wh-space-2);
+}
+.rs-outcome {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-1_5);
+  padding: var(--wh-space-2) var(--wh-space-2_5);
+  border: 1px dashed var(--wh-gray-300);
+  border-radius: var(--wh-radius-icon);
+  font-size: calc(0.84375rem * var(--wh-font-scale));
+  font-weight: 600;
+  color: var(--wh-text-muted);
+}
+.rs-outcome svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+}
+.rs-note {
+  margin-top: var(--wh-space-2_5);
+  padding: var(--wh-space-3) var(--wh-space-3_5);
+  border-radius: var(--wh-radius-m);
+  background: var(--wh-st-done-bg);
+  font-size: var(--wh-type-label);
+  line-height: 1.5;
+  color: var(--wh-text);
+  overflow-wrap: anywhere;
+}
+.rs-note small {
+  display: block;
+  margin-bottom: var(--wh-space-1);
+  font-size: var(--wh-type-tiny);
+  font-weight: 600;
+  color: var(--wh-st-done);
+}
+.rs-note--hard {
+  background: var(--wh-st-hard-bg);
+}
+.rs-note--hard small {
+  color: var(--wh-st-hard);
+}
+.rs-foot {
+  margin-top: var(--wh-space-4);
+}
+
+/* 나중에 다시 보려면 */
+.rs-keep {
+  margin-top: var(--wh-space-4);
+}
+.rs-keep__title {
+  margin-bottom: var(--wh-space-2);
+}
+.rs-link {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-2_5);
+  padding: var(--wh-space-3) var(--wh-space-3_5);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-soft);
+}
+.rs-link + .rs-link {
+  margin-top: var(--wh-space-2);
+}
+.rs-link > svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--wh-text-muted);
+}
+.rs-link__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  font-size: calc(0.90625rem * var(--wh-font-scale));
+  font-weight: 600;
+  color: var(--wh-text-body);
+}
+.rs-link__text small {
+  margin-top: var(--wh-space-0_5);
+  font-size: calc(0.78125rem * var(--wh-font-scale));
+  font-weight: 500;
+  color: var(--wh-text-muted);
+}
+.rs-link--warn {
+  border: 1.5px solid var(--wh-st-hard);
+  background: var(--wh-st-hard-bg);
+}
+.rs-link--warn > svg,
+.rs-link--warn .rs-link__text {
+  color: var(--wh-st-hard);
+}
+.rs-link--nav {
+  min-height: var(--wh-touch);
+}
+.rs-link--nav:active {
+  background: var(--wh-surface-muted);
+}
+.rs-link__chev.rs-link__chev {
+  color: var(--wh-text-disabled);
+}

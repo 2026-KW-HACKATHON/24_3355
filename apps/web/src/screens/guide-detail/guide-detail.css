@@ -63,7 +63,7 @@
   gap: var(--wh-space-1);
   min-height: 32px;
   padding: 0 var(--wh-space-3);
-  border-radius: 10px;
+  border-radius: var(--wh-radius-icon);
   background: var(--wh-on-primary-weak);
   font-size: var(--wh-type-small);
   font-weight: 600;
@@ -89,7 +89,7 @@
   flex: none;
 }
 
-/* 내용이 달라요 → 메모 (LF-02 12·44는 다음 업데이트) */
+/* 내용이 달라요 → 메모 (lofi 11). 재확인 필요면 읽기만(gd-memo--hold) */
 .gd-memo {
   display: flex;
   align-items: center;
@@ -109,9 +109,262 @@
   color: var(--wh-text);
 }
 .gd-memo__sub {
-  margin-bottom: var(--wh-space-1);
   font-size: var(--wh-type-caption);
+  line-height: var(--wh-leading-snug);
   color: var(--wh-text-muted);
+}
+.gd-memo--hold {
+  background: var(--wh-st-hard-bg);
+}
+.gd-memo--hold .gd-memo__sub {
+  color: var(--wh-text-strong-subtle);
+}
+.gd-memo .seed-action-button {
+  flex: none;
+}
+
+/* 안내 아래 메모 결과(확인 전·반영됨·기존 유지) */
+.gd-memos {
+  margin-top: var(--wh-space-6);
+}
+.gd-memos__title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--wh-space-1_5);
+  margin-bottom: var(--wh-space-2_5);
+  font-size: var(--wh-type-section);
+  font-weight: 700;
+  letter-spacing: var(--wh-tracking-tight);
+}
+.gd-memos__count {
+  font-size: var(--wh-type-small);
+  font-weight: 600;
+  color: var(--wh-text-muted);
+}
+.gd-memos__list {
+  display: grid;
+  gap: var(--wh-space-2);
+}
+.gd-memo-item {
+  padding: var(--wh-space-3) var(--wh-space-3_5);
+  border: 1px solid var(--wh-border);
+  border-radius: var(--wh-radius-card);
+  animation: wh-rise-in var(--seed-duration-d4) var(--seed-timing-function-enter) both;
+}
+.gd-memo-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--wh-space-2);
+}
+.gd-memo-item__body {
+  margin-top: var(--wh-space-2);
+  font-size: var(--wh-type-label);
+  line-height: 1.5;
+  color: var(--wh-text-body);
+  white-space: pre-line;
+}
+.gd-memo-item__outcome {
+  display: flex;
+  gap: var(--wh-space-1_5);
+  margin-top: var(--wh-space-2);
+  padding-top: var(--wh-space-2);
+  border-top: 1px solid var(--wh-border-soft);
+  font-size: var(--wh-type-caption);
+  line-height: var(--wh-leading-snug);
+  color: var(--wh-text-subtle);
+}
+.gd-memo-item__outcome svg {
+  flex: none;
+  width: var(--wh-icon-s);
+  height: var(--wh-icon-s);
+  margin-top: 1px;
+  color: var(--wh-text-muted);
+}
+.gd-memos__note {
+  margin-top: var(--wh-space-2);
+}
+.gd-memos-error {
+  margin-top: var(--wh-space-4);
+}
+.gd-inline-retry {
+  min-height: var(--wh-touch);
+  padding: 0 var(--wh-space-1);
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--wh-primary);
+}
+
+/* 메모 시트: 작성(12) · 남긴 뒤(13) · 연결 필요(44) */
+.gm-sheet {
+  max-height: 90dvh;
+  /* SEED 시트는 글자 단위로 줄을 바꿔서 앱 기본(단어 단위)으로 되돌립니다 */
+  word-break: keep-all;
+}
+.gm-body {
+  padding-top: var(--wh-space-2);
+  padding-bottom: calc(var(--wh-space-3) + env(safe-area-inset-bottom));
+}
+.gm-body--sent {
+  padding-top: var(--wh-space-5);
+}
+/* 같은 시트 안에서 바뀐 내용(남긴 뒤 13, 지울지 확인)은 목록 항목처럼 한 번 올라오며 나타납니다 */
+.gm-body--sent,
+.gm-body--discard {
+  animation: wh-rise-in var(--seed-duration-d4) var(--seed-timing-function-enter) both;
+}
+.gm-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--wh-space-2);
+}
+.gm-close.wh-icon-btn {
+  flex: none;
+  margin: -10px -12px -10px 0;
+}
+/* SEED 제목은 머리 안에서 쓰는 좌우 여백이 있어 본문 안에서는 지웁니다 */
+.gm-title.seed-bottom-sheet__title {
+  padding-inline: 0;
+}
+.gm-title {
+  margin-top: var(--wh-space-2);
+  font-size: calc(1.25rem * var(--wh-font-scale));
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: var(--wh-tracking-tight);
+}
+.gm-lead {
+  margin-top: var(--wh-space-1);
+}
+.gm-field {
+  position: relative;
+  margin-top: var(--wh-space-4);
+}
+.gm-textarea.wh-textarea {
+  min-height: 112px;
+  padding-bottom: var(--wh-space-8);
+  background: var(--wh-surface);
+}
+.gm-count {
+  position: absolute;
+  right: var(--wh-space-3_5);
+  bottom: var(--wh-space-2_5);
+  font-size: var(--wh-type-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--wh-text-disabled);
+  pointer-events: none;
+}
+.gm-about {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--wh-space-2);
+  margin-top: var(--wh-space-2);
+  font-size: calc(0.84375rem * var(--wh-font-scale));
+  line-height: 1.5;
+  color: var(--wh-text-subtle);
+}
+.gm-about svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+  color: var(--wh-text-muted);
+}
+.gm-error {
+  margin: var(--wh-space-3) 0 0;
+}
+.gm-submit.seed-action-button {
+  margin-top: var(--wh-space-4);
+}
+.gm-hami .wh-hami {
+  width: 150px;
+  margin: -16px 0 -18px;
+}
+.gm-hami + .wh-sheet__title {
+  margin-top: var(--wh-space-2);
+}
+.gm-sent {
+  margin-top: var(--wh-space-4_5);
+  padding: var(--wh-space-3) var(--wh-space-3_5);
+  border: 1px solid var(--wh-border);
+  border-radius: var(--wh-radius-card);
+}
+.gm-sent__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--wh-space-2);
+}
+.gm-sent__text {
+  margin-top: var(--wh-space-2);
+  font-size: var(--wh-type-label);
+  line-height: 1.5;
+  color: var(--wh-text-body);
+  white-space: pre-line;
+}
+.gm-body--sent .gm-submit.seed-action-button {
+  margin-top: var(--wh-space-5);
+}
+.gm-body--discard .gm-title {
+  margin-top: var(--wh-space-3);
+}
+.gm-discard-actions {
+  margin-top: var(--wh-space-5);
+}
+.gm-mark {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-top: var(--wh-space-2);
+  border-radius: var(--wh-radius-l);
+  background: var(--wh-primary-soft);
+  color: var(--wh-primary);
+}
+.gm-mark svg {
+  width: 26px;
+  height: 26px;
+}
+.gm-title--connect {
+  margin-top: var(--wh-space-3);
+}
+.gm-lead--connect {
+  margin-top: var(--wh-space-2);
+}
+.gm-info {
+  margin-top: var(--wh-space-4);
+  padding: var(--wh-space-2_5) var(--wh-space-4);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-soft);
+}
+.gm-info li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--wh-space-2_5);
+  padding: 5px 0;
+  font-size: calc(0.90625rem * var(--wh-font-scale));
+  line-height: 1.5;
+  color: var(--wh-text-strong-subtle);
+}
+.gm-info svg {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  margin-top: 2px;
+  color: var(--wh-text-muted);
+}
+.gm-info__link {
+  font-weight: 600;
+  color: var(--wh-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.gm-connect-actions {
+  margin-top: var(--wh-space-5);
 }
 
 .gd-skeleton {

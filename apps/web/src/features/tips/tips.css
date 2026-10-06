@@ -1,0 +1,230 @@
+/* 생활 팁 공통 모양: 팁 카드(lofi building.css .tip), 거주자 홈 미리 보기, 시트, 토스트 */
+.tp-card {
+  padding: var(--wh-space-3_5) var(--wh-space-4);
+  border: 1px solid var(--wh-border);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface);
+}
+.tp-card--mine {
+  border-color: var(--wh-primary-line);
+  background: var(--wh-surface-soft);
+}
+.tp-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--wh-space-2);
+  margin-bottom: var(--wh-space-2);
+}
+.tp-card__badges,
+.tp-card__side {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--wh-space-1_5);
+}
+.tp-card__side {
+  flex: none;
+  flex-wrap: nowrap;
+  gap: var(--wh-space-1);
+}
+/* 모양은 18px 점 세 개, 누를 자리는 44px */
+.tp-card__more {
+  display: grid;
+  place-items: center;
+  width: var(--wh-touch);
+  height: var(--wh-touch);
+  margin: calc((var(--wh-touch) - 24px) / -2) calc(var(--wh-space-3) * -1)
+    calc((var(--wh-touch) - 24px) / -2) 0;
+  border: 0;
+  border-radius: var(--wh-radius-m);
+  background: none;
+  color: var(--wh-text-disabled);
+}
+.tp-card__more:active {
+  background: var(--wh-surface-muted);
+}
+.tp-card__more svg {
+  width: 18px;
+  height: 18px;
+}
+.tp-card__body {
+  font-size: calc(0.96875rem * var(--wh-font-scale));
+  line-height: var(--wh-leading-body);
+  color: var(--wh-text-body);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+/* 거주자 홈(03)의 미리 보기: 옆으로 넘기는 카드 */
+.tp-preview__caption {
+  margin: calc(var(--wh-space-1) * -1) 0 var(--wh-space-2_5);
+  padding: 0 var(--wh-gutter);
+}
+.tp-preview__more {
+  font-weight: 600;
+  color: var(--wh-primary);
+}
+.tp-preview__note {
+  padding: 0 var(--wh-gutter);
+}
+.tp-preview__retry {
+  min-height: var(--wh-touch);
+  border: 0;
+  background: none;
+  font-weight: 600;
+  color: var(--wh-primary);
+  text-decoration: underline;
+}
+.tp-preview__scroll {
+  display: flex;
+  gap: var(--wh-space-2_5);
+  padding: 0 var(--wh-gutter) var(--wh-space-1);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--wh-gutter);
+  scrollbar-width: none;
+}
+.tp-preview__scroll > li {
+  flex: 0 0 min(250px, 78%);
+  scroll-snap-align: start;
+  animation: wh-rise-in var(--seed-duration-d4) var(--seed-timing-function-enter) both;
+}
+/* 불러오는 중: 팁 카드(lofi .tips-scroll .tip) 한 줄 높이만큼 자리를 잡습니다 */
+.tp-preview__ghosts {
+  height: 138px;
+  overflow: hidden;
+}
+.tp-preview__ghosts > * {
+  flex: 0 0 min(250px, 78%);
+}
+.tp-preview__card {
+  display: block;
+  height: 100%;
+  border-radius: var(--wh-radius-card);
+  transition: var(--seed-feedback-scale-transition);
+}
+.tp-preview__card:active {
+  scale: var(--seed-scale-s98);
+}
+.tp-preview__card .tp-card {
+  height: 100%;
+}
+
+/* 시트: 내 팁(고치기·지우기), 신고 */
+.tp-sheet {
+  max-height: 90dvh;
+}
+.tp-sheet__body {
+  padding-top: var(--wh-space-3);
+  padding-bottom: calc(var(--wh-space-3) + env(safe-area-inset-bottom));
+}
+.tp-sheet__body--confirm {
+  padding-top: var(--wh-space-4);
+  animation: wh-rise-in var(--seed-duration-d4) var(--seed-timing-function-enter) both;
+}
+.tp-sheet__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-top: var(--wh-space-2);
+}
+.tp-sheet__mark {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--wh-radius-l);
+  background: var(--wh-surface-muted);
+  color: var(--wh-text-subtle);
+}
+.tp-sheet__mark svg {
+  width: 24px;
+  height: 24px;
+}
+.tp-sheet__close.wh-icon-btn {
+  margin: -6px -12px 0 0;
+}
+/* SEED 제목은 머리 안에서 쓰는 좌우 여백이 있어 본문 안에서는 지웁니다 */
+.tp-sheet__title.seed-bottom-sheet__title {
+  padding-inline: 0;
+}
+.tp-sheet__title {
+  margin-top: var(--wh-space-3);
+  font-size: calc(1.25rem * var(--wh-font-scale));
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: var(--wh-tracking-tight);
+}
+.tp-sheet__body--confirm .tp-sheet__title,
+.tp-sheet__body > .tp-sheet__title:first-child {
+  margin-top: 0;
+}
+.tp-sheet__lead {
+  margin-top: var(--wh-space-1);
+}
+.tp-sheet__field {
+  margin-top: var(--wh-space-4);
+}
+.tp-sheet__input.wh-input {
+  background: var(--wh-surface);
+  font-size: calc(0.96875rem * var(--wh-font-scale));
+}
+.tp-opt {
+  font-weight: 500;
+  color: var(--wh-text-muted);
+}
+.tp-sheet__error {
+  margin: var(--wh-space-3) 0 0;
+}
+.tp-sheet__actions {
+  margin-top: var(--wh-space-4);
+}
+.tp-sheet__body--confirm .tp-sheet__actions {
+  margin-top: var(--wh-space-5);
+}
+.tp-menu {
+  margin: var(--wh-space-3) calc(var(--wh-space-4) * -1) 0;
+}
+.tp-menu__row {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-3);
+  width: 100%;
+  min-height: 56px;
+  padding: 0 var(--wh-space-4);
+  border: 0;
+  background: none;
+  font-size: var(--wh-type-body);
+  font-weight: 600;
+  color: var(--wh-text);
+  text-align: left;
+  transition: background-color var(--seed-duration-color-transition)
+    var(--seed-timing-function-easing);
+}
+.tp-menu__row:active {
+  background: var(--wh-surface-soft);
+}
+.tp-menu__row svg {
+  width: var(--wh-icon-m);
+  height: var(--wh-icon-m);
+  color: var(--wh-text-subtle);
+}
+.tp-menu__row--danger,
+.tp-menu__row--danger svg {
+  color: var(--wh-danger);
+}
+
+/* 팁을 남긴 뒤 토스트(04): hami-mini 40px */
+.tp-toast.seed-snackbar__content {
+  justify-content: flex-start;
+}
+.tp-toast__hami.wh-hami {
+  flex: none;
+  width: 40px;
+  margin: -4px 0;
+  animation: none;
+}
+.tp-sheet__login.seed-action-button {
+  margin-top: var(--wh-space-3);
+}

@@ -1,0 +1,144 @@
+/* 로그인 전 동의(lofi 16 .check .view). 연결 2/2(16)와 다른 로그인 입구의 동의 시트·다시 로그인이 같이 씁니다. */
+.au-consent {
+  margin: var(--wh-space-5) 0 0;
+  padding: var(--wh-space-1_5) 0 0;
+  border: 0;
+  border-top: 1px solid var(--wh-border-soft);
+}
+.au-check {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-3);
+  min-height: 48px;
+  font-size: calc(0.96875rem * var(--wh-font-scale));
+  color: var(--wh-text-body);
+  cursor: pointer;
+}
+.au-check input {
+  position: absolute;
+  opacity: 0;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+}
+.au-check__box {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid var(--wh-gray-300);
+  border-radius: 7px;
+  color: transparent;
+  transition:
+    background-color var(--seed-duration-color-transition) var(--seed-timing-function-easing),
+    border-color var(--seed-duration-color-transition) var(--seed-timing-function-easing);
+}
+.au-check__box svg {
+  width: 15px;
+  height: 15px;
+}
+.au-check input:checked + .au-check__box {
+  border-color: var(--wh-primary);
+  background: var(--wh-primary);
+  color: var(--wh-gray-0);
+}
+.au-check input:focus-visible + .au-check__box {
+  outline: 3px solid var(--wh-focus);
+  outline-offset: 2px;
+}
+.au-check--all {
+  font-weight: 700;
+  color: var(--wh-text);
+}
+.au-check__req {
+  margin-right: var(--wh-space-1);
+  font-weight: 600;
+  color: var(--wh-primary);
+}
+/* 동의 항목 + 보기. 버튼은 label 밖에 둡니다. */
+.au-check-row {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-2);
+}
+.au-check-row .au-check {
+  flex: 1;
+  min-width: 0;
+}
+.au-check__view {
+  flex: none;
+  min-width: var(--wh-touch);
+  min-height: var(--wh-touch);
+  padding: 0 var(--wh-space-1);
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: calc(0.8125rem * var(--wh-font-scale));
+  color: var(--wh-text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* 동의 항목 요약(16의 ‘보기’ 시트, 로그인 동의 시트 안의 보기) */
+.au-doc {
+  max-height: 90dvh;
+  word-break: keep-all;
+}
+.au-doc__body {
+  padding-top: var(--wh-space-4);
+  padding-bottom: calc(var(--wh-space-3) + env(safe-area-inset-bottom));
+}
+.au-doc__list {
+  display: grid;
+  gap: var(--wh-space-2);
+  margin: var(--wh-space-4) 0 0;
+  padding: var(--wh-space-3_5) var(--wh-space-4) var(--wh-space-3_5) var(--wh-space-8);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-soft);
+  font-size: var(--wh-type-small);
+  line-height: 1.55;
+  color: var(--wh-text-strong-subtle);
+  text-align: left;
+}
+
+/* 로그인 동의: 시트 안(LoginActions)과 다시 로그인 자리(LoginAgainButton) */
+.au-login {
+  text-align: left;
+}
+.au-login .au-consent {
+  margin-top: var(--wh-space-3);
+}
+.au-login__title {
+  font-size: calc(1.0625rem * var(--wh-font-scale));
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--wh-text);
+}
+.au-login__note {
+  margin-top: var(--wh-space-2);
+  font-size: var(--wh-type-caption);
+  line-height: var(--wh-leading-snug);
+  color: var(--wh-text-muted);
+}
+.au-login__hint {
+  margin-top: var(--wh-space-2);
+  text-align: center;
+  font-size: var(--wh-type-caption);
+  color: var(--wh-text-muted);
+}
+.au-login .wh-sheet__actions {
+  margin-top: var(--wh-space-3);
+}
+/* 다시 로그인 자리(하단 버튼·다른 시트 안)에 펼칠 때는 카드처럼 구분합니다 */
+.au-login--inline {
+  margin-bottom: var(--wh-space-2);
+  padding: var(--wh-space-3) var(--wh-space-4) var(--wh-space-2);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-soft);
+}
+.au-login--inline .au-doc__list {
+  background: var(--wh-surface);
+}

@@ -1,4 +1,4 @@
-// LF-12 집주인 시작 · lofi 41 (건물 확인 23은 다음 업데이트, 공개 뒤 38은 setup-done)
+// LF-12 집주인 시작 · lofi 41 (수락 뒤 건물 확인 23은 landlord-confirm, 공개 뒤 38은 setup-done)
 import { ActionButton, Skeleton } from "@seed-design/react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
@@ -8,14 +8,13 @@ import { EmptyState, LoadError } from "../../components/ScreenState";
 import { LoginActions } from "../../features/auth/LoginActions";
 import { useMe } from "../../features/auth/queries";
 import { CATEGORY } from "../../features/guides/categories";
+import { isDeadInvite, useAcceptInvite, useInvitePreview } from "../../features/invites/queries";
 import {
   clearInviteToken,
   loadInviteToken,
   readInviteHash,
   stashInviteToken,
-  useAcceptInvite,
-  useInvitePreview,
-} from "../../features/invites/queries";
+} from "../../features/invites/token";
 import { errorMessage, toAppError } from "../../lib/errors";
 import "./landlord-invite.css";
 
@@ -90,10 +89,23 @@ export function Component() {
               확인하는 중
             </ActionButton>
           </Dock>
+        ) : me.isError ? (
+          // 로그인 여부를 모르면 로그인 전으로 치지 않고 다시 확인하게 합니다(401만 로그인 전).
+          <Dock hint={HINT} error={errorMessage(me.error)}>
+            <ActionButton
+              className="wh-btn"
+              size="large"
+              loading={me.isFetching}
+              disabled={me.isFetching}
+              onClick={() => void me.refetch()}
+            >
+              다시 시도
+            </ActionButton>
+          </Dock>
         ) : me.data ? (
           <AcceptDock token={token} />
         ) : (
-          <LoginActions returnTo="/invite" hint={HINT} />
+          <LoginActions returnTo="/invite" hint={HINT} allowDemo={false} />
         )
       }
     >
@@ -181,7 +193,13 @@ function AcceptDock({ token }: { token: string }) {
     try {
       const result = await accept.mutateAsync(token);
       clearInviteToken();
-      void navigate(`/manage/${result.buildingId}`, { replace: true });
+      // 새로 수락했으면 건물 확인(23)으로 갑니다. 이미 확인한 건물이면 23이 관리 홈으로 넘깁니다.
+      void navigate(
+        result.alreadyManager
+          ? `/manage/${result.buildingId}`
+          : `/manage/${result.buildingId}/confirm`,
+        { replace: true },
+      );
     } catch {
       // 오류는 아래 문구로 남깁니다.
     } finally {
@@ -190,8 +208,10 @@ function AcceptDock({ token }: { token: string }) {
   }
 
   const error = accept.error ? toAppError(accept.error) : undefined;
+  // 다시 눌러도 같은 결과인 실패면 버튼을 막습니다. 저장한 토큰은 useAcceptInvite가 지웁니다.
+  const dead = error !== undefined && isDeadInvite(error);
   const message =
-    error?.code === "NOT_FOUND"
+    error?.code === "NOT_FOUND" || error?.code === "CONFLICT"
       ? "이미 수락했거나 찾을 수 없는 초대예요"
       : error
         ? errorMessage(error)
@@ -203,7 +223,7 @@ function AcceptDock({ token }: { token: string }) {
         className="wh-btn"
         size="large"
         loading={accept.isPending}
-        disabled={accept.isPending}
+        disabled={accept.isPending || dead}
         onClick={handleAccept}
       >
         초대 수락하고 시작하기

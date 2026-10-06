@@ -1,0 +1,123 @@
+/* LF-06 생활 팁 (lofi 04 · 18), 연결 필요(44를 화면으로) */
+.tl-skeleton {
+  display: grid;
+  gap: var(--wh-space-3);
+  padding-top: var(--wh-space-2);
+}
+.tl-title {
+  margin-top: var(--wh-space-2);
+}
+.tl-scope {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-2);
+  margin-top: var(--wh-space-3);
+  padding: var(--wh-space-2_5) var(--wh-space-3);
+  border-radius: var(--wh-radius-icon);
+  background: var(--wh-surface-soft);
+  font-size: calc(0.84375rem * var(--wh-font-scale));
+  line-height: 1.45;
+  color: var(--wh-text-subtle);
+}
+.tl-scope svg {
+  flex: none;
+  width: var(--wh-icon-s);
+  height: var(--wh-icon-s);
+  color: var(--wh-text-muted);
+}
+.tl-list {
+  display: grid;
+  gap: var(--wh-space-2_5);
+  margin-top: var(--wh-space-5);
+}
+.tl-list > li {
+  animation: wh-rise-in var(--seed-duration-d4) var(--seed-timing-function-enter) both;
+}
+.tl-own {
+  margin-top: var(--wh-space-1_5);
+  font-size: calc(0.78125rem * var(--wh-font-scale));
+  color: var(--wh-navy-500);
+}
+
+/* 18 없음: 쓰기를 재촉하지 않는 작은 버튼 하나 */
+.tl-caption {
+  margin-top: var(--wh-space-2);
+}
+.tl-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 84px;
+  padding: 0 var(--wh-space-3);
+  text-align: center;
+}
+.tl-empty__hami.wh-hami {
+  width: 150px;
+  margin: -18px 0 -14px;
+}
+.tl-empty__title {
+  margin-top: var(--wh-space-2);
+  font-size: var(--wh-type-section);
+  font-weight: 700;
+  line-height: var(--wh-leading-tight);
+  letter-spacing: var(--wh-tracking-tight);
+}
+.tl-empty__write.seed-action-button {
+  margin-top: var(--wh-space-4);
+}
+
+/* 연결 필요(44) */
+.tl-connect {
+  padding-top: var(--wh-space-6);
+}
+.tl-connect__mark {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--wh-radius-l);
+  background: var(--wh-primary-soft);
+  color: var(--wh-primary);
+}
+.tl-connect__mark svg {
+  width: 26px;
+  height: 26px;
+}
+.tl-connect__title {
+  margin-top: var(--wh-space-3);
+  font-size: calc(1.25rem * var(--wh-font-scale));
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: var(--wh-tracking-tight);
+}
+.tl-connect__lead {
+  margin-top: var(--wh-space-2);
+}
+.tl-connect__info {
+  margin-top: var(--wh-space-4);
+  padding: var(--wh-space-2_5) var(--wh-space-4);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-soft);
+}
+.tl-connect__info li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--wh-space-2_5);
+  padding: 5px 0;
+  font-size: calc(0.90625rem * var(--wh-font-scale));
+  line-height: 1.5;
+  color: var(--wh-text-strong-subtle);
+}
+.tl-connect__info svg {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  margin-top: 2px;
+  color: var(--wh-text-muted);
+}
+.tl-connect__link {
+  font-weight: 600;
+  color: var(--wh-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

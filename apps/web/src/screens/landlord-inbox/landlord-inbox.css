@@ -1,0 +1,81 @@
+/* LF-16 받은 내용 탭 */
+.li-scope {
+  display: flex;
+  gap: var(--wh-space-2);
+  margin: var(--wh-space-1) var(--wh-gutter) 0;
+  padding: var(--wh-space-2_5) var(--wh-space-3);
+  border-radius: var(--wh-radius-icon);
+  background: var(--wh-surface-soft);
+  font-size: var(--wh-type-caption);
+  line-height: 1.5;
+  color: var(--wh-text-subtle);
+}
+.li-scope svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+}
+.li-head {
+  margin-top: var(--wh-space-6);
+}
+.li-count {
+  font-size: var(--wh-type-small);
+  font-weight: 600;
+  color: var(--wh-text-muted);
+}
+.li-none {
+  padding: 0 var(--wh-gutter);
+}
+.li-skeleton {
+  display: grid;
+  gap: var(--wh-space-6);
+  padding-top: var(--wh-space-6);
+}
+.li-empty {
+  padding-top: var(--wh-space-12);
+}
+.li-list > li {
+  animation: wh-rise-in var(--seed-duration-d4) var(--seed-timing-function-enter) both;
+}
+.li-memo {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--wh-space-3);
+  padding: var(--wh-space-4) var(--wh-gutter);
+  border-bottom: 1px solid var(--wh-border-soft);
+  transition: background-color var(--seed-duration-color-transition)
+    var(--seed-timing-function-easing);
+}
+.li-memo:active {
+  background: var(--wh-surface-soft);
+}
+.li-memo__text {
+  display: block;
+  flex: 1;
+  min-width: 0;
+}
+.li-memo__cat {
+  display: block;
+  font-size: var(--wh-type-caption);
+  color: var(--wh-text-muted);
+}
+.li-memo__body {
+  display: -webkit-box;
+  margin-top: var(--wh-space-1);
+  overflow: hidden;
+  font-size: calc(0.96875rem * var(--wh-font-scale));
+  font-weight: 500;
+  line-height: var(--wh-leading-snug);
+  color: var(--wh-text);
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.li-memo__chev {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: var(--wh-space-3_5);
+  color: var(--wh-text-disabled);
+}

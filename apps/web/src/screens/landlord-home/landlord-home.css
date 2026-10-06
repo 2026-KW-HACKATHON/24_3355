@@ -78,6 +78,18 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+.lh-stat__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--wh-space-0_5);
+  min-height: var(--wh-touch);
+  margin-block: calc((var(--wh-touch) - 1.5em) / -2);
+  color: var(--wh-primary);
+}
+.lh-stat__link svg {
+  width: 18px;
+  height: 18px;
+}
 .lh-caption {
   margin-top: var(--wh-space-2);
   padding: 0 var(--wh-gutter);
@@ -106,7 +118,8 @@
   transition: background-color var(--seed-duration-color-transition)
     var(--seed-timing-function-easing);
 }
-a.lh-row:active {
+a.lh-row:active,
+button.lh-row:active:not(:disabled) {
   background: var(--wh-surface-soft);
 }
 .lh-row:disabled {
@@ -118,7 +131,7 @@ a.lh-row:active {
   flex: none;
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: var(--wh-radius-icon);
   background: var(--wh-surface-muted);
   color: var(--wh-primary);
 }
@@ -139,12 +152,16 @@ a.lh-row:active {
   flex: 1;
   min-width: 0;
 }
+/* 긴 제목은 두 줄까지 보이고 넘치면 줄임(크게 보기에서도 내용이 줄지 않게 줄바꿈) */
 .lh-row__title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
   font-size: calc(0.96875rem * var(--wh-font-scale));
   font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.4;
 }
 .lh-row:disabled .lh-row__title {
   color: var(--wh-text-strong-subtle);
@@ -163,4 +180,65 @@ a.lh-row:active {
   height: var(--wh-icon-m);
   margin-left: auto;
   color: var(--wh-text-disabled);
+}
+
+/* 공지 쓰기·QR (lofi 24 .quick) */
+.lh-quick {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--wh-space-2);
+  margin-top: var(--wh-space-4);
+  padding: 0 var(--wh-gutter);
+}
+.lh-quick > .seed-action-button {
+  min-height: 52px;
+  padding-inline: var(--wh-space-2);
+  font-size: calc(0.96875rem * var(--wh-font-scale));
+}
+.lh-row__ic--moon {
+  background: var(--wh-moon-50);
+  color: var(--wh-moon-ink);
+}
+.lh-inline-retry {
+  min-height: var(--wh-touch);
+  padding: 0 var(--wh-space-1);
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--wh-primary);
+}
+.lh-share-error {
+  padding: 0 var(--wh-gutter) var(--wh-space-2);
+  overflow-wrap: anywhere;
+}
+
+/* 확인할 것(lofi 24) */
+.lh-section--first {
+  margin-top: var(--wh-space-2);
+}
+.lh-count {
+  font-size: var(--wh-type-small);
+  color: var(--wh-text-muted);
+}
+.lh-row__ic--navy {
+  background: var(--wh-primary-soft);
+  color: var(--wh-primary);
+}
+.lh-row__ic--received {
+  background: var(--wh-st-received-bg);
+  color: var(--wh-st-received);
+}
+.lh-row--static {
+  margin: 0;
+}
+.lh-todo-error {
+  margin: var(--wh-space-2) 0 0;
+  padding: 0 var(--wh-gutter);
+}
+.lh-public-link {
+  padding: var(--wh-space-1) var(--wh-gutter) 0;
+}
+.lh-public-link .lh-status__link {
+  margin-bottom: 0;
 }

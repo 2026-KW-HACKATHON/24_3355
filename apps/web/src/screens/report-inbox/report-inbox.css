@@ -1,0 +1,250 @@
+/* LF-16 받은 상황 상세 (lofi 07 · 35) */
+.ri-skeleton {
+  display: grid;
+  gap: var(--wh-space-3);
+  padding-top: var(--wh-space-4);
+}
+.ri-body {
+  padding-top: var(--wh-space-2);
+}
+.ri-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--wh-space-1_5);
+}
+.ri-title {
+  margin-top: var(--wh-space-2);
+  overflow-wrap: anywhere;
+}
+.ri-sub {
+  margin-top: var(--wh-space-1);
+}
+.ri-meta {
+  margin-top: var(--wh-space-3_5);
+}
+.ri-meta > div {
+  display: flex;
+  padding: var(--wh-space-1_5) 0;
+  font-size: calc(0.90625rem * var(--wh-font-scale));
+  line-height: 1.5;
+}
+.ri-meta dt {
+  flex: none;
+  width: calc(4.75rem * var(--wh-font-scale));
+  color: var(--wh-text-muted);
+}
+.ri-meta dd {
+  min-width: 0;
+  margin: 0;
+  color: var(--wh-text-body);
+}
+.ri-quote {
+  margin-top: var(--wh-space-3);
+  padding: var(--wh-space-4);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-soft);
+  font-size: var(--wh-type-body);
+  line-height: 1.6;
+  color: var(--wh-text);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.ri-quote--empty {
+  font-size: calc(0.90625rem * var(--wh-font-scale));
+  color: var(--wh-text-muted);
+}
+.ri-label {
+  margin-top: var(--wh-space-6);
+}
+.ri-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+/* ‘확인했어요’(07 → 35)·처리 결과 저장 뒤 새로 생기는 덩어리 */
+.ri-fieldset,
+.ri-said {
+  animation: wh-rise-in var(--seed-duration-d4) var(--seed-timing-function-enter) both;
+}
+.ri-legend {
+  width: 100%;
+  padding: 0;
+}
+.ri-legend .ri-label {
+  margin-bottom: var(--wh-space-2);
+}
+.ri-opts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--wh-space-2);
+}
+.ri-opt {
+  position: relative;
+  display: flex;
+}
+.ri-opt svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+.ri-opt input {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.ri-opt__face {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: var(--wh-space-1_5);
+  min-height: 56px;
+  padding: var(--wh-space-1) var(--wh-space-2);
+  border: 1.5px solid var(--wh-border);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface);
+  font-size: calc(0.96875rem * var(--wh-font-scale));
+  font-weight: 600;
+  color: var(--wh-text-strong-subtle);
+  text-align: center;
+  transition:
+    background-color var(--seed-duration-color-transition) var(--seed-timing-function-easing),
+    border-color var(--seed-duration-color-transition) var(--seed-timing-function-easing),
+    color var(--seed-duration-color-transition) var(--seed-timing-function-easing);
+}
+.ri-opt--completed input:checked + .ri-opt__face {
+  border-color: var(--wh-st-done);
+  background: var(--wh-st-done-bg);
+  color: var(--wh-st-done);
+}
+.ri-opt--unable input:checked + .ri-opt__face {
+  border-color: var(--wh-st-hard);
+  background: var(--wh-st-hard-bg);
+  color: var(--wh-st-hard);
+}
+.ri-opt input:focus-visible + .ri-opt__face {
+  outline: 3px solid var(--wh-focus);
+  outline-offset: 2px;
+}
+.ri-opt input:not(:checked):not(:disabled):active + .ri-opt__face {
+  background: var(--wh-surface-soft);
+}
+/* 07: 확인 전에는 고를 수 없음을 흐리게 보여줍니다(설명은 아래 글자) */
+.ri-opts--off {
+  opacity: 0.45;
+}
+.ri-off-opt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--wh-space-1_5);
+  min-height: 52px;
+  border: 1px solid var(--wh-gray-300);
+  border-radius: var(--wh-radius-m);
+  font-size: var(--wh-type-label);
+  font-weight: 600;
+  color: var(--wh-text-strong-subtle);
+}
+.ri-off-opt svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+.ri-caption {
+  margin-top: var(--wh-space-2);
+}
+.ri-note {
+  margin-top: var(--wh-space-5);
+}
+.ri-field {
+  margin-top: var(--wh-space-4);
+}
+.ri-opt-label {
+  font-weight: 500;
+  color: var(--wh-text-muted);
+}
+.ri-input.wh-input {
+  font-size: calc(0.96875rem * var(--wh-font-scale));
+}
+.ri-help {
+  margin-top: var(--wh-space-1_5);
+}
+.ri-said {
+  margin-top: var(--wh-space-4);
+  padding: var(--wh-space-3) var(--wh-space-3_5);
+  border-radius: var(--wh-radius-m);
+  background: var(--wh-st-done-bg);
+  font-size: var(--wh-type-label);
+  line-height: 1.5;
+  color: var(--wh-text);
+  overflow-wrap: anywhere;
+}
+.ri-said small {
+  display: block;
+  margin-bottom: var(--wh-space-1);
+  font-size: var(--wh-type-tiny);
+  font-weight: 600;
+  color: var(--wh-st-done);
+}
+.ri-said--unable {
+  background: var(--wh-st-hard-bg);
+}
+.ri-said--unable small {
+  color: var(--wh-st-hard);
+}
+
+/* 필요하면 이어서 */
+.ri-next {
+  margin-top: var(--wh-space-5);
+  padding: var(--wh-space-3_5) var(--wh-space-4);
+  border-radius: var(--wh-radius-l);
+  background: var(--wh-surface-soft);
+}
+.ri-next__head {
+  font-size: var(--wh-type-caption);
+  font-weight: 700;
+  color: var(--wh-text-muted);
+}
+.ri-next__btns {
+  display: flex;
+  gap: var(--wh-space-2);
+  margin-top: var(--wh-space-2_5);
+}
+.ri-next__btn {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: var(--wh-space-1_5);
+  min-height: var(--wh-touch);
+  padding: var(--wh-space-1) var(--wh-space-2);
+  border: 1px solid var(--wh-border);
+  border-radius: var(--wh-radius-m);
+  background: var(--wh-surface);
+  font-size: calc(0.90625rem * var(--wh-font-scale));
+  font-weight: 600;
+  color: var(--wh-text-body);
+  text-align: center;
+  transition:
+    background-color var(--seed-duration-color-transition) var(--seed-timing-function-easing),
+    var(--seed-feedback-scale-transition);
+}
+.ri-next__btn:active {
+  background: var(--wh-surface-muted);
+  scale: var(--seed-scale-s95);
+}
+.ri-next__btn svg {
+  width: var(--wh-icon-s);
+  height: var(--wh-icon-s);
+  flex: none;
+}
+.ri-next__note {
+  margin-top: var(--wh-space-2);
+  font-size: calc(0.78125rem * var(--wh-font-scale));
+  color: var(--wh-text-muted);
+}

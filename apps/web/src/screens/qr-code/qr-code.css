@@ -1,0 +1,105 @@
+/* LF-18 QR과 가입코드. lofi/screens/26 */
+.qc-body {
+  padding-top: var(--wh-space-1);
+}
+.qc-intro {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: var(--wh-space-2);
+}
+.qc-intro .wh-hami {
+  width: 104px;
+  margin: -14px -10px -10px 0;
+}
+.qc-block {
+  padding: var(--wh-space-4);
+  border: 1px solid var(--wh-border);
+  border-radius: var(--wh-radius-frame);
+}
+.qc-block + .qc-block {
+  margin-top: var(--wh-space-3);
+}
+.qc-block__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--wh-space-2);
+}
+.qc-block__head h2 {
+  font-size: var(--wh-type-body);
+  font-weight: 700;
+}
+.qc-qr-row {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-3_5);
+  margin-top: var(--wh-space-3);
+}
+.qc-qr {
+  flex: none;
+  width: 116px;
+  padding: var(--wh-space-2);
+  border: 1px solid var(--wh-border);
+  border-radius: var(--wh-radius-m);
+  background: var(--wh-surface);
+}
+.qc-qr-row__side {
+  flex: 1;
+  min-width: 0;
+}
+.qc-qr-row__side p {
+  font-size: calc(0.84375rem * var(--wh-font-scale));
+  line-height: 1.5;
+  color: var(--wh-text-subtle);
+}
+.qc-download.seed-action-button {
+  margin-top: var(--wh-space-2_5);
+}
+.qc-code-body {
+  margin-top: var(--wh-space-3);
+}
+.qc-empty {
+  font-size: var(--wh-type-small);
+  color: var(--wh-text-subtle);
+}
+.qc-create.seed-action-button {
+  margin-top: var(--wh-space-3);
+}
+.qc-actions {
+  display: flex;
+  gap: var(--wh-space-2);
+  margin-top: var(--wh-space-3);
+}
+.qc-actions > .seed-action-button {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: var(--wh-control-height-s);
+  border-radius: var(--wh-radius-m);
+  font-size: var(--wh-type-label);
+}
+.qc-caption {
+  margin-top: var(--wh-space-2);
+}
+.qc-card.seed-action-button {
+  min-height: 48px;
+  margin-top: var(--wh-space-3);
+  font-size: calc(0.96875rem * var(--wh-font-scale));
+}
+.qc-warn {
+  display: flex;
+  gap: var(--wh-space-2);
+  margin-top: var(--wh-space-4);
+  font-size: calc(0.84375rem * var(--wh-font-scale));
+  line-height: 1.5;
+  color: var(--wh-st-hard);
+}
+.qc-warn svg {
+  width: var(--wh-icon-s);
+  height: var(--wh-icon-s);
+  flex: none;
+  margin-top: 2px;
+}
+.qc-dialog-error {
+  padding: 0 var(--wh-space-5);
+}

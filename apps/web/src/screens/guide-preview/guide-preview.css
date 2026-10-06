@@ -33,5 +33,69 @@
   margin-top: var(--wh-space-2_5);
   padding: var(--wh-space-4);
   border: 1.5px solid var(--wh-border);
-  border-radius: 18px;
+  border-radius: var(--wh-radius-frame);
+}
+.gp-skeleton {
+  display: grid;
+  gap: var(--wh-space-4);
+  padding-top: var(--wh-space-1);
+}
+
+/* 수정 공개: 함께 반영할 메모 */
+.gp-memos {
+  margin: var(--wh-space-5) 0 0;
+  padding: 0;
+  border: 0;
+}
+.gp-memos__legend {
+  padding: 0;
+}
+.gp-memos__note {
+  margin-top: calc(var(--wh-space-1) * -1);
+  margin-bottom: var(--wh-space-2);
+}
+.gp-memo {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--wh-space-3);
+  min-height: var(--wh-touch);
+  padding: var(--wh-space-3) var(--wh-space-3_5);
+  border: 1px solid var(--wh-border);
+  border-radius: var(--wh-radius-card);
+  cursor: pointer;
+  transition: border-color var(--seed-duration-color-transition) var(--seed-timing-function-easing);
+}
+.gp-memo + .gp-memo {
+  margin-top: var(--wh-space-2);
+}
+.gp-memo:has(input:checked) {
+  border-color: var(--wh-primary);
+  background: var(--wh-primary-soft);
+}
+.gp-memo input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  accent-color: var(--wh-primary);
+}
+.gp-memo__text {
+  display: grid;
+  gap: var(--wh-space-1);
+  min-width: 0;
+}
+.gp-memo__body {
+  font-size: var(--wh-type-label);
+  line-height: 1.5;
+  color: var(--wh-text);
+  white-space: pre-line;
+}
+.gp-inline-retry {
+  min-height: var(--wh-touch);
+  padding: 0 var(--wh-space-1);
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--wh-primary);
 }

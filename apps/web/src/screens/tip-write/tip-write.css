@@ -1,0 +1,76 @@
+/* LF-07 생활 팁 작성 (lofi 19) */
+.tw-form {
+  display: contents;
+}
+.tw-skeleton {
+  padding-top: var(--wh-space-4);
+}
+.tw-body {
+  padding-top: var(--wh-space-2);
+}
+.tw-title {
+  font-size: calc(1.1875rem * var(--wh-font-scale));
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: var(--wh-tracking-tight);
+}
+.tw-field {
+  margin-top: var(--wh-space-3);
+}
+.tw-field .wh-chips-field__legend {
+  margin-bottom: 0;
+}
+.tw-textarea {
+  position: relative;
+}
+.tw-textarea__input.wh-textarea {
+  min-height: 96px;
+  padding-bottom: var(--wh-space-8);
+}
+.tw-textarea__count {
+  position: absolute;
+  right: var(--wh-space-3_5);
+  bottom: var(--wh-space-2_5);
+  font-size: var(--wh-type-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--wh-text-disabled);
+  pointer-events: none;
+}
+.tw-rule {
+  margin-top: var(--wh-space-2);
+}
+
+/* 키보드 위 막대: 공개 범위 + 남기기 */
+.tw-dock.wh-dock {
+  padding-top: var(--wh-space-2_5);
+  background: var(--wh-bg);
+}
+.tw-dock__row {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-2_5);
+}
+.tw-dock__scope {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--wh-space-1_5);
+  min-width: 0;
+  font-size: var(--wh-type-caption);
+  line-height: 1.4;
+  color: var(--wh-text-muted);
+}
+.tw-dock__scope svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+}
+.tw-dock__btn.wh-btn.seed-action-button {
+  flex: none;
+  width: auto;
+  min-height: var(--wh-control-height-s);
+  padding-inline: var(--wh-space-5);
+}
+.tw-reconfirm.seed-action-button {
+  margin-top: var(--wh-space-5);
+}

@@ -115,6 +115,13 @@ a {
     visibility: hidden;
   }
 }
+/* 성공 표시(체크 원)처럼 작은 결과 표시가 나타날 때. SEED 토스트와 같은 0.8 → 1 */
+@keyframes wh-pop-in {
+  from {
+    opacity: 0;
+    scale: 0.8;
+  }
+}
 
 /* ---------- 상단 막대 ---------- */
 .wh-topbar {
@@ -158,9 +165,15 @@ a {
   font-weight: 600;
   color: var(--wh-text-subtle);
   border-radius: var(--wh-radius-m);
+  transition: background-color var(--seed-duration-color-transition)
+    var(--seed-timing-function-easing);
+}
+.wh-topbar__text-btn:active:not(:disabled) {
+  background: var(--wh-surface-muted);
 }
 .wh-icon-btn {
   display: inline-grid;
+  flex: none; /* 옆 알약(크게 보기 켜짐)이 넓어져도 44px을 지킵니다 */
   place-items: center;
   width: var(--wh-touch);
   height: var(--wh-touch);
@@ -252,6 +265,12 @@ a {
   background: var(--wh-primary);
   color: var(--wh-gray-0);
 }
+.wh-pill-btn:active .wh-pill-btn__face {
+  background: var(--wh-gray-200);
+}
+.wh-pill-btn[aria-pressed="true"]:active .wh-pill-btn__face {
+  background: var(--wh-primary-hover);
+}
 
 /* ---------- 글자 ---------- */
 .wh-h-display {
@@ -298,6 +317,8 @@ a {
 .wh-section-head__more {
   display: inline-flex;
   align-items: center;
+  justify-content: flex-end;
+  min-width: var(--wh-touch);
   min-height: var(--wh-touch);
   margin-block: calc((var(--wh-touch) - 1.5em) / -2);
   font-size: var(--wh-type-small);
@@ -346,6 +367,9 @@ a {
   background: var(--wh-kakao);
   color: var(--wh-kakao-ink);
 }
+.wh-btn--kakao.seed-action-button:active:not(:disabled) {
+  background: var(--wh-kakao-pressed);
+}
 .wh-btn--kakao > svg {
   fill: currentColor;
   stroke: none;
@@ -354,7 +378,7 @@ a {
   width: auto;
   min-height: var(--wh-control-height-s);
   padding: var(--wh-space-1_5) var(--wh-space-3_5);
-  border-radius: 10px;
+  border-radius: var(--wh-radius-icon);
   font-size: var(--wh-type-label);
   white-space: nowrap;
 }
@@ -381,7 +405,8 @@ a {
 .wh-dock {
   position: sticky;
   bottom: 0;
-  z-index: 10;
+  /* SEED 시트·대화상자(z-index 2)가 하단 버튼·탭 위에 오도록 1로 둡니다 */
+  z-index: 1;
   padding: 22px var(--wh-gutter) calc(var(--wh-space-3) + env(safe-area-inset-bottom));
   background: linear-gradient(to bottom, transparent, var(--wh-dock-bg) 20px);
 }
@@ -406,11 +431,14 @@ a {
   gap: var(--wh-space-1);
   min-height: 24px;
   padding: 0 var(--wh-space-2);
-  border-radius: 6px;
+  border-radius: var(--wh-radius-badge);
   font-size: var(--wh-type-tiny);
   font-weight: 600;
   line-height: 1.3;
   white-space: nowrap;
+  transition:
+    background-color var(--seed-duration-color-transition) var(--seed-timing-function-easing),
+    color var(--seed-duration-color-transition) var(--seed-timing-function-easing);
 }
 .wh-badge svg {
   width: 13px;
@@ -591,6 +619,12 @@ a {
   resize: vertical;
   field-sizing: content;
 }
+/* 글자에 맞춰 늘어나는 브라우저에서는 lofi처럼 크기 조절 손잡이를 두지 않습니다 */
+@supports (field-sizing: content) {
+  .wh-textarea {
+    resize: none;
+  }
+}
 .wh-input::placeholder,
 .wh-textarea::placeholder {
   color: var(--wh-text-disabled);
@@ -616,64 +650,7 @@ a {
   color: var(--wh-danger);
 }
 
-/* ---------- 건물 정적 그림 ---------- */
-.building-scene {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-.building-scene polygon {
-  stroke: var(--wh-scene-edge);
-  stroke-width: 1;
-  stroke-linejoin: round;
-}
-.building-scene .scene-ground {
-  fill: var(--wh-scene-ground);
-  stroke: none;
-}
-.building-scene .scene-road {
-  fill: var(--wh-scene-road);
-  stroke: none;
-}
-.building-scene .scene-g-top {
-  fill: var(--wh-scene-g-top);
-}
-.building-scene .scene-g-left {
-  fill: var(--wh-scene-g-left);
-}
-.building-scene .scene-g-right {
-  fill: var(--wh-scene-g-right);
-}
-.building-scene .scene-g2-top {
-  fill: var(--wh-scene-g2-top);
-}
-.building-scene .scene-g2-left {
-  fill: var(--wh-scene-g2-left);
-}
-.building-scene .scene-g2-right {
-  fill: var(--wh-scene-g2-right);
-}
-.building-scene .scene-hl-top {
-  fill: var(--wh-scene-hl-top);
-  stroke: none;
-}
-.building-scene .scene-hl-left {
-  fill: var(--wh-scene-hl-left);
-  stroke: none;
-}
-.building-scene .scene-hl-right {
-  fill: var(--wh-scene-hl-right);
-  stroke: none;
-}
-.building-scene .scene-window {
-  fill: var(--wh-cream);
-  stroke: none;
-}
-.building-scene .scene-window-lit {
-  fill: var(--wh-moon);
-  stroke: none;
-}
+/* 건물 그림은 components/building-scene.css */
 
 /* ---------- 불러오는 중·오류 ---------- */
 .wh-skeleton-lines {
@@ -693,6 +670,13 @@ a {
   display: grid;
   gap: var(--wh-space-4);
   padding-top: var(--wh-space-2);
+}
+.wh-gate-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--wh-space-1);
+  margin-top: var(--wh-space-5);
 }
 .wh-gate-action.seed-action-button {
   margin-top: var(--wh-space-5);
@@ -729,4 +713,329 @@ a {
     transition: none !important;
     scroll-behavior: auto;
   }
+  /* 스켈레톤의 300ms 지연은 움직임이 아니라서 남깁니다(빨리 오면 번쩍이지 않게) */
+  .wh-delayed {
+    /* biome-ignore lint/complexity/noImportantStyles: Keeps the skeleton delay over the reduced-motion reset. */
+    animation: wh-show 0s linear var(--seed-duration-d6) both !important;
+  }
+}
+
+/* ---------- 글자로만 된 누름 요소 ----------
+   더 보기·다시 시도·링크형 버튼. 배경이 없어 누르면 옅어지고, 처리 중(disabled)이면 흐린 글자입니다.
+   새로 만들 때는 wh-text-action을 붙입니다(문장 속 ‘다시 시도’ 등, 누를 자리 높이 44px). */
+.wh-text-action {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--wh-touch);
+  padding: 0 var(--wh-space-1);
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--wh-primary);
+}
+.wh-text-action,
+.wh-section-head__more,
+.wh-demo-login,
+.lh-status__link,
+.lh-stat__link,
+.fg-more,
+.cn-nocode__link,
+.rp-sheet__error-link,
+.nw-who__retry,
+.gd-inline-retry,
+.tp-preview__retry,
+.nc-card__retry,
+.tl-connect__link,
+.gm-info__link {
+  transition: opacity var(--seed-duration-color-transition) var(--seed-timing-function-easing);
+}
+:is(
+  .wh-text-action,
+  .wh-section-head__more,
+  .wh-demo-login,
+  .lh-status__link,
+  .lh-stat__link,
+  .fg-more,
+  .cn-nocode__link,
+  .rp-sheet__error-link,
+  .nw-who__retry,
+  .gd-inline-retry,
+  .tp-preview__retry,
+  .nc-card__retry,
+  .tl-connect__link,
+  .gm-info__link
+):active:not(:disabled) {
+  opacity: 0.6;
+}
+:is(
+  .wh-text-action,
+  .nw-who__retry,
+  .gd-inline-retry,
+  .tp-preview__retry,
+  .nc-card__retry
+):disabled {
+  color: var(--wh-text-disabled);
+  cursor: progress;
+}
+
+/* ---------- 토스트 (SEED Snackbar) ----------
+   lofi 04처럼 화면 좌우 여백(20px)에 맞추고, 하단 버튼·탭 위에 뜹니다(Dock·TabBar의 Snackbar.AvoidOverlap).
+   SEED는 자리(bottom)가 바뀔 때 d4로 옮기는데, 화면이 바뀌며 하단 버튼이 새로 잡힐 때 토스트가 버튼을 덮은 채
+   올라가 보여서 옮기는 움직임은 두지 않습니다(위치는 transform·opacity로만 움직임, interaction.md §1). */
+:root .seed-snackbar-region {
+  padding-inline: var(--wh-gutter);
+  transition: none;
+}
+
+/* ---------- 하단 탭 (lofi .tabbar) ---------- */
+.wh-tabbar {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  min-height: calc(var(--wh-tab-height) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  border-top: 1px solid var(--wh-border);
+  background: var(--wh-surface);
+}
+.wh-tabbar__tab {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: var(--wh-tab-height);
+  font-size: calc(0.71875rem * var(--wh-font-scale));
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--wh-text-muted);
+  transition: color var(--seed-duration-color-transition) var(--seed-timing-function-easing);
+}
+.wh-tabbar__tab svg {
+  width: var(--wh-icon-l);
+  height: var(--wh-icon-l);
+}
+.wh-tabbar__tab[aria-current="page"] {
+  font-weight: 600;
+  color: var(--wh-text);
+}
+.wh-tabbar__tab:active {
+  color: var(--wh-text-body);
+}
+.wh-screen--tabs .wh-dock {
+  bottom: calc(var(--wh-tab-height) + env(safe-area-inset-bottom));
+  padding-bottom: var(--wh-space-3);
+}
+
+/* ---------- 6칸 코드 (lofi .otp) ---------- */
+.wh-code {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--wh-space-2);
+}
+.wh-code__cell {
+  display: grid;
+  place-items: center;
+  min-height: 60px;
+  border: 1.5px solid transparent;
+  border-radius: var(--wh-radius-m);
+  background: var(--wh-surface-muted);
+  font-size: calc(1.625rem * var(--wh-font-scale));
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  color: var(--wh-text);
+  transition:
+    border-color var(--seed-duration-color-transition) var(--seed-timing-function-easing),
+    background-color var(--seed-duration-color-transition) var(--seed-timing-function-easing);
+}
+.wh-code__cell--filled {
+  border-color: var(--wh-gray-300);
+  background: var(--wh-surface);
+}
+.wh-code__cell--active {
+  border-color: var(--wh-primary);
+  background: var(--wh-surface);
+  box-shadow: 0 0 0 3px var(--wh-focus-halo);
+}
+.wh-code__cell--active:empty::after {
+  content: "";
+  width: 2px;
+  height: 26px;
+  background: var(--wh-primary);
+}
+.wh-code--invalid .wh-code__cell {
+  border-color: var(--wh-danger);
+  background: var(--wh-surface);
+}
+.wh-code--compact .wh-code__cell {
+  min-height: 48px;
+  background: var(--wh-surface-soft);
+  font-size: calc(1.375rem * var(--wh-font-scale));
+}
+
+/* ---------- 목록 행 (lofi .list-row) ---------- */
+.wh-list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-3_5);
+  width: 100%;
+  min-height: 54px;
+  padding: var(--wh-space-2_5) var(--wh-gutter);
+  border: 0;
+  background: none;
+  text-align: left;
+  transition: background-color var(--seed-duration-color-transition)
+    var(--seed-timing-function-easing);
+}
+a.wh-list-row:active,
+button.wh-list-row:active:not(:disabled) {
+  background: var(--wh-surface-soft);
+}
+.wh-list-row:disabled {
+  cursor: not-allowed;
+}
+.wh-list-row__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.wh-list-row__title {
+  font-size: var(--wh-type-body);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--wh-text);
+}
+.wh-list-row:disabled .wh-list-row__title {
+  color: var(--wh-text-strong-subtle);
+}
+.wh-list-row__sub {
+  margin-top: var(--wh-space-0_5);
+  font-size: var(--wh-type-caption);
+  line-height: var(--wh-leading-snug);
+  color: var(--wh-text-muted);
+}
+.wh-list-row__value {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--wh-space-0_5);
+  font-size: var(--wh-type-small);
+  color: var(--wh-text-muted);
+}
+.wh-list-row__value svg {
+  width: 18px;
+  height: 18px;
+  color: var(--wh-text-disabled);
+}
+.wh-group-title {
+  margin: var(--wh-space-4) 0 0;
+  padding: 0 var(--wh-gutter);
+  font-size: var(--wh-type-caption);
+  font-weight: 600;
+  color: var(--wh-text-muted);
+}
+.wh-divider-thick {
+  height: 10px;
+  background: var(--wh-surface-muted);
+}
+
+/* ---------- 시트 (SEED BottomSheet 위에 lofi 모양) ---------- */
+.wh-sheet__hami {
+  display: flex;
+  justify-content: center;
+}
+.wh-sheet__hami .wh-hami {
+  width: 112px;
+  margin: -14px 0 -16px;
+}
+.wh-sheet__title {
+  font-size: calc(1.25rem * var(--wh-font-scale));
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: var(--wh-tracking-tight);
+  text-align: center;
+}
+.wh-sheet__lead {
+  margin-top: var(--wh-space-1);
+  font-size: var(--wh-type-small);
+  line-height: 1.5;
+  color: var(--wh-text-subtle);
+  text-align: center;
+  white-space: pre-line;
+}
+.wh-sheet__caption {
+  margin-top: var(--wh-space-2);
+  font-size: var(--wh-type-caption);
+  line-height: var(--wh-leading-snug);
+  color: var(--wh-text-muted);
+  text-align: center;
+}
+.wh-sheet__actions {
+  display: grid;
+  gap: var(--wh-space-2);
+  margin-top: var(--wh-space-4);
+}
+.wh-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--wh-space-2);
+  font-size: calc(0.84375rem * var(--wh-font-scale));
+  line-height: 1.5;
+  color: var(--wh-text-subtle);
+}
+.wh-note svg {
+  width: var(--wh-icon-s);
+  height: var(--wh-icon-s);
+  flex: none;
+  margin-top: 2px;
+  color: var(--wh-text-muted);
+}
+.wh-steps-box {
+  margin-top: var(--wh-space-4);
+  padding: var(--wh-space-2) var(--wh-space-4);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-soft);
+}
+.wh-steps-box li {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-3);
+  padding: 7px 0;
+  font-size: var(--wh-type-label);
+  color: var(--wh-text-body);
+}
+.wh-steps-box__num {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--wh-primary);
+  color: var(--wh-gray-0);
+  font-size: 12px;
+  font-weight: 700;
+}
+.wh-steps-box li > svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-left: auto;
+  color: var(--wh-text-muted);
+}
+
+/* ---------- QR ---------- */
+.wh-qr {
+  width: 100%;
+  height: auto;
+}
+.wh-qr__bg {
+  fill: var(--wh-surface);
+}
+.wh-qr__dots {
+  fill: var(--wh-navy-700);
 }

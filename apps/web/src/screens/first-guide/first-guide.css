@@ -86,7 +86,7 @@
   margin-top: var(--wh-space-3);
   padding: var(--wh-space-4) var(--wh-space-4_5);
   border: 1px solid var(--wh-primary-line);
-  border-radius: 18px;
+  border-radius: var(--wh-radius-frame);
   background: var(--wh-primary-soft);
 }
 .fg-next__title {

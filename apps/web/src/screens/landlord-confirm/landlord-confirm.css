@@ -1,0 +1,86 @@
+/* LF-12 건물 확인 (lofi 23) */
+.lc-body {
+  padding-bottom: var(--wh-space-6);
+}
+.lc-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--wh-space-2);
+  margin-top: var(--wh-space-2);
+}
+/* 함이 가이드 §4: 118px, 투명 여백만큼 당깁니다(lofi 23) */
+.lc-head .wh-hami {
+  flex: none;
+  width: 118px;
+  margin: -14px -14px -12px 0;
+}
+.lc-label {
+  margin-top: var(--wh-space-6);
+}
+.lc-label--address {
+  margin-top: var(--wh-space-5);
+}
+.lc-label__opt {
+  font-weight: 500;
+  color: var(--wh-text-muted);
+}
+.lc-caption {
+  margin-top: var(--wh-space-2);
+}
+/* 팀이 확인한 주소: 입력칸 모양이지만 고칠 수 없음 */
+.lc-lock {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-2);
+  min-height: var(--wh-control-height);
+  padding: var(--wh-space-3) var(--wh-space-4);
+  border: 1.5px solid var(--wh-border-field);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-muted);
+  font-size: var(--wh-type-body);
+  line-height: var(--wh-leading-snug);
+  color: var(--wh-text-strong-subtle);
+  overflow-wrap: anywhere;
+}
+.lc-lock svg {
+  flex: none;
+  width: var(--wh-icon-s);
+  height: var(--wh-icon-s);
+  color: var(--wh-text-muted);
+}
+.lc-ask {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-2);
+  min-height: var(--wh-touch);
+  margin-top: var(--wh-space-6);
+  padding: var(--wh-space-3) var(--wh-space-3_5);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-soft);
+  font-size: var(--wh-type-small);
+  color: var(--wh-text-strong-subtle);
+  transition:
+    background-color var(--seed-duration-color-transition) var(--seed-timing-function-easing),
+    var(--seed-feedback-scale-transition);
+}
+.lc-ask:active {
+  background: var(--wh-primary-soft);
+  scale: var(--seed-scale-s98);
+}
+.lc-ask svg {
+  flex: none;
+  width: var(--wh-icon-s);
+  height: var(--wh-icon-s);
+  color: var(--wh-text-muted);
+}
+.lc-ask__text {
+  flex: 1;
+  min-width: 0;
+}
+.lc-ask__action {
+  flex: none;
+  font-weight: 600;
+  color: var(--wh-primary);
+  white-space: nowrap;
+}

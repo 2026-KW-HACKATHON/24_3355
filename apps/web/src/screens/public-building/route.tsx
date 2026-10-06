@@ -1,32 +1,44 @@
-// LF-01 공개 건물 화면 · lofi 01 28 (안내 없음 14, 건물 없음 22)
-import { ActionButton, Skeleton } from "@seed-design/react";
-import type { Guide, Notice, PublicBuilding } from "@wolgyeham/contracts";
-import { type ReactNode, useEffect, useState } from "react";
+// LF-01 공개 건물 화면 · lofi 01 28 (안내 없음 14, 건물 없음 22). 이 건물 거주자는 같은 주소에서 LF-05
+import { ActionButton } from "@seed-design/react";
+import {
+  type Guide,
+  type Me,
+  type PublicBuilding,
+  REPORT_PRESETS,
+  type ReportPreset,
+} from "@wolgyeham/contracts";
+import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router";
 import { BuildingScene } from "../../components/BuildingScene";
 import { Hami } from "../../components/Hami";
 import { Icon } from "../../components/Icon";
-import { Brand, Dock, LargeModeToggle, Screen, SoonNote, TopBar } from "../../components/Screen";
+import {
+  BackButton,
+  Brand,
+  Dock,
+  hasAppHistory,
+  LargeModeToggle,
+  Screen,
+  TopBar,
+} from "../../components/Screen";
 import { Delayed, EmptyState, LoadError } from "../../components/ScreenState";
 import { BuildingNotFound } from "../../features/buildings/BuildingNotFound";
-import {
-  useCurrentNotice,
-  usePublicBuilding,
-  usePublicGuides,
-} from "../../features/buildings/queries";
+import { BuildingSkeleton } from "../../features/buildings/BuildingSkeleton";
+import { GuideBigList, GuideRows, GuideTiles } from "../../features/buildings/GuideTiles";
+import { usePublicBuilding, usePublicGuides } from "../../features/buildings/queries";
 import { ShareButton } from "../../features/buildings/ShareButton";
-import { CATEGORY, tileLabels } from "../../features/guides/categories";
+import { hasSameCategory } from "../../features/guides/categories";
+import { NoticeCards } from "../../features/notices/NoticeCards";
+import { useNotices } from "../../features/notices/queries";
+import { connectPath } from "../../features/occupancy/connectDraft";
+import { REPORT_PRESET_COPY } from "../../features/reports/labels";
+import { MyReportsBanner } from "../../features/reports/MyReportsBanner";
+import { useMyReportsForBuilding } from "../../features/reports/queries";
+import { ReportChooser } from "../../features/reports/ReportChooser";
+import { ReportConfirmSheet } from "../../features/reports/ReportConfirmSheet";
 import { toAppError } from "../../lib/errors";
-import { formatDay } from "../../lib/format";
 import { useLargeMode } from "../../lib/largeMode";
 import "./public-building.css";
-
-// 자주 쓰는 말(lofi 01). 보내기(LF-10)는 다음 업데이트에서 엽니다.
-const QUICK_REPORTS = [
-  { icon: "trash-2", text: "건물 앞 쓰레기가 넘쳤어요" },
-  { icon: "ban", text: "통로를 막는 물건이 있어요" },
-  { icon: "droplets", text: "물이 새거나 고장 났어요" },
-] as const;
 
 /** 공개 화면 첫 방문에만 함이를 보여줍니다(재방문 30에는 넣지 않음). */
 function useFirstVisit(buildingId: string, ready: boolean) {
@@ -49,11 +61,15 @@ function useFirstVisit(buildingId: string, ready: boolean) {
   return first;
 }
 
-export function Component() {
+/**
+ * `me`는 주소 나누기(app/BuildingRoute)가 판정한 값입니다. 모르면(실패·늦음) null로 봅니다.
+ * `viaQr`도 주소 나누기가 `?via=qr`을 읽어 넘깁니다(인쇄한 현관 QR로 열었을 때만 ‘현관 QR’ 배지).
+ */
+export function Component({ me = null, viaQr = false }: { me?: Me | null; viaQr?: boolean }) {
   const { buildingId = "" } = useParams();
   const building = usePublicBuilding(buildingId);
   const guides = usePublicGuides(buildingId);
-  const notice = useCurrentNotice(buildingId);
+  const notices = useNotices(buildingId);
   const large = useLargeMode();
   const ready = building.isSuccess && guides.isSuccess;
   const firstVisit = useFirstVisit(buildingId, ready);
@@ -69,7 +85,7 @@ export function Component() {
 
   if (building.isError || guides.isError) {
     return (
-      <PublicShell title={building.data?.name}>
+      <PublicShell title={building.data?.name} manageId={undefined}>
         <LoadError
           retrying={building.isFetching || guides.isFetching}
           onRetry={() => {
@@ -83,120 +99,89 @@ export function Component() {
 
   if (!ready) {
     return (
-      <PublicShell busy>
+      <PublicShell busy manageId={undefined}>
         <Delayed label="건물 안내를 불러오는 중">
-          <PublicSkeleton />
+          <BuildingSkeleton />
         </Delayed>
       </PublicShell>
     );
   }
 
-  if (guides.data.length === 0) return <NoGuides building={building.data} />;
+  // 집주인이 자기 건물 QR로 들어오면 같은 공개 화면에 본인에게만 ‘관리하기’를 둡니다(screens.md §5).
+  const manageId = me?.managedBuildings.some((item) => item.id === buildingId)
+    ? buildingId
+    : undefined;
 
   const noticeSlot = (
-    <NoticeSlot
-      notice={notice.data}
-      failed={notice.isError}
-      retrying={notice.isFetching}
-      onRetry={() => void notice.refetch()}
+    <NoticeCards
+      notices={notices.data}
+      failed={notices.isError}
+      retrying={notices.isFetching}
+      onRetry={() => void notices.refetch()}
     />
   );
 
+  // 공개된 안내가 없어도 공지와 연결 카드는 그대로 둡니다(리뷰 L13).
+  if (guides.data.length === 0) {
+    return <NoGuides building={building.data} manageId={manageId} notice={noticeSlot} />;
+  }
+
   return large ? (
-    <LargeLayout building={building.data} guides={guides.data} notice={noticeSlot} />
+    <LargeLayout
+      building={building.data}
+      guides={guides.data}
+      notice={noticeSlot}
+      manageId={manageId}
+    />
   ) : (
     <DefaultLayout
       building={building.data}
       guides={guides.data}
       notice={noticeSlot}
       showHami={firstVisit}
+      viaQr={viaQr}
+      manageId={manageId}
     />
+  );
+}
+
+/** 집주인 본인에게만 보이는 관리 입구. 권한은 관리 화면에서 서버가 다시 확인합니다. */
+function ManageLink({ buildingId }: { buildingId: string }) {
+  return (
+    <Link className="wh-pill-btn pb-manage" to={`/manage/${buildingId}`}>
+      <span className="wh-pill-btn__face">관리하기</span>
+    </Link>
+  );
+}
+
+function TopEnd({ title, manageId }: { title?: string | undefined; manageId: string | undefined }) {
+  return (
+    <>
+      {manageId ? <ManageLink buildingId={manageId} /> : null}
+      <LargeModeToggle />
+      {title ? <ShareButton title={title} /> : null}
+    </>
   );
 }
 
 function PublicShell({
   title,
+  manageId,
   busy = false,
   children,
 }: {
   title?: string | undefined;
+  manageId: string | undefined;
   busy?: boolean;
   children: ReactNode;
 }) {
   return (
     <Screen
       busy={busy}
-      topbar={
-        <TopBar
-          start={<Brand />}
-          end={
-            <>
-              <LargeModeToggle />
-              {title ? <ShareButton title={title} /> : null}
-            </>
-          }
-        />
-      }
+      topbar={<TopBar start={<Brand />} end={<TopEnd title={title} manageId={manageId} />} />}
     >
       {children}
     </Screen>
-  );
-}
-
-function PublicSkeleton() {
-  return (
-    <div className="pb-skeleton">
-      <Skeleton radius="16" height="150px" width="100%" />
-      <div className="pb-skeleton__body">
-        <Skeleton radius="8" height="34px" width="45%" />
-        <Skeleton radius="8" height="20px" width="80%" />
-        <Skeleton radius="16" height="64px" />
-        <div className="pb-skeleton__tiles">
-          {["a", "b", "c", "d"].map((key) => (
-            <Skeleton key={key} radius="16" height="78px" />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function NoticeSlot({
-  notice,
-  failed,
-  retrying,
-  onRetry,
-}: {
-  notice: Notice | null | undefined;
-  failed: boolean;
-  retrying: boolean;
-  onRetry: () => void;
-}) {
-  if (failed) {
-    return (
-      <div className="pb-notice pb-notice--failed" role="status">
-        <span className="pb-notice__ic">
-          <Icon name="wifi-off" />
-        </span>
-        <p className="pb-notice__text">공지를 불러오지 못했어요</p>
-        <button type="button" className="pb-notice__retry" onClick={onRetry} disabled={retrying}>
-          다시 시도
-        </button>
-      </div>
-    );
-  }
-  if (!notice) return null;
-  // 공지 상세(LF-03)는 아직 없어서 누르는 곳이 아니라 알림 카드로 둡니다.
-  return (
-    <section className="pb-notice" aria-label="공지">
-      <span className="pb-notice__ic">
-        <Icon name="megaphone" />
-      </span>
-      <div className="pb-notice__text">
-        <p className="pb-notice__title">{notice.title}</p>
-        <p className="pb-notice__sub">공지 · {formatDay(notice.endsAt)}까지</p>
-      </div>
-    </section>
   );
 }
 
@@ -205,41 +190,83 @@ function DefaultLayout({
   guides,
   notice,
   showHami,
+  viaQr,
+  manageId,
 }: {
   building: PublicBuilding;
   guides: Guide[];
   notice: ReactNode;
   showHami: boolean;
+  viaQr: boolean;
+  manageId: string | undefined;
 }) {
-  const labels = tileLabels(guides);
+  // ‘전체 보기’: 타일(종류)을 제목까지 보이는 목록으로 펼칩니다. 같은 종류가 여럿이면 이미 목록입니다.
+  const [expanded, setExpanded] = useState(false);
+  const rowsAlready = hasSameCategory(guides);
+  // 자주 쓰는 말을 누르면(첫 번째 탭) 확인 시트(20), 시트의 ‘집주인에게 보내기’가 두 번째 탭입니다.
+  // 닫히는 동안에도 문구가 보이도록 고른 말은 시트를 닫아도 남겨 둡니다.
+  const [preset, setPreset] = useState<ReportPreset | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  // 재방문(30): ‘내가 보낸 내용’ 배너가 있으면(또는 자리를 잡아 두면) 건물 그림을 120px로 줄입니다(lofi 30).
+  const mine = useMyReportsForBuilding(building.id);
+  const hasBanner = mine.items.length > 0;
+  const hero = useRef<HTMLDivElement>(null);
+  // 자리를 잡아 둔 높이(배너 자리 + 그림 120px). 조회해 보니 보낸 내용이 없으면 이 높이를 그대로 두고 그림이
+  // 배너 자리까지 채웁니다. 건물 이름 아래 내용은 움직이지 않습니다(CLS 0, frontend.md §5).
+  const [reservedHeight, setReservedHeight] = useState<number>();
+  useLayoutEffect(() => {
+    if (!mine.reserve || hasBanner) return;
+    const height = hero.current?.offsetHeight;
+    if (height && height !== reservedHeight) setReservedHeight(height);
+  });
+  const filled = !mine.reserve && !hasBanner && reservedHeight !== undefined;
+  const withBanner = hasBanner || mine.reserve;
   return (
     <Screen
       topbar={
-        <TopBar
-          start={<Brand />}
-          end={
-            <>
-              <LargeModeToggle />
-              <ShareButton title={building.name} />
-            </>
-          }
-        />
+        <TopBar start={<Brand />} end={<TopEnd title={building.name} manageId={manageId} />} />
       }
     >
-      <div className="pb-scene">
-        <BuildingScene />
-        {showHami ? (
-          <div className="pb-scene__hami">
-            <p className="wh-bubble wh-bubble--tail-left">이 건물의 안내와 소식을 확인해요.</p>
-            <Hami pose="guide" size={104} eager />
-          </div>
-        ) : null}
+      <div
+        ref={hero}
+        className="pb-hero"
+        style={filled ? { minHeight: `${reservedHeight}px` } : undefined}
+      >
+        <MyReportsBanner buildingId={building.id} reserveForAccount />
+        {/* 채울 때는 그림을 새로 붙입니다(같은 그림이 위로 옮겨 가면 밀림으로 셈). 나타남은 이미 한 번 보였습니다. */}
+        <div
+          key={filled ? "fill" : "flow"}
+          className={
+            filled
+              ? "pb-scene pb-scene--fill"
+              : withBanner
+                ? "pb-scene pb-scene--return"
+                : "pb-scene"
+          }
+        >
+          <BuildingScene />
+          {/* 재방문(30)에는 함이를 넣지 않습니다(함이 가이드 §4). 배너가 있으면 처음 방문이 아닙니다. */}
+          {showHami && !withBanner ? (
+            <div className="pb-scene__hami">
+              <p className="wh-bubble wh-bubble--tail-left">이 건물의 안내와 소식을 확인해요.</p>
+              <Hami pose="guide" size={104} eager />
+            </div>
+          ) : null}
+        </div>
       </div>
 
       <div className="pb-building">
-        <h1 className="wh-h-display" tabIndex={-1}>
-          {building.name}
-        </h1>
+        <div className="pb-building__row">
+          <h1 className="wh-h-display" tabIndex={-1}>
+            {building.name}
+          </h1>
+          {viaQr ? (
+            <span className="wh-badge wh-badge--navy">
+              <Icon name="qr-code" />
+              현관 QR
+            </span>
+          ) : null}
+        </div>
         <p className="wh-small pb-building__address">
           {building.displayAddress} · 집주인이 관리하는 건물
         </p>
@@ -250,23 +277,26 @@ function DefaultLayout({
       <section className="pb-section" aria-labelledby="pb-guides">
         <div className="wh-section-head">
           <h2 id="pb-guides">건물 안내</h2>
+          {rowsAlready ? null : (
+            <button
+              type="button"
+              className="wh-section-head__more pb-more"
+              aria-expanded={expanded}
+              aria-controls="pb-guide-list"
+              onClick={() => setExpanded((value) => !value)}
+            >
+              {expanded ? "접기" : "전체 보기"}
+              <Icon name={expanded ? "chevron-up" : "chevron-right"} />
+            </button>
+          )}
         </div>
-        <ul className="pb-tiles">
-          {guides.map((guide) => (
-            <li key={guide.id}>
-              <Link
-                className="pb-tile"
-                to={`/b/${building.id}/guides/${guide.id}`}
-                aria-label={`${labels.get(guide.id)}: ${guide.title}`}
-              >
-                <span className="pb-tile__ic">
-                  <Icon name={CATEGORY[guide.category].icon} />
-                </span>
-                <span className="pb-tile__label">{labels.get(guide.id)}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div id="pb-guide-list">
+          {expanded ? (
+            <GuideRows buildingId={building.id} guides={guides} />
+          ) : (
+            <GuideTiles buildingId={building.id} guides={guides} />
+          )}
+        </div>
 
         <Link className="pb-first" to={`/b/${building.id}/first`}>
           <Icon name="book-open" className="pb-first__lead" />
@@ -280,51 +310,32 @@ function DefaultLayout({
         </Link>
       </section>
 
-      <div className="pb-connect">
-        <span className="pb-connect__ic">
-          <Icon name="key-round" />
-        </span>
-        <div className="pb-connect__text">
-          <p className="pb-connect__title">새 공지를 알림으로 받으려면</p>
-          <p className="pb-connect__sub">이 건물에 살고 있다면 가입코드로 연결해요</p>
-          <SoonNote id="pb-connect-soon" />
-        </div>
-        <button
-          type="button"
-          className="pb-connect__action"
-          disabled
-          aria-describedby="pb-connect-soon"
-        >
-          연결하기
-        </button>
-      </div>
+      <ConnectCard buildingId={building.id} />
 
       <section className="pb-section pb-section--report" aria-labelledby="pb-report">
         <div className="wh-section-head">
           <h2 id="pb-report">집주인에게 바로 알리기</h2>
-          <button
-            type="button"
-            className="wh-section-head__more pb-more"
-            disabled
-            aria-describedby="pb-report-soon"
-          >
+          <Link className="wh-section-head__more pb-more" to={`/b/${building.id}/report`}>
             직접 적기
             <Icon name="chevron-right" />
-          </button>
+          </Link>
         </div>
         <ul className="pb-quick">
-          {QUICK_REPORTS.map((item) => (
-            <li key={item.text}>
+          {REPORT_PRESETS.map((key) => (
+            <li key={key}>
               <button
                 type="button"
                 className="pb-quick__row"
-                disabled
-                aria-describedby="pb-report-soon"
+                aria-haspopup="dialog"
+                onClick={() => {
+                  setPreset(key);
+                  setConfirmOpen(true);
+                }}
               >
                 <span className="pb-quick__em">
-                  <Icon name={item.icon} />
+                  <Icon name={REPORT_PRESET_COPY[key].icon} />
                 </span>
-                <span className="pb-quick__text">{item.text}</span>
+                <span className="pb-quick__text">{REPORT_PRESET_COPY[key].text}</span>
                 <span className="pb-quick__send">
                   보내기
                   <Icon name="chevron-right" />
@@ -334,10 +345,34 @@ function DefaultLayout({
           ))}
         </ul>
         <p className="pb-quick-note">
-          <SoonNote id="pb-report-soon">알리기는 다음 업데이트에서 열려요</SoonNote>
+          <Icon name="eye-off" />
+          가입하지 않아도 보낼 수 있어요 · 집주인만 봐요
         </p>
       </section>
+      <ReportConfirmSheet
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        buildingId={building.id}
+        buildingName={building.name}
+        draft={preset ? { source: "preset", preset } : null}
+      />
     </Screen>
+  );
+}
+
+/** 연결 카드(lofi 01) → LF-04. 공개 안내가 없어도 보입니다. */
+function ConnectCard({ buildingId }: { buildingId: string }) {
+  return (
+    <Link className="pb-connect" to={connectPath(buildingId)}>
+      <span className="pb-connect__ic">
+        <Icon name="key-round" />
+      </span>
+      <span className="pb-connect__text">
+        <span className="pb-connect__title">새 공지를 알림으로 받으려면</span>
+        <span className="pb-connect__sub">이 건물에 살고 있다면 가입코드로 연결해요</span>
+      </span>
+      <span className="pb-connect__action">연결하기</span>
+    </Link>
   );
 }
 
@@ -346,34 +381,26 @@ function LargeLayout({
   building,
   guides,
   notice,
+  manageId,
 }: {
   building: PublicBuilding;
   guides: Guide[];
   notice: ReactNode;
+  manageId: string | undefined;
 }) {
-  const labels = tileLabels(guides);
+  const [reportOpen, setReportOpen] = useState(false);
   return (
     <Screen
       topbar={
-        <TopBar
-          start={<Brand />}
-          end={
-            <>
-              <LargeModeToggle />
-              <ShareButton title={building.name} />
-            </>
-          }
-        />
+        <TopBar start={<Brand />} end={<TopEnd title={building.name} manageId={manageId} />} />
       }
       dock={
-        <Dock
-          hint={<SoonNote id="pb-large-report-soon">알리기는 다음 업데이트에서 열려요</SoonNote>}
-        >
+        <Dock hint="가입하지 않아도 보낼 수 있어요">
           <ActionButton
             className="wh-btn"
             size="large"
-            disabled
-            aria-describedby="pb-large-report-soon"
+            aria-haspopup="dialog"
+            onClick={() => setReportOpen(true)}
           >
             <Icon name="mail" />
             집주인에게 알리기
@@ -381,6 +408,8 @@ function LargeLayout({
         </Dock>
       }
     >
+      {/* 크게 보기에서도 ‘내가 보낸 내용’은 그대로 둡니다(screens.md 화면 규칙) */}
+      <MyReportsBanner buildingId={building.id} />
       <div className="pb-building pb-building--large">
         <h1 className="wh-h-display" tabIndex={-1}>
           {building.name}
@@ -401,55 +430,49 @@ function LargeLayout({
             <Icon name="chevron-right" />
           </Link>
         </div>
-        <ul className="pb-big-list">
-          {guides.map((guide) => (
-            <li key={guide.id}>
-              <Link
-                className="pb-big-list__row"
-                to={`/b/${building.id}/guides/${guide.id}`}
-                aria-label={`${labels.get(guide.id)}: ${guide.title}`}
-              >
-                <Icon name={CATEGORY[guide.category].icon} className="pb-big-list__lead" />
-                <span className="pb-big-list__text">{labels.get(guide.id)}</span>
-                <Icon name="chevron-right" className="pb-big-list__chev" />
-              </Link>
-            </li>
-          ))}
-        </ul>
-        <div className="pb-big-list pb-big-list--single">
-          <button
-            type="button"
-            className="pb-big-list__row"
-            disabled
-            aria-describedby="pb-large-connect-soon"
-          >
-            <Icon name="key-round" className="pb-big-list__lead" />
-            <span className="pb-big-list__text">
+        <GuideBigList buildingId={building.id} guides={guides} />
+        <div className="bd-big-list pb-big-list--single">
+          <Link className="bd-big-list__row" to={connectPath(building.id)}>
+            <Icon name="key-round" className="bd-big-list__lead" />
+            <span className="bd-big-list__text">
               새 공지 알림 받기
               <small>이 건물에 산다면 연결하기</small>
-              <SoonNote id="pb-large-connect-soon" />
             </span>
-            <Icon name="chevron-right" className="pb-big-list__chev" />
-          </button>
+            <Icon name="chevron-right" className="bd-big-list__chev" />
+          </Link>
         </div>
       </section>
+      <ReportChooser
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        buildingId={building.id}
+        buildingName={building.name}
+      />
     </Screen>
   );
 }
 
 // 안내 없음 · lofi 14. preparing 건물의 QR도 여기로 옵니다(screens.md §3).
-function NoGuides({ building }: { building: PublicBuilding }) {
+// 앱 안에서 넘어왔으면 lofi 14처럼 ‘‹ 건물 안내’, 현관 QR로 바로 열었으면 브랜드 막대입니다.
+// 공지와 연결 카드는 안내가 없어도 그대로 둡니다.
+function NoGuides({
+  building,
+  manageId,
+  notice,
+}: {
+  building: PublicBuilding;
+  manageId: string | undefined;
+  notice: ReactNode;
+}) {
+  const [inApp] = useState(hasAppHistory);
+  const [reportOpen, setReportOpen] = useState(false);
   return (
     <Screen
       topbar={
         <TopBar
-          start={<Brand />}
-          end={
-            <>
-              <LargeModeToggle />
-              <ShareButton title={building.name} />
-            </>
-          }
+          start={inApp ? <BackButton fallback="/" /> : <Brand />}
+          title={inApp ? "건물 안내" : undefined}
+          end={<TopEnd title={building.name} manageId={manageId} />}
         />
       }
       dock={
@@ -458,22 +481,23 @@ function NoGuides({ building }: { building: PublicBuilding }) {
             className="wh-btn wh-btn--secondary"
             size="large"
             variant="neutralWeak"
-            disabled
-            aria-describedby="pb-empty-report-soon"
+            aria-haspopup="dialog"
+            onClick={() => setReportOpen(true)}
           >
             <Icon name="mail" />
             집주인에게 알리기
           </ActionButton>
-          <p className="pb-dock-soon">
-            <SoonNote id="pb-empty-report-soon">알리기는 다음 업데이트에서 열려요</SoonNote>
-          </p>
         </Dock>
       }
     >
+      <MyReportsBanner buildingId={building.id} />
       <div className="wh-pad">
         <p className="wh-caption pb-empty-caption">
           {building.name} · {building.displayAddress}
         </p>
+      </div>
+      {notice}
+      <div className="wh-pad">
         <div className="pb-empty">
           <EmptyState
             hami="folder"
@@ -482,6 +506,13 @@ function NoGuides({ building }: { building: PublicBuilding }) {
           />
         </div>
       </div>
+      <ConnectCard buildingId={building.id} />
+      <ReportChooser
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        buildingId={building.id}
+        buildingName={building.name}
+      />
     </Screen>
   );
 }
