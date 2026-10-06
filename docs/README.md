@@ -22,6 +22,12 @@
 3. [../CONTRIBUTING.md](../CONTRIBUTING.md)의 브랜치·커밋 규칙과 [architecture.md](architecture.md)를 읽습니다.
 4. 맡은 영역의 문서(백엔드 또는 프론트엔드)를 읽고 `pnpm dev`로 로컬을 띄웁니다.
 
+## 테스트
+
+- `pnpm check`: lint, 타입 검사, 단위·DB 테스트(vitest), 빌드. PR 전에 통과시킵니다. DB 테스트는 `pnpm db:up`이 필요합니다([backend.md](backend.md)).
+- `pnpm e2e`: Playwright로 실제 화면 흐름을 390×844에서 돌립니다. `pnpm db:up && pnpm dev`가 떠 있어야 하고, 설치된 Chrome을 씁니다. 쓰기 테스트는 e2e 전용 건물(테스트빌라·준비빌라)만 쓰며, 쌓인 데이터는 `pnpm db:seed -- --reset-demo`로 되돌립니다. `pnpm check`에는 들어 있지 않습니다.
+- e2e는 로컬 DB와 시연 계정을 함께 쓰므로 한 번에 하나만 돌립니다. 비회원 제보 반복 제한(IP당 시간당 10건)에 걸리거나 A·B 연결 상태가 엇갈리면 `pnpm db:seed -- --reset-demo` 뒤 다시 돌립니다. 새 집주인 흐름(준비빌라)은 리셋 뒤 첫 실행에서만 돌고, `E2E_RESET_DEMO=1 pnpm e2e`는 실행이 끝난 뒤 시연 데이터를 되돌립니다.
+
 ## 문서를 고칠 때
 
 - 코드와 문서가 어긋나면 같은 PR에서 둘 다 고칩니다.

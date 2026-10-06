@@ -1,6 +1,6 @@
 {
   "CallerReference": "wolgyeham-api-dev",
-  "Comment": "wolgyeham api dev (prod: CallerReference·Comment를 prod로, HTTPPort를 8082로)",
+  "Comment": "wolgyeham api dev (prod: CallerReference·Comment를 prod로, DomainName을 prod.<ORIGIN_DOMAIN>으로)",
   "Enabled": true,
   "PriceClass": "PriceClass_200",
   "HttpVersion": "http2",
@@ -9,14 +9,18 @@
     "Items": [
       {
         "Id": "ec2-api",
-        "DomainName": "<EC2_PUBLIC_DNS>",
+        "DomainName": "<ORIGIN_HOST>",
         "CustomOriginConfig": {
-          "HTTPPort": 8081,
+          "HTTPPort": 80,
           "HTTPSPort": 443,
-          "OriginProtocolPolicy": "http-only",
+          "OriginProtocolPolicy": "https-only",
           "OriginReadTimeout": 30,
           "OriginKeepaliveTimeout": 5,
           "OriginSslProtocols": { "Quantity": 1, "Items": ["TLSv1.2"] }
+        },
+        "CustomHeaders": {
+          "Quantity": 1,
+          "Items": [{ "HeaderName": "X-Origin-Verify", "HeaderValue": "<ORIGIN_VERIFY_SECRET>" }]
         }
       }
     ]

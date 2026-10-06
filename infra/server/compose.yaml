@@ -1,5 +1,7 @@
 # EC2 서버에서 돌리는 구성. 로컬 개발은 infra/compose.yaml을 씁니다.
 # deploy.sh가 /opt/wolgyeham/.deploy.env(이미지 주소·태그)와 env/*.env(SSM 비밀값)를 만든 뒤 실행합니다.
+# 밖에서 들어오는 입구는 caddy(80·443)뿐입니다. API 포트는 서버 안(127.0.0.1)에서만 열어 deploy.sh가 상태를 확인합니다.
+# API_BIND_ADDRESS는 원본을 HTTPS로 옮기는 동안에만 0.0.0.0으로 둡니다(docs/aws-setup.md 7-A).
 name: wolgyeham
 
 x-api: &api
@@ -35,7 +37,7 @@ services:
     image: ${API_IMAGE:-wolgyeham-api}:${DEV_TAG:-none}
     env_file: env/dev.env
     ports:
-      - "8081:3001"
+      - "${API_BIND_ADDRESS:-127.0.0.1}:8081:3001"
     logging:
       driver: awslogs
       options:
@@ -48,7 +50,7 @@ services:
     image: ${API_IMAGE:-wolgyeham-api}:${PROD_TAG:-none}
     env_file: env/prod.env
     ports:
-      - "8082:3001"
+      - "${API_BIND_ADDRESS:-127.0.0.1}:8082:3001"
     logging:
       driver: awslogs
       options:
@@ -56,5 +58,30 @@ services:
         awslogs-group: /wolgyeham/prod
         awslogs-create-group: "false"
 
+  # CloudFront → 원본 HTTPS(D-31). 설정은 caddy/Caddyfile, 인증서와 ACME 계정은 caddy-data 볼륨에 남습니다.
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    env_file:
+      - path: env/caddy.env
+        required: false # deploy.sh가 만들기 전에도 backup.sh 같은 다른 compose 명령이 돌도록
+    environment:
+      GOMEMLIMIT: 48MiB
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy:/etc/caddy:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    mem_limit: 64m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
 volumes:
   postgres-data:
+  caddy-data:
+  caddy-config:

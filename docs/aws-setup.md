@@ -14,12 +14,12 @@
 aws login                                                     # 처음 한 번은 루트로
 bash infra/aws/setup-iam.sh <관리자 이름> <개발자 이름> <개발자 이름>   # 3단계 (3-B 방식)
 aws login                                                     # 이제 관리자 IAM 사용자로
-bash infra/aws/setup-infra.sh <예산 알림 이메일>                # 2·4~8단계
+bash infra/aws/setup-infra.sh <예산 알림 이메일>                # 2·4~8단계 (원본 HTTPS 포함)
 # 콘솔에서 Amplify 앱 두 개를 GitHub에 연결 (9단계 표)
 bash infra/aws/setup-amplify.sh <dev 앱 ID> <prod 앱 ID>        # 9단계 나머지
 ```
 
-아래는 각 단계가 무엇을 하는지와 수동으로 할 때의 명령입니다.
+아래는 각 단계가 무엇을 하는지와 수동으로 할 때의 명령입니다. 이미 원본이 HTTP로 돌고 있는 환경을 HTTPS로 옮기는 절차는 [7-A](#7-a-원본-https로-옮기기-이미-돌고-있는-환경)입니다.
 
 ## 0. 준비
 
@@ -109,6 +109,7 @@ put /wolgyeham/db/POSTGRES_PASSWORD "$(openssl rand -hex 24)"
 for e in dev prod; do
   put /wolgyeham/$e/DB_PASSWORD "$(openssl rand -hex 24)"
   put /wolgyeham/$e/SESSION_SECRET "$(openssl rand -hex 32)"
+  put /wolgyeham/$e/ORIGIN_VERIFY_SECRET "$(openssl rand -hex 32)"   # 7단계, 없으면 deploy.sh가 멈춤
 done
 ```
 
@@ -126,15 +127,16 @@ aws iam put-role-policy --role-name wolgyeham-ec2 --policy-name wolgyeham-app \
 aws iam create-instance-profile --instance-profile-name wolgyeham-ec2
 aws iam add-role-to-instance-profile --instance-profile-name wolgyeham-ec2 --role-name wolgyeham-ec2
 
-# 보안 그룹: CloudFront에서 오는 8081~8082만 허용, SSH 없음
+# 보안 그룹: CloudFront에서 오는 443(caddy)과 인증서 발급용 80만 허용, SSH 없음
 VPC_ID=$(aws ec2 describe-vpcs --filters Name=is-default,Values=true --query 'Vpcs[0].VpcId' --output text)
 SG_ID=$(aws ec2 create-security-group --group-name wolgyeham-app --vpc-id $VPC_ID \
   --description "Wolgyeham API from CloudFront only" --query GroupId --output text)
 CF_PL=$(aws ec2 describe-managed-prefix-lists \
   --filters Name=prefix-list-name,Values=com.amazonaws.global.cloudfront.origin-facing \
   --query 'PrefixLists[0].PrefixListId' --output text)
-aws ec2 authorize-security-group-ingress --group-id $SG_ID \
-  --ip-permissions "IpProtocol=tcp,FromPort=8081,ToPort=8082,PrefixListIds=[{PrefixListId=$CF_PL}]"
+aws ec2 authorize-security-group-ingress --group-id $SG_ID --ip-permissions \
+  "IpProtocol=tcp,FromPort=443,ToPort=443,PrefixListIds=[{PrefixListId=$CF_PL,Description=CloudFront to Caddy}]" \
+  "IpProtocol=tcp,FromPort=80,ToPort=80,IpRanges=[{CidrIp=0.0.0.0/0,Description=ACME HTTP-01 and redirect only}]"
 
 # 인스턴스 (Amazon Linux 2023, t3.micro, 암호화된 20GB, IMDSv2)
 AMI=$(aws ssm get-parameter --name /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64 \
@@ -151,27 +153,66 @@ INSTANCE_ID=$(aws ec2 run-instances --image-id $AMI --instance-type t3.micro \
 ALLOC=$(aws ec2 allocate-address --tag-specifications 'ResourceType=elastic-ip,Tags=[{Key=Project,Value=wolgyeham}]' \
   --query AllocationId --output text)
 aws ec2 associate-address --instance-id $INSTANCE_ID --allocation-id $ALLOC
-aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[0].Instances[0].PublicDnsName' --output text
+EIP=$(aws ec2 describe-addresses --allocation-ids $ALLOC --query 'Addresses[0].PublicIp' --output text)
+ORIGIN_DOMAIN=${EIP//./-}.sslip.io   # 예: 13-124-0-10.sslip.io. 팀 도메인이 있으면 그 하위 이름
 ```
 
-역할을 만든 직후 `run-instances`가 실패하면 10초쯤 뒤 다시 실행합니다. 마지막 줄의 퍼블릭 DNS(`ec2-…compute.amazonaws.com`)를 7단계에서 씁니다.
+역할을 만든 직후 `run-instances`가 실패하면 10초쯤 뒤 다시 실행합니다. CloudFront 목록은 보안 그룹 규칙 55개로 세고 기본 한도가 60이라, 이 목록을 쓰는 규칙은 하나만 둡니다.
 
-서버 설정 파일을 만듭니다(비밀값 아님, [server.env.example](../infra/server/server.env.example)).
+서버 설정 파일을 만듭니다(비밀값 아님, [server.env.example](../infra/server/server.env.example)). `AWS_REGION`, `API_IMAGE`, `OPS_BUCKET`에 더해 원본 이름 `ORIGIN_DOMAIN`과 인증서 연락 주소 `ACME_EMAIL`이 있어야 deploy.sh가 돕니다. `setup-infra.sh`의 "서버 설정 파일" 단계가 SSM Run Command로 이 파일을 씁니다(연락 주소는 예산 알림 이메일).
 
-`setup-infra.sh`의 "서버 설정 파일" 단계가 SSM Run Command로 이 파일을 씁니다.
+**원본 이름(`ORIGIN_DOMAIN`)과 인증서.** CloudFront는 IP를 원본으로 받지 않고, HTTPS 원본에는 이름에 맞는 공인 인증서가 필요합니다. 도메인을 사지 않으므로 [sslip.io](https://sslip.io)를 씁니다: `<무엇이든>.<a-b-c-d>.sslip.io`를 IP `a.b.c.d`로 풀어 주는 공개 DNS입니다(`dev.13-124-0-10.sslip.io` → `13.124.0.10`, TTL 1시간). 서버의 caddy가 `dev.<ORIGIN_DOMAIN>`, `prod.<ORIGIN_DOMAIN>` 인증서를 Let's Encrypt에서 HTTP-01(80번)로 받고 알아서 갱신합니다.
+
+- **외부 의존:** sslip.io(개인 두 명이 운영, nip.io와 통합)의 DNS가 멈추면 CloudFront가 원본을 찾지 못하고 인증서 갱신도 실패합니다. 이름을 IP에서 만들므로 탄력적 IP를 바꾸면 이름도 바뀝니다.
+- **발급 한도:** sslip.io는 공개 접미사 목록(PSL)에 없어 모든 사용자가 Let's Encrypt의 `sslip.io` 도메인 한도를 함께 씁니다(기본 주 50장을 sslip.io는 25만 장까지 늘려 받음). 한도에 걸리면 caddy가 ZeroSSL로 받습니다(`ACME_EMAIL` 필요, 이 주소가 ZeroSSL 계정으로 등록됨).
+- **팀 도메인으로 바꾸기:** 코드 변경 없이 이름만 바꿉니다. 도메인의 DNS에 `dev.<원본 이름>`, `prod.<원본 이름>` A 레코드를 탄력적 IP로 넣은 뒤 `switch-origin-tls.sh`를 `rollback` → `ORIGIN_DOMAIN=<원본 이름> … prepare <이메일>` → Deploy API(dev, caddy가 새 이름으로 인증서를 받음) → `ORIGIN_DOMAIN=<원본 이름> … switch` → `… cleanup` 순서로 실행합니다. 먼저 `rollback`으로 CloudFront를 HTTP 원본으로 돌려 두는 이유는, 배포한 caddy가 예전 이름의 인증서를 더 내주지 않아 `switch`까지 몇 분 동안 끊기기 때문입니다.
 
 ## 7. API용 CloudFront (dev, prod 두 개)
 
-[cloudfront-api.json](../infra/aws/cloudfront-api.json)은 dev용입니다. prod는 `CallerReference`와 `Comment`를 prod로, `HTTPPort`를 `8082`로 바꿔 한 번 더 만듭니다. 캐시를 끄고(`CachingDisabled`), Host를 뺀 모든 헤더·쿠키를 원본에 넘깁니다(`AllViewerExceptHostHeader`).
+[cloudfront-api.json](../infra/aws/cloudfront-api.json)은 dev용입니다. 원본은 `https://dev.<ORIGIN_DOMAIN>`(443, `https-only`, TLS 1.2)이고, prod는 `CallerReference`와 `Comment`를 prod로, `DomainName`을 `prod.<ORIGIN_DOMAIN>`으로 바꿔 한 번 더 만듭니다. 캐시를 끄고(`CachingDisabled`), Host를 뺀 모든 헤더·쿠키를 원본에 넘깁니다(`AllViewerExceptHostHeader`). 그래서 caddy가 받는 Host는 원본 이름이고, 그 이름으로 dev·prod를 나눕니다.
 
 ```bash
-EC2_DNS=<6단계의 퍼블릭 DNS>
-sed "s/<EC2_PUBLIC_DNS>/$EC2_DNS/" infra/aws/cloudfront-api.json > /tmp/cf-dev.json
+SECRET=$(aws ssm get-parameter --name /wolgyeham/dev/ORIGIN_VERIFY_SECRET --with-decryption --query Parameter.Value --output text)
+(umask 077; sed -e "s/<ORIGIN_HOST>/dev.$ORIGIN_DOMAIN/" -e "s/<ORIGIN_VERIFY_SECRET>/$SECRET/" \
+  infra/aws/cloudfront-api.json > /tmp/cf-dev.json)
 aws cloudfront create-distribution --distribution-config file:///tmp/cf-dev.json \
   --query 'Distribution.[Id,DomainName]' --output text
+rm /tmp/cf-dev.json; unset SECRET
 ```
 
-두 도메인(`d…cloudfront.net`)을 적어 둡니다. 배포가 끝나면(몇 분) 확인합니다: `curl https://<dev 도메인>/api/health`는 첫 API 배포 뒤에 `ok`를 돌려줍니다.
+두 도메인(`d…cloudfront.net`)을 적어 둡니다. 배포가 끝나면(몇 분) 확인합니다: `curl https://<dev 도메인>/api/health`는 첫 API 배포 뒤 caddy가 인증서를 받으면 `ok`를 돌려줍니다.
+
+원본 확인 헤더: CloudFront는 EC2로 넘길 때 `X-Origin-Verify` 헤더에 SSM `/wolgyeham/<env>/ORIGIN_VERIFY_SECRET` 값을 붙입니다. caddy는 값이 그 환경과 다르면 403으로 막고(다른 사람의 CloudFront 배포로 들어오는 요청), API는 이 헤더가 맞을 때만 `X-Forwarded-For`를 믿습니다([decisions.md](decisions.md) D-23). caddy는 CloudFront가 만든 `X-Forwarded-For`를 그대로 넘기므로 API가 보는 체인 모양은 원본이 HTTP일 때와 같습니다. `setup-infra.sh`는 새로 만들 때 헤더를 넣습니다.
+
+비밀값을 바꿀 때는 `aws ssm put-parameter --overwrite`로 새 값을 넣고 `bash infra/aws/add-origin-verify.sh`(CloudFront에 반영)와 Deploy API(dev, prod)를 이어서 실행합니다. CloudFront가 새 값을 보내기 시작한 때부터 배포가 끝날 때까지 몇 분 동안 caddy가 403을 돌려주므로 사용자가 적은 때에 합니다.
+
+## 7-A. 원본 HTTPS로 옮기기 (이미 돌고 있는 환경)
+
+[D-31](decisions.md) 반영 절차입니다. 새로 만드는 환경은 위 6·7단계가 처음부터 HTTPS로 만들므로 필요 없습니다. [switch-origin-tls.sh](../infra/aws/switch-origin-tls.sh)를 단계마다 실행하며, 모든 단계는 `--dry-run`으로 먼저 바꿀 내용을 볼 수 있고 다시 실행해도 됩니다. 원본 이름은 탄력적 IP로 만든 `<a-b-c-d>.sslip.io`가 기본입니다(팀 도메인은 `ORIGIN_DOMAIN=<원본 이름>`을 앞에 붙임).
+
+1. **준비 (caddy 변경을 병합하기 전에).** 이 단계 없이 배포하면 deploy.sh가 아무것도 바꾸지 않고 멈춥니다.
+   ```bash
+   bash infra/aws/switch-origin-tls.sh prepare <인증서 연락 이메일> --dry-run
+   bash infra/aws/switch-origin-tls.sh prepare <인증서 연락 이메일>
+   ```
+   SSM `ORIGIN_VERIFY_SECRET`(dev·prod)이 없으면 만들고, 지금 CloudFront(아직 HTTP)에 `X-Origin-Verify` 헤더를 붙이고, 보안 그룹의 CloudFront 규칙을 `8081-8082` → `443-8082`로 넓히고(규칙을 새로 더하면 한도 60을 넘음) 80을 전체에 엽니다. 서버 `server.env`에는 `ORIGIN_DOMAIN`, `ACME_EMAIL`, 옮기는 동안만 쓰는 `API_BIND_ADDRESS=0.0.0.0`(API 포트를 지금처럼 공개해 HTTP 원본이 계속 동작)을 씁니다.
+2. **caddy 배포.** caddy가 들어간 변경을 `main`에 병합합니다(dev 배포). 병합이 늦으면 Actions → Deploy API → dev를 수동 실행합니다. dev 배포 한 번이 dev·prod 원본 이름의 인증서를 모두 받습니다.
+3. **인증서 확인.** SSM 세션에서 두 이름이 모두 보여야 합니다(보통 1분 안).
+   ```bash
+   cd /opt/wolgyeham && docker compose --env-file server.env --env-file .deploy.env logs caddy | grep -i 'certificate obtained'
+   ```
+4. **CloudFront 전환.** 서버 안에서 `https://<env>.<ORIGIN_DOMAIN>`이 헤더 없이 403, 헤더와 함께 200(아직 배포하지 않은 환경은 502)인지 먼저 확인하고, 아니면 아무것도 바꾸지 않습니다. 맞으면 두 CloudFront의 원본을 `https-only`·443·원본 이름으로 바꾸고 반영을 기다린 뒤 `/api/health`를 확인합니다.
+   ```bash
+   bash infra/aws/switch-origin-tls.sh switch --dry-run
+   bash infra/aws/switch-origin-tls.sh switch
+   ```
+5. **확인.** dev·prod 웹 주소의 `/api/health`(Amplify 경유), 카카오 로그인 뒤 새로고침, dev의 `/api/dev/whoami`에서 `mode`가 `origin-verify`이고 `forwardedFor`가 예전과 같은 모양(직접 `[나]`, Amplify `[나, CloudFront, 서울 EC2]`)인지 봅니다.
+6. **정리.** `server.env`에서 `API_BIND_ADDRESS`를 지우고 API 컨테이너를 다시 만들어 8081·8082를 서버 안(127.0.0.1)에서만 열고, 보안 그룹의 CloudFront 규칙을 443만 남깁니다. 몇 초 끊깁니다.
+   ```bash
+   bash infra/aws/switch-origin-tls.sh cleanup
+   ```
+
+4·5단계에서 문제가 있으면 `bash infra/aws/switch-origin-tls.sh rollback`이 보안 그룹을 `443-8082`로 넓히고 API 포트를 다시 공개한 뒤 CloudFront를 예전 HTTP 원본(EC2 퍼블릭 DNS 8081·8082)으로 되돌립니다. caddy와 80 규칙은 남겨 두고, 원인을 고친 뒤 `switch`를 다시 실행합니다. 6단계 뒤에도 같은 명령으로 되돌릴 수 있습니다.
 
 ## 8. GitHub 배포 권한 (OIDC)
 
@@ -184,7 +225,9 @@ aws iam put-role-policy --role-name wolgyeham-github-deploy --policy-name deploy
   --policy-document "$(fill infra/aws/github-deploy-policy.json)"
 ```
 
-신뢰 정책은 이 저장소의 `main`과 `release`에서 실행한 워크플로만 역할을 받게 합니다. 저장소 변수를 넣습니다.
+신뢰 정책은 이 저장소의 `main`과 `release`에서 실행한 워크플로만 역할을 받게 합니다. 이 저장소는 GitHub OIDC의 불변 식별자 형식(`use_immutable_subject`)을 써서 토큰의 `sub`가 `repo:2026-KW-HACKATHON@329474081/24_3355@1373145913:ref:refs/heads/main`처럼 조직·저장소 ID를 포함합니다. 신뢰 정책에는 이 형식과 이름만 쓰는 형식을 둘 다 넣어 둡니다. 형식은 `gh api repos/2026-KW-HACKATHON/24_3355/actions/oidc/customization/sub`로 확인하고, 정책을 고쳤으면 `aws iam update-assume-role-policy --role-name wolgyeham-github-deploy --policy-document "$(fill infra/aws/github-oidc-trust.json)"`로 반영합니다.
+
+저장소 변수를 넣습니다.
 
 ```bash
 R=2026-KW-HACKATHON/24_3355
@@ -229,6 +272,7 @@ PR 미리 보기 주소는 매번 달라서 등록하지 않습니다. 발급한
 ## 11. 첫 배포 확인
 
 - [ ] Actions → Deploy API → Run workflow(dev)가 성공한다
+- [ ] caddy 로그에 `dev.<ORIGIN_DOMAIN>`, `prod.<ORIGIN_DOMAIN>`의 `certificate obtained`가 있다(7-A 3번 명령)
 - [ ] `https://<dev CloudFront>/api/health`가 `ok`
 - [ ] dev 웹 주소에서 화면이 뜨고 `<dev 웹>/api/swagger`가 열린다 (Amplify 프록시 확인)
 - [ ] dev 웹에서 카카오 로그인 후 새로고침해도 로그인이 유지된다 (프록시로 쿠키가 오가는지 확인)
