@@ -1,0 +1,14 @@
+/* 알림 선택 시트(lofi 17). 공통 모양은 global.css의 .wh-sheet__* */
+.ns-sheet {
+  max-height: 90dvh;
+}
+.ns-body {
+  padding-top: var(--wh-space-4);
+  padding-bottom: calc(var(--wh-space-3) + env(safe-area-inset-bottom));
+}
+.ns-note {
+  margin-top: var(--wh-space-2_5);
+}
+.ns-error {
+  margin: var(--wh-space-3) 0 0;
+}

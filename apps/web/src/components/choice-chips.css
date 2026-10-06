@@ -1,0 +1,78 @@
+/* 하나를 고르는 칩 (lofi .chips .chip). 누를 자리는 44px, 모양은 lofi 칩 높이 40px(크게 보기 48px) */
+.wh-chips-field {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.wh-chips-field__legend {
+  width: 100%;
+  padding: 0;
+}
+.wh-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--wh-space-2);
+}
+.wh-chip {
+  position: relative;
+  display: inline-flex;
+}
+/* 위아래로 2px씩 누를 자리를 넓힙니다 */
+.wh-chip::before {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
+}
+.wh-chip input {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.wh-chip__face {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--wh-space-1_5);
+  min-height: var(--wh-chip-height);
+  padding: var(--wh-space-1) var(--wh-space-3_5);
+  border: 1px solid var(--wh-border);
+  border-radius: var(--wh-radius-pill);
+  background: var(--wh-surface);
+  font-size: var(--wh-type-label);
+  font-weight: 500;
+  line-height: var(--wh-leading-tight);
+  color: var(--wh-text-strong-subtle);
+  transition:
+    background-color var(--seed-duration-color-transition) var(--seed-timing-function-easing),
+    border-color var(--seed-duration-color-transition) var(--seed-timing-function-easing),
+    color var(--seed-duration-color-transition) var(--seed-timing-function-easing);
+}
+.wh-chip__face svg {
+  width: var(--wh-icon-s);
+  height: var(--wh-icon-s);
+  flex: none;
+}
+.wh-chip input:checked + .wh-chip__face {
+  border-color: var(--wh-primary);
+  background: var(--wh-primary-soft);
+  color: var(--wh-primary);
+  font-weight: 600;
+}
+.wh-chip input:focus-visible + .wh-chip__face {
+  outline: 3px solid var(--wh-focus);
+  outline-offset: 2px;
+}
+.wh-chip input:disabled {
+  cursor: not-allowed;
+}
+.wh-chip input:disabled:not(:checked) + .wh-chip__face {
+  border-color: var(--wh-border-soft);
+  background: var(--wh-surface-soft);
+  color: var(--wh-text-disabled);
+}
+.wh-chip input:not(:checked):not(:disabled):active + .wh-chip__face {
+  background: var(--wh-surface-soft);
+}

@@ -37,6 +37,7 @@
   --wh-danger-soft: #fdecee;
   --wh-kakao: #fee500;
   --wh-kakao-ink: rgb(0 0 0 / 88%);
+  --wh-kakao-pressed: #f0d800;
 
   /* 의미 */
   --wh-bg: var(--wh-gray-0);
@@ -66,6 +67,7 @@
   --wh-dim: rgb(0 0 0 / 48%);
   --wh-focus-halo: rgb(37 53 90 / 12%);
   --wh-on-primary-weak: rgb(255 255 255 / 14%);
+  --wh-on-primary-pressed: rgb(255 255 255 / 24%);
   --wh-moon-pressed: rgb(138 106 36 / 8%);
 
   /* 건물 정적 그림 (lofi chrome.js 등각 투영과 같은 색) */
@@ -82,6 +84,27 @@
   --wh-scene-hl-top: #3d5286;
   --wh-scene-hl-left: var(--wh-navy-700);
   --wh-scene-hl-right: var(--wh-navy-600);
+
+  /* 스플래시(lofi 00) 배경과 장식 */
+  --wh-splash-top: #f5f7fb;
+  --wh-splash-bottom: #e7edf8;
+  --wh-splash-glow: rgb(255 255 255 / 90%);
+  --wh-splash-moon-glow: rgb(201 164 92 / 16%);
+  --wh-splash-ink: #111621;
+  --wh-splash-shadow: drop-shadow(0 18px 24px rgb(28 41 69 / 16%));
+  --wh-splash-deco-shadow: drop-shadow(0 10px 14px rgb(28 41 69 / 14%));
+  --wh-splash-gold-light: #f3dc9b;
+  --wh-splash-gold-dark: #b8903f;
+  --wh-splash-moon-light: #fff3cf;
+  --wh-splash-moon-mid: #e7c574;
+  --wh-splash-moon-dark: #a97f30;
+  --wh-splash-star-edge: #c9d1e3;
+
+  /* 입주 카드(lofi 39) 종이 */
+  --wh-paper: #fffdf8;
+  --wh-paper-line: #efe6d2;
+  --wh-paper-cut: #e3d6b8;
+  --wh-shadow-paper: 0 8px 24px rgb(25 31 40 / 8%);
 
   /* 글자. 크게 보기에서 --wh-font-scale만 바꾸면 함께 커집니다 */
   --wh-font-scale: 1;
@@ -123,18 +146,23 @@
   --wh-content-width: 480px;
 
   /* 모양 */
+  --wh-radius-badge: 6px; /* lofi .badge */
   --wh-radius-s: 8px;
+  --wh-radius-icon: 10px; /* 아이콘 칸(32~40px)·작은 버튼 (lofi .ic, .btn-sm) */
   --wh-radius-m: 12px;
   --wh-radius-card: 14px;
   --wh-radius-l: 16px;
+  --wh-radius-frame: 18px; /* QR·입주 카드·미리 보기처럼 테두리로 감싼 큰 카드 */
   --wh-radius-xl: 20px;
   --wh-radius-sheet: 22px;
   --wh-radius-pill: 999px;
   --wh-radius-control: 16px;
   --wh-control-height: 56px;
   --wh-control-height-s: 44px;
+  --wh-chip-height: 40px; /* 모양 높이. 누를 자리는 위아래로 넓혀 44px */
   --wh-touch: 44px;
   --wh-topbar-height: 52px;
+  --wh-tab-height: 56px;
   --wh-icon-s: 16px;
   --wh-icon-m: 20px;
   --wh-icon-l: 24px;
@@ -161,5 +189,6 @@ html[data-size="large"] {
   --wh-font-scale: 1.25;
   --wh-control-height: 64px;
   --wh-control-height-s: 48px;
+  --wh-chip-height: 48px;
   --wh-icon-m: 24px;
 }

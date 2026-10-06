@@ -10,6 +10,7 @@
   border-radius: var(--wh-radius-pill);
   background: var(--wh-primary);
   color: var(--wh-gray-0);
+  animation: wh-pop-in var(--seed-duration-d4) var(--seed-timing-function-enter) both;
 }
 .sd-ok svg {
   width: 26px;
@@ -92,4 +93,22 @@
   font-size: calc(0.84375rem * var(--wh-font-scale));
   line-height: var(--wh-leading-snug);
   color: var(--wh-text-muted);
+}
+.sd-step {
+  transition: background-color var(--seed-duration-color-transition)
+    var(--seed-timing-function-easing);
+}
+a.sd-step:active,
+button.sd-step:active:not(:disabled) {
+  background: var(--wh-surface-soft);
+}
+.sd-step__chev {
+  flex: none;
+  width: var(--wh-icon-m);
+  height: var(--wh-icon-m);
+  color: var(--wh-text-disabled);
+}
+.sd-copy-error {
+  padding-bottom: var(--wh-space-2);
+  overflow-wrap: anywhere;
 }

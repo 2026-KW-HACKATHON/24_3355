@@ -1,0 +1,100 @@
+/* 약관·개인정보 처리방침 초안(D-28). lofi 없음: 45 내 정보의 글자·간격을 따름 */
+.lg-body {
+  padding-bottom: var(--wh-space-12);
+}
+.lg-draft {
+  display: grid;
+  justify-items: start;
+  gap: var(--wh-space-2);
+  margin-top: var(--wh-space-2);
+  padding: var(--wh-space-3_5) var(--wh-space-4);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-moon-50);
+  font-size: var(--wh-type-small);
+  line-height: 1.5;
+  color: var(--wh-text-strong-subtle);
+}
+.lg-title {
+  margin-top: var(--wh-space-5);
+}
+.lg-meta {
+  margin-top: var(--wh-space-1);
+  overflow-wrap: anywhere;
+}
+.lg-lead {
+  margin-top: var(--wh-space-3);
+}
+.lg-section {
+  margin-top: var(--wh-space-8);
+}
+.lg-section__title {
+  font-size: var(--wh-type-sub);
+  font-weight: 700;
+  line-height: var(--wh-leading-snug);
+  color: var(--wh-text);
+}
+.lg-p,
+.lg-list,
+.lg-rows {
+  margin-top: var(--wh-space-2_5);
+  font-size: var(--wh-type-body);
+  line-height: var(--wh-leading-read);
+  color: var(--wh-text-body);
+}
+.lg-list {
+  display: grid;
+  gap: var(--wh-space-2);
+  padding-left: var(--wh-space-5);
+  list-style: disc;
+}
+.lg-list li::marker {
+  color: var(--wh-text-muted);
+}
+.lg-rows {
+  display: grid;
+  gap: var(--wh-space-2);
+}
+.lg-row {
+  padding: var(--wh-space-3) var(--wh-space-4);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-soft);
+}
+.lg-row dt {
+  font-size: var(--wh-type-small);
+  font-weight: 700;
+  color: var(--wh-text);
+}
+.lg-row dd {
+  margin: var(--wh-space-1) 0 0;
+  font-size: var(--wh-type-small);
+  line-height: 1.6;
+  color: var(--wh-text-body);
+}
+.lg-contact {
+  gap: var(--wh-space-1_5);
+  margin-top: var(--wh-space-2);
+  padding: 0;
+}
+.lg-contact svg {
+  width: var(--wh-icon-s);
+  height: var(--wh-icon-s);
+}
+.lg-contact__ext {
+  color: var(--wh-text-muted);
+}
+.lg-contact--none {
+  color: var(--wh-text-subtle);
+}
+.lg-other {
+  margin-top: var(--wh-space-8);
+  padding-top: var(--wh-space-4);
+  border-top: 1px solid var(--wh-border-soft);
+}
+.lg-other__link {
+  gap: var(--wh-space-0_5);
+  padding: 0;
+}
+.lg-other__link svg {
+  width: var(--wh-icon-s);
+  height: var(--wh-icon-s);
+}

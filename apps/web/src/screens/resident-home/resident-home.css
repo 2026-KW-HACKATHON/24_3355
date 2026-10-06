@@ -1,0 +1,233 @@
+/* LF-05 거주자 홈. lofi/screens/03·10과 building.css */
+.rh-scene {
+  position: relative;
+  overflow: hidden;
+  height: 132px;
+  margin: 0 var(--wh-space-3);
+  border-radius: var(--wh-radius-xl);
+  background: var(--wh-scene-bg);
+}
+
+/* 연결 직후 환영(10). 함이 house 104 */
+.rh-welcome {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-2_5);
+  margin: var(--wh-space-1) var(--wh-space-3) 0;
+  padding: var(--wh-space-2_5) var(--wh-space-4) var(--wh-space-2_5) var(--wh-space-2);
+  border-radius: var(--wh-radius-xl);
+  background: linear-gradient(135deg, var(--wh-navy-100), var(--wh-navy-50));
+  animation: wh-rise-in var(--seed-duration-d5) var(--seed-timing-function-enter) both;
+}
+.rh-welcome .wh-hami {
+  flex: none;
+  width: 104px;
+  margin: -14px -10px -14px -8px;
+}
+.rh-welcome__title {
+  font-size: var(--wh-type-sub);
+  font-weight: 700;
+  letter-spacing: var(--wh-tracking-tight);
+}
+.rh-welcome__sub {
+  margin-top: var(--wh-space-0_5);
+  font-size: var(--wh-type-small);
+  color: var(--wh-text-strong-subtle);
+}
+
+.rh-building {
+  padding: var(--wh-space-4) var(--wh-gutter) 0;
+}
+.rh-building__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--wh-space-3);
+}
+.rh-building__row .wh-h-display {
+  min-width: 0;
+}
+.rh-building__sub {
+  margin-top: var(--wh-space-1);
+}
+/* 홈 위 재확인 배너(시트 40을 다시 여는 자리). 요청 중은 남색, 기한이 지나면 주황 + 글자 */
+.rh-reconfirm {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-3);
+  width: calc(100% - var(--wh-space-3) * 2);
+  min-height: 60px;
+  margin: 0 var(--wh-space-3) var(--wh-space-3);
+  padding: var(--wh-space-3) var(--wh-space-4);
+  border: 1px solid var(--wh-primary-line);
+  border-radius: var(--wh-radius-l);
+  background: var(--wh-primary-soft);
+  text-align: left;
+  animation: wh-rise-in var(--seed-duration-d4) var(--seed-timing-function-enter) both;
+  transition:
+    background-color var(--seed-duration-color-transition) var(--seed-timing-function-easing),
+    var(--seed-feedback-scale-transition);
+}
+.rh-reconfirm:active {
+  background: var(--wh-primary-line);
+  scale: var(--seed-scale-s98);
+}
+.rh-reconfirm--needed {
+  border-color: transparent;
+  background: var(--wh-st-hard-bg);
+}
+.rh-reconfirm--needed:active {
+  background: var(--wh-moon-50);
+}
+.rh-reconfirm__ic {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--wh-radius-icon);
+  background: var(--wh-surface);
+  color: var(--wh-primary);
+}
+.rh-reconfirm--needed .rh-reconfirm__ic {
+  color: var(--wh-st-hard);
+}
+.rh-reconfirm__ic svg {
+  width: 18px;
+  height: 18px;
+}
+.rh-reconfirm__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.rh-reconfirm__title {
+  font-size: calc(0.96875rem * var(--wh-font-scale));
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--wh-text);
+}
+.rh-reconfirm__sub {
+  margin-top: var(--wh-space-0_5);
+  font-size: var(--wh-type-caption);
+  line-height: var(--wh-leading-snug);
+  color: var(--wh-text-strong-subtle);
+}
+.rh-reconfirm__action {
+  flex: none;
+  font-size: var(--wh-type-small);
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--wh-primary);
+}
+.rh-reconfirm--needed .rh-reconfirm__action {
+  color: var(--wh-st-hard);
+}
+
+.rh-first {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-2_5);
+  min-height: 48px;
+  margin: var(--wh-space-3) var(--wh-gutter) 0;
+  padding: var(--wh-space-2) var(--wh-space-3_5);
+  border: 1px solid var(--wh-primary-line);
+  border-radius: var(--wh-radius-card);
+  transition:
+    background-color var(--seed-duration-color-transition) var(--seed-timing-function-easing),
+    var(--seed-feedback-scale-transition);
+}
+.rh-first:active {
+  background: var(--wh-primary-soft);
+  scale: var(--seed-scale-s98);
+}
+.rh-first__lead {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--wh-primary);
+}
+.rh-first__text {
+  flex: 1;
+  font-size: calc(0.90625rem * var(--wh-font-scale));
+  font-weight: 600;
+  color: var(--wh-primary);
+}
+.rh-first__chev {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--wh-navy-500);
+}
+
+.rh-section {
+  margin-top: var(--wh-space-5);
+}
+.rh-more {
+  font-weight: 600;
+  color: var(--wh-primary);
+}
+.rh-empty {
+  padding-top: var(--wh-space-4);
+}
+/* 집주인에게 알리기(lofi 03 .report-row): 누르면 자주 쓰는 말·직접 적기 시트 */
+.rh-report {
+  display: grid;
+  gap: var(--wh-space-2);
+  margin: var(--wh-space-6) var(--wh-gutter) 0;
+}
+.rh-report__row {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-3);
+  width: 100%;
+  padding: var(--wh-space-4);
+  border: 1px solid var(--wh-border);
+  border-radius: var(--wh-radius-l);
+  background: none;
+  text-align: left;
+  transition:
+    background-color var(--seed-duration-color-transition) var(--seed-timing-function-easing),
+    var(--seed-feedback-scale-transition);
+}
+.rh-report__row:active {
+  background: var(--wh-surface-soft);
+  scale: var(--seed-scale-s98);
+}
+.rh-report__ic {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--wh-radius-m);
+  background: var(--wh-primary-soft);
+  color: var(--wh-primary);
+}
+.rh-report__ic svg {
+  width: var(--wh-icon-m);
+  height: var(--wh-icon-m);
+}
+.rh-report__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.rh-report__title {
+  font-size: calc(0.96875rem * var(--wh-font-scale));
+  font-weight: 600;
+  color: var(--wh-text);
+}
+.rh-report__sub {
+  margin-top: var(--wh-space-1);
+  font-size: var(--wh-type-caption);
+  color: var(--wh-text-muted);
+}
+.rh-report__chev {
+  flex: none;
+  width: var(--wh-icon-m);
+  height: var(--wh-icon-m);
+  color: var(--wh-text-disabled);
+}

@@ -1,29 +1,40 @@
+import { Snackbar } from "@seed-design/react";
 import type { ElementType, ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { setLargeMode, useLargeMode } from "../lib/largeMode";
 import { Icon } from "./Icon";
 
-/** 화면 한 장: 상단 막대 + 본문(main) + 하단 고정 버튼. */
+/** 화면 한 장: 상단 막대 + 본문(main) + 하단 고정 버튼 + (탭 화면이면) 하단 탭. */
 export function Screen({
   topbar,
   dock,
+  tabs,
   tone = "white",
   children,
   busy = false,
 }: {
   topbar?: ReactNode;
   dock?: ReactNode;
+  tabs?: ReactNode;
   tone?: "white" | "gray";
   children: ReactNode;
   busy?: boolean;
 }) {
+  const className = [
+    "wh-screen",
+    tone === "gray" ? "wh-screen--gray" : "",
+    tabs ? "wh-screen--tabs" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
   return (
-    <div className={tone === "gray" ? "wh-screen wh-screen--gray" : "wh-screen"}>
+    <div className={className}>
       {topbar}
       <main className="wh-screen__body" tabIndex={-1} aria-busy={busy || undefined}>
         {children}
       </main>
       {dock}
+      {tabs}
     </div>
   );
 }
@@ -66,12 +77,18 @@ export function Brand() {
   );
 }
 
+/** 이 탭에서 앱 안의 다른 화면을 거쳐 왔는지(react-router가 history state에 두는 idx). */
+export function hasAppHistory(): boolean {
+  if (typeof window === "undefined") return false;
+  const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
+  return idx > 0;
+}
+
 /** 앱 안에서 들어왔으면 뒤로, 주소로 바로 열었으면 `fallback`으로 갑니다. */
 export function useGoBack(fallback: string) {
   const navigate = useNavigate();
   return () => {
-    const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
-    if (idx > 0) void navigate(-1);
+    if (hasAppHistory()) void navigate(-1);
     else void navigate(fallback, { replace: true });
   };
 }
@@ -121,16 +138,19 @@ export function Dock({
   error?: ReactNode;
   children: ReactNode;
 }) {
+  // 토스트가 하단 버튼을 가리지 않고 그 위에 뜨도록 SEED에 이 자리를 알립니다(interaction.md §6).
   return (
-    <div className="wh-dock">
-      {error ? (
-        <p className="wh-dock__error" role="alert">
-          {error}
-        </p>
-      ) : null}
-      {hint ? <p className="wh-dock__hint">{hint}</p> : null}
-      {children}
-    </div>
+    <Snackbar.AvoidOverlap>
+      <div className="wh-dock">
+        {error ? (
+          <p className="wh-dock__error" role="alert">
+            {error}
+          </p>
+        ) : null}
+        {hint ? <p className="wh-dock__hint">{hint}</p> : null}
+        {children}
+      </div>
+    </Snackbar.AvoidOverlap>
   );
 }
 

@@ -1,0 +1,215 @@
+/* LF-04 우리 건물로 연결. lofi/screens/02·16과 lofi.css .steps .otp .check */
+.cn-body {
+  padding-top: var(--wh-space-1);
+}
+.cn-skeleton {
+  display: grid;
+  gap: var(--wh-space-4);
+  padding-top: var(--wh-space-2);
+}
+
+.cn-steps__bar {
+  display: flex;
+  gap: var(--wh-space-1);
+}
+.cn-steps__seg {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--wh-gray-200);
+  transition: background-color var(--seed-duration-color-transition)
+    var(--seed-timing-function-easing);
+}
+.cn-steps__seg--on {
+  background: var(--wh-primary);
+}
+.cn-steps__label {
+  margin-top: var(--wh-space-2);
+}
+
+.cn-target {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--wh-space-2);
+  max-width: 100%;
+  min-height: 36px;
+  margin-top: var(--wh-space-6);
+  padding: var(--wh-space-1) var(--wh-space-3) var(--wh-space-1) var(--wh-space-1_5);
+  border-radius: var(--wh-radius-pill);
+  background: var(--wh-surface-muted);
+  font-size: var(--wh-type-small);
+  font-weight: 600;
+  color: var(--wh-text-body);
+}
+.cn-target__mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--wh-primary);
+  color: var(--wh-gray-0);
+}
+.cn-target__mark svg {
+  width: 14px;
+  height: 14px;
+}
+.cn-title {
+  margin-top: var(--wh-space-3);
+}
+.cn-title--step2 {
+  margin-top: var(--wh-space-6);
+}
+.cn-lead {
+  margin-top: var(--wh-space-1);
+  color: var(--wh-text-subtle);
+}
+.cn-lead b {
+  color: var(--wh-text);
+}
+
+/* 6칸 코드: 칸 위에 투명한 입력칸 하나를 겹쳐 붙여넣기·지우기·키보드를 그대로 씁니다. */
+.cn-code {
+  position: relative;
+  margin-top: var(--wh-space-6);
+}
+.cn-code__input {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
+  font-size: 16px; /* iOS가 입력칸을 확대하지 않도록 */
+  letter-spacing: 0;
+  opacity: 0;
+}
+.cn-code__input:disabled {
+  cursor: not-allowed;
+}
+.cn-code:has(.cn-code__input:focus-visible) .wh-code {
+  outline: 3px solid var(--wh-focus);
+  outline-offset: 4px;
+  border-radius: var(--wh-radius-m);
+}
+.cn-code:has(.cn-code__input:disabled) .wh-code__cell {
+  color: var(--wh-text-disabled);
+}
+.cn-error {
+  margin-top: var(--wh-space-3);
+}
+.cn-help {
+  margin-top: var(--wh-space-4);
+}
+.cn-next.seed-action-button {
+  margin-top: var(--wh-space-6);
+}
+
+.cn-nocode {
+  margin-top: var(--wh-space-3);
+}
+.cn-nocode__summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--wh-touch);
+  font-size: var(--wh-type-small);
+  font-weight: 600;
+  color: var(--wh-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  list-style: none;
+}
+.cn-nocode__summary::-webkit-details-marker {
+  display: none;
+}
+.cn-nocode__body {
+  display: grid;
+  gap: var(--wh-space-2);
+  padding: var(--wh-space-3_5) var(--wh-space-4);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-soft);
+  font-size: var(--wh-type-small);
+  line-height: 1.55;
+  color: var(--wh-text-strong-subtle);
+  animation: wh-rise-in var(--seed-duration-d4) var(--seed-timing-function-enter) both;
+}
+.cn-nocode__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--wh-space-0_5);
+  min-height: var(--wh-touch);
+  font-weight: 600;
+  color: var(--wh-primary);
+}
+.cn-nocode__link svg {
+  width: var(--wh-icon-s);
+  height: var(--wh-icon-s);
+}
+
+/* 2/2 */
+.cn-code-ok {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-2_5);
+  margin-top: var(--wh-space-5);
+  padding: var(--wh-space-3) var(--wh-space-3_5);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-soft);
+  font-size: calc(0.90625rem * var(--wh-font-scale));
+  color: var(--wh-text-strong-subtle);
+}
+.cn-code-ok svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--wh-success);
+}
+.cn-code-ok b {
+  letter-spacing: 0.08em;
+  color: var(--wh-text);
+}
+
+.cn-consent-note {
+  margin-top: var(--wh-space-2);
+}
+.cn-switch-info {
+  margin-top: var(--wh-space-5);
+}
+
+/* 재확인 요청 중인 거주자가 코드를 다시 넣을 때(D-17) */
+.cn-reconfirm {
+  margin-top: var(--wh-space-3);
+  padding: var(--wh-space-2_5) var(--wh-space-3);
+  border-radius: var(--wh-radius-m);
+  background: var(--wh-surface-soft);
+}
+
+/* 이미 연결한 사람: 코드 없이 로그인 */
+.cn-signin {
+  display: grid;
+  justify-items: center;
+  margin-top: var(--wh-space-2);
+}
+.cn-signin__btn {
+  min-height: var(--wh-touch);
+  padding: 0 var(--wh-space-2);
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: var(--wh-type-small);
+  font-weight: 600;
+  color: var(--wh-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.cn-signin__btn:disabled {
+  color: var(--wh-text-disabled);
+  cursor: default;
+}

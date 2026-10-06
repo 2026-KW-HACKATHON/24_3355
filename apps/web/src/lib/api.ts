@@ -39,6 +39,28 @@ export async function postEmpty(path: string): Promise<void> {
   }
 }
 
+/** 본문도 응답 본문도 없는 삭제(204). 안내 수정본 지우기에 씁니다. */
+export async function deleteEmpty(path: string): Promise<void> {
+  try {
+    await http.delete(path);
+  } catch (error) {
+    throw toAppError(error);
+  }
+}
+
+/** 본문을 보내고 응답 본문은 없는 요청(204). 푸시 구독 저장·삭제에 씁니다. */
+export async function sendJsonEmpty(
+  method: "post" | "delete",
+  path: string,
+  body: unknown,
+): Promise<void> {
+  try {
+    await http(path, { method, json: body });
+  } catch (error) {
+    throw toAppError(error);
+  }
+}
+
 /** URL 조각에 들어갈 id를 안전하게 넣습니다. */
 export function seg(value: string): string {
   return encodeURIComponent(value);

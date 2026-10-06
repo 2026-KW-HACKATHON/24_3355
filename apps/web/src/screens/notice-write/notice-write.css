@@ -1,0 +1,106 @@
+/* LF-15 공지 올리기. lofi/screens/34 */
+.nw-form {
+  display: contents;
+}
+.nw-body {
+  padding-top: var(--wh-space-1);
+}
+.nw-field + .nw-field {
+  margin-top: var(--wh-space-4);
+}
+.nw-when {
+  margin-inline: 0;
+  padding: 0;
+  border: 0;
+}
+.nw-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--wh-space-2);
+}
+.nw-time {
+  position: relative;
+  display: block;
+}
+.nw-time small {
+  position: absolute;
+  top: 6px;
+  left: var(--wh-space-3_5);
+  z-index: 1;
+  font-size: calc(0.78125rem * var(--wh-font-scale));
+  color: var(--wh-text-muted);
+  pointer-events: none;
+}
+.nw-time__input.wh-input {
+  min-height: 60px;
+  padding: 20px var(--wh-space-2) 4px var(--wh-space-3_5);
+  font-size: var(--wh-type-label);
+}
+.nw-help {
+  margin-top: var(--wh-space-2);
+}
+.nw-textarea.wh-textarea {
+  min-height: 132px;
+  font-size: calc(0.96875rem * var(--wh-font-scale));
+}
+
+.nw-who {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--wh-space-2_5);
+  margin-top: var(--wh-space-4);
+  padding: var(--wh-space-3) var(--wh-space-3_5);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-soft);
+  font-size: calc(0.90625rem * var(--wh-font-scale));
+  line-height: 1.5;
+  color: var(--wh-text-strong-subtle);
+}
+.nw-who > svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 2px;
+  color: var(--wh-text-muted);
+}
+.nw-who > span {
+  flex: 1;
+}
+.nw-who b {
+  color: var(--wh-text);
+}
+.nw-who small {
+  display: block;
+  margin-top: var(--wh-space-1);
+  font-size: var(--wh-type-caption);
+  color: var(--wh-text-muted);
+}
+.nw-who__retry {
+  flex: none;
+  min-height: var(--wh-touch);
+  margin: calc(var(--wh-space-3) * -1) calc(var(--wh-space-2) * -1) 0 0;
+  padding: 0 var(--wh-space-2);
+  border: 0;
+  background: none;
+  font-size: var(--wh-type-small);
+  font-weight: 600;
+  color: var(--wh-primary);
+}
+.nw-rule {
+  display: flex;
+  gap: var(--wh-space-2);
+  margin-top: var(--wh-space-2_5);
+  font-size: calc(0.84375rem * var(--wh-font-scale));
+  line-height: 1.5;
+  color: var(--wh-text-subtle);
+}
+.nw-rule svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  margin-top: 2px;
+  color: var(--wh-moon-ink);
+}
+.nw-rule b {
+  color: var(--wh-primary);
+}

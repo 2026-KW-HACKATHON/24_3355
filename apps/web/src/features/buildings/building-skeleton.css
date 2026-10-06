@@ -1,0 +1,23 @@
+/* 간격은 공개 화면(public-building.css)·거주자 홈(resident-home.css)의 실제 간격과 같습니다 */
+.bd-skeleton {
+  padding: 0 var(--wh-space-3);
+}
+.bd-skeleton__body {
+  display: grid;
+  padding: var(--wh-space-4) var(--wh-space-2) 0;
+}
+.bd-skeleton__address {
+  margin-top: var(--wh-space-1);
+}
+.bd-skeleton__notice {
+  margin-top: var(--wh-space-4);
+}
+.bd-skeleton__head {
+  margin-top: var(--wh-space-5);
+}
+.bd-skeleton__tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--wh-space-2);
+  margin-top: var(--wh-space-2_5);
+}

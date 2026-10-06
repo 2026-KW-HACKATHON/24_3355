@@ -1,0 +1,16 @@
+/* 약관 링크 한 줄(LegalLinks) */
+.wh-legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0 var(--wh-space-1);
+  font-size: var(--wh-type-caption);
+  color: var(--wh-text-muted);
+}
+.wh-legal-links__link {
+  font-weight: 500;
+  color: var(--wh-text-subtle);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

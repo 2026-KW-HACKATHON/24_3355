@@ -1,0 +1,187 @@
+/* LF-17 수정 메모 검토 (lofi 25) */
+.mr-skeleton {
+  display: grid;
+  gap: var(--wh-space-3_5);
+  padding-top: var(--wh-space-2);
+}
+.mr-body {
+  padding-top: var(--wh-space-2);
+}
+.mr-title {
+  margin-top: var(--wh-space-2);
+}
+.mr-cmp {
+  padding: var(--wh-space-3_5) var(--wh-space-4);
+  border-radius: var(--wh-radius-l);
+}
+.mr-cmp--now {
+  margin-top: var(--wh-space-4);
+  background: var(--wh-surface-soft);
+}
+.mr-cmp--memo {
+  background: var(--wh-primary-soft);
+}
+.mr-cmp__head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--wh-space-2);
+  font-size: var(--wh-type-caption);
+  font-weight: 700;
+  color: var(--wh-text-muted);
+}
+.mr-cmp--memo .mr-cmp__head {
+  color: var(--wh-primary);
+}
+.mr-cmp__title {
+  margin-top: var(--wh-space-1_5);
+  font-size: var(--wh-type-label);
+  font-weight: 700;
+  line-height: 1.45;
+}
+.mr-cmp__text {
+  margin-top: var(--wh-space-1);
+  font-size: var(--wh-type-label);
+  line-height: 1.55;
+  color: var(--wh-text-body);
+  white-space: pre-line;
+}
+.mr-cmp__text--memo {
+  margin-top: var(--wh-space-1_5);
+  font-size: var(--wh-type-body);
+  color: var(--wh-text);
+}
+.mr-arrow {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  justify-content: center;
+  margin: -2px 0 -10px;
+}
+.mr-arrow span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--wh-border);
+  border-radius: 50%;
+  background: var(--wh-surface);
+  color: var(--wh-text-muted);
+}
+.mr-arrow svg {
+  width: var(--wh-icon-s);
+  height: var(--wh-icon-s);
+}
+.mr-cmp--memo {
+  padding-top: var(--wh-space-4);
+}
+.mr-result {
+  margin-top: var(--wh-space-5);
+}
+.mr-fx {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--wh-space-2_5);
+  padding: 5px 0;
+  font-size: var(--wh-type-label);
+  line-height: 1.5;
+  color: var(--wh-text-strong-subtle);
+}
+.mr-fx svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  color: var(--wh-text-muted);
+}
+.mr-note {
+  margin-top: var(--wh-space-3);
+  padding: var(--wh-space-2_5) var(--wh-space-3);
+  border-radius: var(--wh-radius-m);
+  background: var(--wh-surface-soft);
+}
+.mr-done {
+  margin-top: var(--wh-space-5);
+  padding: var(--wh-space-3_5) var(--wh-space-4);
+  border: 1px solid var(--wh-border);
+  border-radius: var(--wh-radius-l);
+}
+.mr-done__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--wh-space-2);
+}
+.mr-done__text {
+  margin-top: var(--wh-space-2);
+  font-size: var(--wh-type-label);
+  color: var(--wh-text-body);
+}
+.mr-done__reason {
+  margin-top: var(--wh-space-1);
+  font-size: var(--wh-type-small);
+  color: var(--wh-text-subtle);
+  white-space: pre-line;
+}
+
+/* 기존 유지 사유 시트 */
+.mr-sheet {
+  max-height: 90dvh;
+  /* SEED 시트는 글자 단위로 줄을 바꿔서 앱 기본(단어 단위)으로 되돌립니다 */
+  word-break: keep-all;
+}
+.mr-sheet__body {
+  padding-top: var(--wh-space-4);
+  padding-bottom: calc(var(--wh-space-3) + env(safe-area-inset-bottom));
+}
+.mr-sheet__body--discard {
+  animation: wh-rise-in var(--seed-duration-d4) var(--seed-timing-function-enter) both;
+}
+.mr-sheet__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--wh-space-2);
+}
+.mr-sheet__title.seed-bottom-sheet__title {
+  padding-inline: 0;
+}
+.mr-sheet__title {
+  font-size: calc(1.25rem * var(--wh-font-scale));
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: var(--wh-tracking-tight);
+}
+.mr-sheet__close.wh-icon-btn {
+  flex: none;
+  margin: -10px -12px 0 0;
+}
+.mr-sheet__lead {
+  margin-top: var(--wh-space-1);
+}
+.mr-sheet__field {
+  position: relative;
+  margin-top: var(--wh-space-4);
+}
+.mr-sheet__textarea.wh-textarea {
+  min-height: 112px;
+  padding-bottom: var(--wh-space-8);
+  background: var(--wh-surface);
+}
+.mr-sheet__count {
+  position: absolute;
+  right: var(--wh-space-3_5);
+  bottom: var(--wh-space-2_5);
+  font-size: var(--wh-type-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--wh-text-disabled);
+  pointer-events: none;
+}
+.mr-sheet__error {
+  margin: var(--wh-space-3) 0 0;
+}
+.mr-sheet__actions {
+  margin-top: var(--wh-space-5);
+}
+.mr-sheet__login.seed-action-button {
+  margin-top: var(--wh-space-3);
+}

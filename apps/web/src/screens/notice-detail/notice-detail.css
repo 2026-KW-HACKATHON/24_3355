@@ -1,0 +1,91 @@
+/* LF-03 공지 상세. lofi/screens/15 */
+.nd-skeleton {
+  display: grid;
+  gap: var(--wh-space-3_5);
+  padding-top: var(--wh-space-2);
+}
+.nd-article {
+  padding-top: var(--wh-space-2);
+}
+.nd-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--wh-space-1_5);
+}
+.nd-title {
+  margin-top: var(--wh-space-3);
+}
+.nd-meta {
+  margin-top: var(--wh-space-1);
+}
+.nd-period {
+  margin: var(--wh-space-4_5) 0 0;
+  padding: var(--wh-space-3_5) var(--wh-space-4);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-moon-50);
+}
+.nd-period__row {
+  display: flex;
+  gap: var(--wh-space-2);
+  padding: 3px 0;
+  font-size: calc(0.90625rem * var(--wh-font-scale));
+  line-height: 1.5;
+}
+.nd-period__row dt {
+  flex: none;
+  width: 4.5em;
+  font-weight: 600;
+  color: var(--wh-moon-ink);
+}
+.nd-period__row dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--wh-text);
+}
+.nd-body {
+  margin-top: var(--wh-space-5);
+  font-size: var(--wh-type-body);
+  line-height: var(--wh-leading-read);
+  color: var(--wh-text-body);
+  white-space: pre-line;
+}
+.nd-note {
+  margin-top: var(--wh-space-6);
+  padding-top: var(--wh-space-4);
+  border-top: 1px solid var(--wh-border-soft);
+}
+
+/* 읽어주기 막대 (lofi .tts) */
+.nd-tts {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-2_5);
+  margin: 0 var(--wh-gutter) var(--wh-space-3);
+  padding: var(--wh-space-2_5) var(--wh-space-3) var(--wh-space-2_5) var(--wh-space-3_5);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-primary);
+  color: var(--wh-gray-0);
+  font-size: calc(0.90625rem * var(--wh-font-scale));
+}
+.nd-tts__text {
+  flex: 1;
+}
+.nd-tts__stop {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--wh-space-1);
+  min-height: var(--wh-touch);
+  padding: 0 var(--wh-space-3);
+  border: 0;
+  border-radius: var(--wh-radius-icon);
+  background: var(--wh-on-primary-weak);
+  color: var(--wh-gray-0);
+  font-weight: 600;
+}
+.nd-tts__stop svg {
+  width: 14px;
+  height: 14px;
+}
+.nd-tts-off {
+  margin: 0 var(--wh-gutter) var(--wh-space-2);
+}

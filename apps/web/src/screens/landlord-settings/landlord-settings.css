@@ -1,0 +1,10 @@
+/* 집주인 설정 탭(lofi 없음. 45 내 정보의 목록 모양을 따름) */
+.ls-first {
+  margin-top: var(--wh-space-1);
+}
+.ls-static {
+  cursor: default;
+}
+.ls-logout {
+  margin-top: var(--wh-space-8);
+}

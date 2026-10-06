@@ -1,0 +1,29 @@
+/* LF-08 보낸 내용 (lofi 21) */
+.sr-info {
+  display: flex;
+  gap: var(--wh-space-2);
+  margin: var(--wh-space-1) var(--wh-gutter) var(--wh-space-2);
+  padding: var(--wh-space-2_5) var(--wh-space-3);
+  border-radius: var(--wh-radius-icon);
+  background: var(--wh-surface-soft);
+  font-size: var(--wh-type-caption);
+  line-height: 1.5;
+  color: var(--wh-text-subtle);
+}
+.sr-info svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+}
+.sr-skeleton {
+  display: grid;
+  gap: var(--wh-space-6);
+  padding-top: var(--wh-space-4);
+}
+.sr-empty {
+  padding-top: var(--wh-space-12);
+}
+.sr-list > li {
+  animation: wh-rise-in var(--seed-duration-d4) var(--seed-timing-function-enter) both;
+}

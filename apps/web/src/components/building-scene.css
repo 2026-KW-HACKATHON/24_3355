@@ -1,0 +1,92 @@
+/* 건물 그림(lofi chrome.js 등각 자리표시). 색은 tokens.css의 --wh-scene-*, 움직임은 SEED 토큰만 씁니다(interaction.md §7). */
+.wh-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  /* 장식 그림이라 누르거나 끌 수 없고, 그 위에서 시작한 세로 스크롤은 그대로 페이지가 받습니다 */
+  pointer-events: none;
+  touch-action: pan-y;
+}
+.wh-scene polygon {
+  stroke: var(--wh-scene-edge);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  /* 거주자 홈(0.9배)에서도 모서리 선은 1px */
+  vector-effect: non-scaling-stroke;
+}
+.wh-scene .wh-scene__ground {
+  fill: var(--wh-scene-ground);
+  stroke: none;
+}
+.wh-scene .wh-scene__road {
+  fill: var(--wh-scene-road);
+  stroke: none;
+}
+.wh-scene .wh-scene__g-top {
+  fill: var(--wh-scene-g-top);
+}
+.wh-scene .wh-scene__g-left {
+  fill: var(--wh-scene-g-left);
+}
+.wh-scene .wh-scene__g-right {
+  fill: var(--wh-scene-g-right);
+}
+.wh-scene .wh-scene__g2-top {
+  fill: var(--wh-scene-g2-top);
+}
+.wh-scene .wh-scene__g2-left {
+  fill: var(--wh-scene-g2-left);
+}
+.wh-scene .wh-scene__g2-right {
+  fill: var(--wh-scene-g2-right);
+}
+.wh-scene .wh-scene__hl-top {
+  fill: var(--wh-scene-hl-top);
+  stroke: none;
+}
+.wh-scene .wh-scene__hl-left {
+  fill: var(--wh-scene-hl-left);
+  stroke: none;
+}
+.wh-scene .wh-scene__hl-right {
+  fill: var(--wh-scene-hl-right);
+  stroke: none;
+}
+.wh-scene .wh-scene__window {
+  fill: var(--wh-cream);
+  stroke: none;
+}
+.wh-scene .wh-scene__window-lit {
+  fill: var(--wh-moon);
+  stroke: none;
+}
+
+/* 나타남(앱을 연 뒤 한 번): 화면이 뜬 뒤(d3) 우리 건물이 땅에서 올라오고(d6, 150→450ms),
+   올라오는 도중인 d6(300ms)부터 아래층부터 창에 불이 켜집니다(층마다 d1 간격, d4). 두 움직임은 150ms쯤 겹치고
+   모두 600ms 안에 끝나며 반복하지 않습니다.
+   정적 그림이 기본값이고 keyframes는 시작 모습만 적으므로, 애니메이션이 꺼지면 바로 완성된 그림입니다. */
+.wh-scene[data-motion="appear"] .wh-scene__rise {
+  animation: wh-scene-rise var(--seed-duration-d6) var(--seed-timing-function-enter)
+    var(--seed-duration-d3) backwards;
+}
+.wh-scene[data-motion="appear"] .wh-scene__floor {
+  animation: wh-scene-light var(--seed-duration-d4) var(--seed-timing-function-enter) backwards;
+  animation-delay: calc(var(--seed-duration-d6) + var(--floor, 0) * var(--seed-duration-d1));
+}
+/* 우리 건물 높이(4칸 × 10px, BuildingScene.tsx RISE)만큼 아래에서 시작 */
+@keyframes wh-scene-rise {
+  from {
+    transform: translateY(40px);
+  }
+}
+@keyframes wh-scene-light {
+  from {
+    opacity: 0;
+  }
+}
+/* 크게 보기로 바꾸면 도중이라도 바로 정적 그림(동작 줄이기는 global.css가 모든 애니메이션을 끔) */
+html[data-size="large"] .wh-scene * {
+  animation: none;
+}

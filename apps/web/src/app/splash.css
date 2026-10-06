@@ -1,0 +1,162 @@
+/* 스플래시 · lofi 00. 390×844 배치를 비율(%, cqw)로 옮겨 어느 화면 크기에서도 같은 구도로 보입니다. */
+.sp-root {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(120% 60% at 20% 40%, var(--wh-splash-glow), transparent 60%),
+    radial-gradient(90% 50% at 90% 75%, var(--wh-splash-moon-glow), transparent 70%),
+    linear-gradient(180deg, var(--wh-splash-top) 0%, var(--wh-splash-bottom) 100%);
+  animation: wh-fade-in var(--seed-duration-d3) var(--seed-timing-function-enter) both;
+}
+.sp-root--leave {
+  animation: sp-leave var(--seed-duration-d4) var(--seed-timing-function-exit) both;
+  pointer-events: none;
+}
+@keyframes sp-leave {
+  to {
+    opacity: 0;
+  }
+}
+.sp-stage {
+  position: relative;
+  width: min(100vw, calc(100dvh * 390 / 844));
+  aspect-ratio: 390 / 844;
+  overflow: hidden;
+  container-type: size;
+}
+.sp-word {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  margin: 0;
+  text-align: center;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.07em;
+  color: var(--wh-splash-ink);
+}
+.sp-word--top {
+  top: 12.32%;
+  font-size: 26.67cqw;
+}
+.sp-word--bottom {
+  top: 69.67%;
+  font-size: 23.59cqw;
+}
+.sp-word em {
+  font-style: normal;
+  color: var(--wh-navy-600);
+}
+.sp-hami {
+  position: absolute;
+  height: auto;
+  filter: var(--wh-splash-shadow);
+  animation: wh-rise-in var(--seed-duration-d6) var(--seed-timing-function-enter) both;
+}
+.sp-hami--house {
+  z-index: 4;
+  left: -11.79%;
+  top: 23.22%;
+  width: 76.92%;
+  rotate: -9deg;
+}
+.sp-hami--envelope {
+  z-index: 6;
+  right: -11.28%;
+  top: 42.18%;
+  width: 69.23%;
+  rotate: 8deg;
+}
+.sp-deco {
+  position: absolute;
+  z-index: 2;
+  height: auto;
+}
+.sp-moon {
+  right: 10.26%;
+  top: 35.55%;
+  width: 16.41%;
+  rotate: -18deg;
+  filter: drop-shadow(0 10px 14px var(--wh-splash-moon-glow));
+}
+.sp-star {
+  z-index: 7;
+  left: 9.23%;
+  top: 62.8%;
+  width: 14.87%;
+  rotate: 12deg;
+  filter: var(--wh-splash-deco-shadow);
+}
+.sp-star__edge {
+  stroke: var(--wh-gray-0);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.sp-stamp {
+  left: 64.1%;
+  top: 20.85%;
+  width: 14.87%;
+  rotate: 16deg;
+  filter: var(--wh-splash-deco-shadow);
+}
+.sp-fill-white {
+  fill: var(--wh-gray-0);
+}
+.sp-stop--navy-light {
+  stop-color: var(--wh-scene-hl-top);
+}
+.sp-stop--navy-dark {
+  stop-color: var(--wh-navy-700);
+}
+.sp-stop--gold-light {
+  stop-color: var(--wh-splash-gold-light);
+}
+.sp-stop--gold-dark {
+  stop-color: var(--wh-splash-gold-dark);
+}
+.sp-stop--moon-light {
+  stop-color: var(--wh-splash-moon-light);
+}
+.sp-stop--moon-mid {
+  stop-color: var(--wh-splash-moon-mid);
+}
+.sp-stop--moon-dark {
+  stop-color: var(--wh-splash-moon-dark);
+}
+.sp-stop--white {
+  stop-color: var(--wh-gray-0);
+}
+.sp-stop--navy-50 {
+  stop-color: var(--wh-navy-50);
+}
+.sp-stop--star-edge {
+  stop-color: var(--wh-splash-star-edge);
+}
+.sp-foot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 6.87%;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.sp-foot__brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--wh-text);
+}
+.sp-foot__sub {
+  font-size: 13px;
+  color: var(--wh-text-muted);
+}

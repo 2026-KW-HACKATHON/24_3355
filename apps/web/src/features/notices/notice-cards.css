@@ -1,0 +1,84 @@
+/* 진행 중인 공지 카드. lofi/src/building.css .notice */
+.nc-list {
+  display: grid;
+  gap: var(--wh-space-2);
+  margin: var(--wh-space-4) var(--wh-gutter) 0;
+}
+/* 공지는 건물 정보와 따로 받아 늦게 올 수 있어 목록 항목처럼 나타납니다 */
+.nc-list > li {
+  animation: wh-rise-in var(--seed-duration-d4) var(--seed-timing-function-enter) both;
+}
+.nc-card {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-3);
+  min-height: 64px;
+  padding: var(--wh-space-3_5) var(--wh-space-3) var(--wh-space-3_5) var(--wh-space-4);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-moon-50);
+  transition:
+    background-color var(--seed-duration-color-transition) var(--seed-timing-function-easing),
+    var(--seed-feedback-scale-transition);
+}
+a.nc-card:active {
+  background: var(--wh-cream);
+  scale: var(--seed-scale-s98);
+}
+.nc-card__ic {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--wh-radius-icon);
+  background: var(--wh-surface);
+  color: var(--wh-moon-ink);
+}
+.nc-card__ic svg {
+  width: 19px;
+  height: 19px;
+}
+.nc-card__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.nc-card__title {
+  font-size: calc(0.96875rem * var(--wh-font-scale));
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--wh-text);
+}
+.nc-card__sub {
+  margin-top: var(--wh-space-0_5);
+  font-size: var(--wh-type-caption);
+  color: var(--wh-moon-ink);
+}
+.nc-card__chev {
+  flex: none;
+  width: var(--wh-icon-m);
+  height: var(--wh-icon-m);
+  color: var(--wh-moon);
+}
+
+.nc-card--failed {
+  margin: var(--wh-space-4) var(--wh-gutter) 0;
+  background: var(--wh-surface-soft);
+}
+.nc-card--failed .nc-card__ic {
+  color: var(--wh-text-subtle);
+}
+.nc-card--failed .nc-card__text {
+  font-size: var(--wh-type-small);
+  color: var(--wh-text-subtle);
+}
+.nc-card__retry {
+  min-height: var(--wh-touch);
+  padding: 0 var(--wh-space-2);
+  border: 0;
+  background: none;
+  font-size: var(--wh-type-small);
+  font-weight: 600;
+  color: var(--wh-primary);
+}

@@ -73,6 +73,8 @@ const messages: Readonly<Record<AppErrorCode, string>> = {
   RATE_LIMITED: "요청이 많아요. 잠시 뒤 다시 시도해 주세요",
   REPORT_TOO_FREQUENT: "같은 내용을 방금 보냈어요. 잠시 뒤 다시 보내 주세요",
   KAKAO_NOT_CONFIGURED: "지금은 카카오 로그인을 쓸 수 없어요",
+  ALREADY_CONNECTED: "이미 다른 건물에 연결되어 있어요. 연결을 옮길지 먼저 확인해 주세요",
+  PAYLOAD_TOO_LARGE: "내용이 너무 길어요. 조금 줄여서 다시 보내 주세요",
 };
 
 export function errorMessage(error: unknown): string {

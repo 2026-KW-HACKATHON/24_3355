@@ -1,0 +1,87 @@
+/* 재확인(lofi 40)·이사 확인(lofi 08) 시트. 공통 모양은 global.css의 .wh-sheet__* */
+.oc-sheet {
+  max-height: 90dvh;
+  /* SEED 시트는 글자 단위로 줄을 바꿔서 앱 기본(단어 단위)으로 되돌립니다 */
+  word-break: keep-all;
+}
+.oc-body {
+  padding-top: var(--wh-space-5);
+  padding-bottom: calc(var(--wh-space-3) + env(safe-area-inset-bottom));
+}
+.oc-body--start {
+  padding-top: var(--wh-space-4);
+}
+.oc-hami .wh-hami {
+  width: 140px;
+  margin: -16px 0 -18px;
+}
+.oc-hami + .wh-sheet__title {
+  margin-top: var(--wh-space-2);
+}
+.oc-if {
+  margin-top: var(--wh-space-4_5);
+  padding: var(--wh-space-3) var(--wh-space-4);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-soft);
+  font-size: calc(0.84375rem * var(--wh-font-scale));
+  line-height: 1.55;
+  color: var(--wh-text-subtle);
+}
+.oc-error {
+  margin: var(--wh-space-3) 0 0;
+}
+.oc-actions {
+  margin-top: var(--wh-space-5);
+}
+
+/* 이사 확인(08): 끝나는 것 / 남는 것 */
+.oc-title.seed-bottom-sheet__title {
+  padding-inline: 0;
+}
+.oc-title {
+  font-size: calc(1.3125rem * var(--wh-font-scale));
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: var(--wh-tracking-tight);
+}
+.oc-lead {
+  margin-top: var(--wh-space-1);
+}
+.oc-cmp {
+  margin-top: var(--wh-space-4_5);
+  padding: var(--wh-space-3_5) var(--wh-space-4);
+  border-radius: var(--wh-radius-l);
+  background: var(--wh-surface-soft);
+}
+.oc-cmp + .oc-cmp {
+  margin-top: var(--wh-space-2);
+}
+.oc-cmp__head {
+  margin-bottom: var(--wh-space-1_5);
+  font-size: var(--wh-type-caption);
+  font-weight: 700;
+  color: var(--wh-text-muted);
+}
+.oc-cmp__item {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-2_5);
+  padding: var(--wh-space-1) 0;
+  font-size: var(--wh-type-label);
+  line-height: 1.5;
+  color: var(--wh-text-body);
+}
+.oc-cmp__item svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+.oc-cmp--end svg {
+  color: var(--wh-text-muted);
+}
+.oc-cmp--keep svg {
+  color: var(--wh-st-done);
+}
+.oc-login.seed-action-button {
+  margin-top: var(--wh-space-3);
+}
