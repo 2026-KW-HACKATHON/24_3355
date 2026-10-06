@@ -12,11 +12,14 @@ flowchart LR
     U["브라우저<br/>(Safari·Chrome·카카오톡 안)"] -->|HTTPS| AMP["Amplify Hosting<br/>웹 · PR 미리 보기"]
     AMP -->|"/api/* 같은 출처 프록시"| CF["CloudFront 2개<br/>(API용 HTTPS)"]
     subgraph EC2 ["EC2 t3.micro 1대 · docker compose"]
-      APIDEV["api-dev :8081"] --> DB[("Postgres 17<br/>wolgyeham_dev · wolgyeham_prod")]
-      APIPROD["api-prod :8082"] --> DB
+      CADDY["caddy :443<br/>인증서 · X-Origin-Verify 검사"]
+      APIDEV["api-dev<br/>127.0.0.1:8081"] --> DB[("Postgres 17<br/>wolgyeham_dev · wolgyeham_prod")]
+      APIPROD["api-prod<br/>127.0.0.1:8082"] --> DB
+      CADDY -->|"dev.ORIGIN_DOMAIN"| APIDEV
+      CADDY -->|"prod.ORIGIN_DOMAIN"| APIPROD
     end
-    CF -->|HTTP| APIDEV
-    CF -->|HTTP| APIPROD
+    CF -->|"HTTPS · 원본 이름 a-b-c-d.sslip.io"| CADDY
+    LE["Let's Encrypt<br/>(실패 시 ZeroSSL)"] -.->|"HTTP-01 :80"| CADDY
     GH["GitHub Actions"] -->|"OIDC · 이미지 푸시"| ECR["ECR<br/>wolgyeham-api"]
     GH -->|"SSM Run Command"| EC2
     EC2 -->|"pull"| ECR
@@ -47,7 +50,8 @@ flowchart LR
 |---|---|---|---|
 | 웹 | AWS Amplify Hosting 앱 2개 | 빌드·호스팅·PR 미리 보기·`/api` 프록시 | 사용량이 작아 월 1달러 미만 예상 |
 | API 입구 | CloudFront 배포 2개 | API에 HTTPS 주소 제공, 캐시 안 함 | 상시 무료 한도(월 1TB) 안 |
-| API·DB | EC2 t3.micro 1대 + EBS 20GB + 탄력적 IP | docker compose로 api-dev, api-prod, Postgres | 프리 티어 대상 크기. 계정 플랜에 따라 무료 또는 크레딧 차감 |
+| 원본 HTTPS | EC2 안의 caddy + sslip.io 이름 + Let's Encrypt(대체 ZeroSSL) | CloudFront → EC2 구간 암호화, 원본 확인 헤더 검사(D-31) | 무료. 메모리 64MB 제한 |
+| API·DB | EC2 t3.micro 1대 + EBS 20GB + 탄력적 IP | docker compose로 api-dev, api-prod, Postgres, caddy | 프리 티어 대상 크기. 계정 플랜에 따라 무료 또는 크레딧 차감 |
 | 이미지 | ECR `wolgyeham-api` | API 이미지 보관 (최근 10개) | 수백 MB 이하 |
 | 비밀값 | SSM Parameter Store (표준) | 카카오 키, 세션 비밀, DB 비밀번호 | 표준 파라미터 무료 |
 | 백업·서버 파일 | S3 `wolgyeham-ops-<계정ID>` | 매일 pg_dump(14일 보관), 서버 스크립트 | 수 MB |
@@ -60,7 +64,7 @@ flowchart LR
 ## 요청 흐름
 
 1. 세입자가 현관 QR을 열면 Amplify가 웹을 줍니다.
-2. 웹이 `/api/buildings/...`를 부르면 Amplify가 같은 경로를 CloudFront(API)로 넘기고, CloudFront가 EC2의 `api-dev` 또는 `api-prod`로 보냅니다.
+2. 웹이 `/api/buildings/...`를 부르면 Amplify가 같은 경로를 CloudFront(API)로 넘기고, CloudFront가 HTTPS로 EC2의 caddy(`dev.<ORIGIN_DOMAIN>` 또는 `prod.<ORIGIN_DOMAIN>`)에 보냅니다. caddy는 `X-Origin-Verify`가 그 환경 값이면 `api-dev` 또는 `api-prod`로 넘기고, 아니면 403입니다. `X-Forwarded-For`는 CloudFront가 만든 그대로 넘깁니다.
 3. API는 요청을 zod(`packages/contracts`)로 검증하고, 이 건물과의 관계로 권한을 확인한 뒤 Postgres를 읽고 씁니다.
 4. 로그인은 API가 카카오와 직접 주고받고, 세션 쿠키 `wh_session`을 웹과 같은 출처로 내려줍니다.
 5. 응답 로그는 CloudWatch Logs로 갑니다.
@@ -72,8 +76,8 @@ API 응답은 캐시하지 않습니다. CloudFront는 캐시를 끈 정책을 �
 | 항목 | 내용 | 대응 |
 |---|---|---|
 | 단일 서버 | EC2가 멈추면 dev와 prod가 같이 멈춥니다 | 본선·전시 전날 백업과 복구를 한 번 연습합니다. 가용성이 필요해지면 [decisions.md](decisions.md) D-02를 다시 봅니다 |
-| 메모리 | t3.micro는 1GB입니다 | 스왑 1GB, 컨테이너별 메모리 제한, Postgres 설정을 작게 둡니다 |
-| CloudFront→EC2 구간 | 원본 구간이 HTTP입니다 | 보안 그룹이 CloudFront 주소만 받습니다. 도메인을 확보하면 원본도 HTTPS로 바꿉니다 |
+| 메모리 | t3.micro는 1GB입니다 | 스왑 1GB, 컨테이너별 메모리 제한(Postgres 320MB, API 256MB×2, caddy 64MB), Postgres 설정을 작게 둡니다 |
+| CloudFront→EC2 구간 | caddy가 HTTPS로 받습니다. 원본 이름은 외부 서비스 sslip.io에 기대고, 인증서는 80번으로 발급·갱신합니다 | 443은 CloudFront에서만, 80은 인증서 확인과 HTTPS 안내만 합니다. sslip.io나 발급에 문제가 생기면 [deploy.md](deploy.md) 되돌리기, 팀 도메인이 생기면 [aws-setup.md 7-A](aws-setup.md#7-a-원본-https로-옮기기-이미-돌고-있는-환경)로 이름만 바꿉니다 |
 | 미리 보기 로그인 | PR 미리 보기 주소는 카카오에 등록할 수 없습니다 | 로그인 흐름은 dev에서 확인합니다 |
 | 개인정보 | prod에 카카오 계정 연결, 제보 내용이 쌓입니다 | 로그에 남기지 않고, 백업은 14일 뒤 지우고, 전시 뒤 [aws-setup.md](aws-setup.md)의 정리 절차를 따릅니다 |
 

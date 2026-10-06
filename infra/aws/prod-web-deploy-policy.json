@@ -1,0 +1,11 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DeployProdStaticWeb",
+      "Effect": "Allow",
+      "Action": ["amplify:CreateDeployment", "amplify:StartDeployment", "amplify:GetJob"],
+      "Resource": "arn:aws:amplify:ap-northeast-2:<ACCOUNT_ID>:apps/<PROD_WEB_APP_ID>/branches/release*"
+    }
+  ]
+}

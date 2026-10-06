@@ -13,6 +13,8 @@
         },
         "StringLike": {
           "token.actions.githubusercontent.com:sub": [
+            "repo:2026-KW-HACKATHON@329474081/24_3355@1373145913:ref:refs/heads/main",
+            "repo:2026-KW-HACKATHON@329474081/24_3355@1373145913:ref:refs/heads/release",
             "repo:2026-KW-HACKATHON/24_3355:ref:refs/heads/main",
             "repo:2026-KW-HACKATHON/24_3355:ref:refs/heads/release"
           ]

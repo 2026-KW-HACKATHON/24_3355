@@ -7,10 +7,12 @@ on:
     branches: [main, release]
     paths:
       - apps/api/**
+      - apps/web/**
       - packages/contracts/**
       - infra/server/**
       - pnpm-lock.yaml
       - .github/workflows/deploy-api.yml
+      - infra/amplify/**
   workflow_dispatch:
     inputs:
       target:
@@ -117,4 +119,36 @@ jobs:
       - name: 상태 확인
         env:
           BASE_URL: ${{ env.TARGET == 'prod' && vars.PROD_API_BASE_URL || vars.DEV_API_BASE_URL }}
+        run: curl -fsS --retry 5 --retry-delay 3 "$BASE_URL/api/health"
+
+  deploy-prod-web:
+    needs: deploy
+    if: github.ref_name == 'release'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: prod 웹 빌드
+        env:
+          VITE_PUBLIC_ORIGIN: ${{ vars.PROD_WEB_BASE_URL }}
+        run: pnpm --filter @wolgyeham/web build
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ap-northeast-2
+      - name: API 배포 뒤 prod 웹 배포
+        env:
+          APP_ID: ${{ vars.PROD_WEB_APP_ID }}
+        run: bash infra/amplify/deploy-web.sh "$APP_ID" release apps/web/dist
+      - name: prod 웹의 API 연결 확인
+        env:
+          BASE_URL: ${{ vars.PROD_WEB_BASE_URL }}
         run: curl -fsS --retry 5 --retry-delay 3 "$BASE_URL/api/health"
