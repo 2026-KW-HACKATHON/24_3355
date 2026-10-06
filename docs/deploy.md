@@ -28,6 +28,8 @@ dev는 GitHub에 연결된 Amplify 앱입니다. prod는 같은 저장소의 `re
 
 `release`는 관리자만 올립니다.
 
+dev·prod는 서버 설정과 태그 파일을 공유하므로 배포 워크플로 전체를 한 번에 하나씩 실행합니다. 뒤에 온 배포는 앞선 배포가 끝날 때까지 기다립니다. release에서 dev를 수동 배포해도 prod 웹은 바뀌지 않습니다.
+
 prod 웹 배포에 필요한 저장소 변수는 `PROD_WEB_APP_ID=dfldu21sxhojf`, `PROD_WEB_BASE_URL=https://release.dfldu21sxhojf.amplifyapp.com`입니다. 배포 역할에는 `infra/aws/prod-web-deploy-policy.json`의 두 자리표시자를 실제 값으로 바꾼 정책을 추가합니다. 권한은 prod 앱의 release 브랜치 업로드·배포·상태 조회로 제한합니다.
 
 자동 배포가 막혔을 때 웹만 올리는 명령은 다음과 같습니다. 서명된 업로드 URL은 스크립트가 출력하지 않습니다.

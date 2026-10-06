@@ -192,7 +192,7 @@
 - **결정 (2026-10-01):** 1번안을 도메인 없이 한다(팀이 도메인을 사지 않기로 함). CloudFront는 IP를 원본으로 받지 않으므로, 원본 이름은 탄력적 IP로 만든 `dev.<a-b-c-d>.sslip.io`, `prod.<a-b-c-d>.sslip.io`(`ORIGIN_DOMAIN`)를 쓴다. EC2의 caddy(`caddy:2-alpine`, 64MB)가 Let's Encrypt 인증서를 HTTP-01로 받고, 실패하면 ZeroSSL로 받는다. caddy는 환경별 `X-Origin-Verify`가 다르면 403이고, 맞으면 CloudFront가 만든 `X-Forwarded-For`를 그대로 API에 넘긴다(D-23 규칙 변경 없음). API 포트는 127.0.0.1에만 연다. 보안 그룹은 CloudFront 목록에서 443(관리형 목록이 규칙 55개로 세어져 규칙 하나만 둠), 전체에서 80(인증서 확인·HTTPS 안내만)이다. 지금 환경은 `infra/aws/switch-origin-tls.sh`의 prepare → 배포 → switch → cleanup으로 옮긴다([aws-setup.md](aws-setup.md) 7-A).
 - **받아들인 위험:** 외부 무료 DNS(sslip.io)가 멈추면 원본을 찾지 못하고 인증서를 갱신하지 못한다. sslip.io는 공개 접미사 목록에 없어 Let's Encrypt 한도를 모든 사용자와 나눠 쓴다(넘으면 ZeroSSL). 80이 전체에 열리고, 인증서 이름이 CT 로그에 공개되어 원본 IP가 드러난다(443은 CloudFront만 받고 헤더가 막음).
 - **다시 볼 조건:** 팀 도메인을 확보하면 `ORIGIN_DOMAIN`만 바꾼다(코드 변경 없음, rollback → prepare → 배포 → switch → cleanup).
-- **지금 상태:** 관리자 반영(cleanup) 전까지 개인정보 처리방침 초안은 이 구간을 ‘준비 중’으로 적는다. 반영 뒤 문구와 `legal.test.tsx`를 함께 고친다.
+- **반영 (2026-10-06):** dev·prod 원본이 HTTPS로 바뀌었고 API 포트는 127.0.0.1에만 열려 있다. 두 공개 API의 health 200을 확인했다. 개인정보 처리방침과 검증 문구를 함께 고치고 동의 판을 `2026-10-06-draft`로 올렸다.
 
 ### D-32. 모든 로그인 입구에서 동의, 폰트 직접 호스팅
 

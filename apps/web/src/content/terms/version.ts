@@ -7,6 +7,7 @@ import { TERMS_VERSION } from "@wolgyeham/contracts";
 export const TERMS_RELEASE: { readonly version: string; readonly changes: readonly string[] } = {
   version: TERMS_VERSION,
   changes: [
+    "CloudFront에서 서버까지 HTTPS 전환을 완료해 보호 조치에 반영했어요.",
     "모든 로그인 화면에서 로그인 전에 필수 동의를 받아요.",
     "카카오에는 회원번호만 요청하고, 이 기기에만 저장하는 것과 지우는 방법을 자세히 적었어요.",
     "알림을 전하는 푸시 서비스와, 파일럿 동안 알린 내용을 집주인에게 전하는 카카오톡을 맡기는 곳에 적었어요.",

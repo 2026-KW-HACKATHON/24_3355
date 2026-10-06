@@ -234,7 +234,7 @@ export const PRIVACY_DOC: LegalDoc = {
       blocks: [
         {
           list: [
-            "브라우저에서 AWS의 입구(웹 화면을 주는 Amplify, API 입구인 CloudFront)까지는 HTTPS로 암호화해요. CloudFront에서 서버까지의 구간은 아직 HTTPS가 아니어서 정식 서비스 전에 바꾸려고 준비하고 있어요. 그동안 서버는 CloudFront를 거친 요청만 받아요.",
+            "브라우저에서 AWS의 입구(웹 화면을 주는 Amplify, API 입구인 CloudFront)까지와 CloudFront에서 서버까지 모두 HTTPS로 암호화해요. 서버의 API는 CloudFront를 거쳐 원본 확인 헤더가 맞는 요청만 받아요.",
             "로그인 기록, 집주인 초대, 비회원 확인 링크는 해시만 저장해요. 인터넷 주소는 서버만 아는 키로 바꾼 값만 잠시 둬요.",
             "가입코드와 알림을 암호화하는 키는 쓰려면 원래 값이 필요해서 그대로 저장하고, 필요한 사람에게만 보여요. 가입코드는 그 건물 집주인만 봐요.",
             "서버 기록에는 개인정보를 남기지 않아요.",

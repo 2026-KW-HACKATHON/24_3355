@@ -19,7 +19,7 @@ export const ReturnTo = z
  * 약관·개인정보 처리방침 초안의 현재 판(D-28). 판을 바꾸면 `/me`의 `termsUpToDate`가 false가 되어 웹이 다시
  * 동의를 받습니다.
  */
-export const TERMS_VERSION = "2026-09-30-draft";
+export const TERMS_VERSION = "2026-10-06-draft";
 
 /**
  * 로그인할 때 함께 보내는 동의한 판. 형식만 검사하고 현재 판(`TERMS_VERSION`)과 같을 때만 계정에 남깁니다. 배포
