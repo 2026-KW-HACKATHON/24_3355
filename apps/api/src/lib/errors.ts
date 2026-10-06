@@ -7,13 +7,21 @@ export class AppError extends Error {
   readonly status: ContentfulStatusCode;
   readonly code: ErrorCode;
   readonly fields: Record<string, string> | undefined;
+  /** 응답에 붙일 헤더(예: 429의 `Retry-After`). */
+  readonly headers: Record<string, string> | undefined;
 
-  constructor(status: ContentfulStatusCode, code: ErrorCode, fields?: Record<string, string>) {
+  constructor(
+    status: ContentfulStatusCode,
+    code: ErrorCode,
+    fields?: Record<string, string>,
+    headers?: Record<string, string>,
+  ) {
     super(code);
     this.name = "AppError";
     this.status = status;
     this.code = code;
     this.fields = fields;
+    this.headers = headers;
   }
 }
 
@@ -38,10 +46,11 @@ export function onInvalid(result: { success: true } | { success: false; error: r
 const DESCRIPTIONS: Record<number, string> = {
   400: "VALIDATION_FAILED",
   401: "UNAUTHENTICATED",
-  403: "FORBIDDEN, NOT_BUILDING_MANAGER",
+  403: "FORBIDDEN, NOT_BUILDING_MANAGER, NOT_CONNECTED, RECONFIRM_NEEDED",
   404: "NOT_FOUND",
-  409: "CONFLICT",
-  410: "INVITE_EXPIRED",
+  409: "CONFLICT, JOIN_CODE_INVALID, ALREADY_CONNECTED",
+  410: "INVITE_EXPIRED, NOTICE_ENDED, REPORT_LINK_EXPIRED",
+  429: "JOIN_CODE_LOCKED, REPORT_TOO_FREQUENT, RATE_LIMITED (Retry-After 헤더: 남은 초)",
   503: "KAKAO_NOT_CONFIGURED",
 };
 

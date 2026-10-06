@@ -8,6 +8,69 @@
       "when": 1790487621018,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790493307321,
+      "tag": "0001_slice_b_occupancies",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790681593991,
+      "tag": "0002_slice_c_memos_revisions",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790683196002,
+      "tag": "0003_slice_e_reports",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790683519471,
+      "tag": "0004_slice_f_tips",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790684335600,
+      "tag": "0005_user_fk_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790685026975,
+      "tag": "0006_report_kinds_optional_note",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790687694023,
+      "tag": "0007_security_hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790687699579,
+      "tag": "0008_push_endpoint_cleanup",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790693935976,
+      "tag": "0009_building_confirm_terms_consent",
+      "breakpoints": true
     }
   ]
 }

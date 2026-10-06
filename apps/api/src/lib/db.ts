@@ -19,3 +19,12 @@ export function createDatabase(url: string, options: { max?: number } = {}) {
   const db: Database = drizzle(client, { schema });
   return { db, close: () => client.end({ timeout: 5 }) };
 }
+
+/** 유니크 제약 위반(23505). Drizzle은 드라이버 오류를 `cause`에 담습니다. */
+export function isUniqueViolation(error: unknown): boolean {
+  for (let current = error; typeof current === "object" && current; current = current.cause) {
+    if ("code" in current && current.code === "23505") return true;
+    if (!("cause" in current)) break;
+  }
+  return false;
+}

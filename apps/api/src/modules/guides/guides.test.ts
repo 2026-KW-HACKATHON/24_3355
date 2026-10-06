@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { beforeAll, describe, expect, it } from "vitest";
+import { DEMO_BUILDING_ID, seedDemo } from "../../db/demo.ts";
 import { buildings, guides } from "../../db/schema.ts";
-import { DEMO_BUILDING_ID, seedDemo } from "../../db/seed.ts";
 import {
   createBuilding,
   createGuide,
@@ -9,6 +9,7 @@ import {
   createUser,
   jsonRequest,
   sessionCookie,
+  TEST_ORIGIN,
   useTestApp,
   withCookie,
 } from "../../test/helpers.ts";
@@ -146,11 +147,10 @@ describe("creating and editing drafts", () => {
     expect(Object.keys(error.fields).sort()).toEqual(["category", "title"]);
   });
 
-  it("edits a draft for the manager and refuses strangers and published guides", async () => {
+  it("edits a draft for the manager and refuses strangers", async () => {
     // Given
     const { building, managerCookie } = await createManagedBuilding(t.db, "open");
     const draft = await createGuide(t.db, building.id, { status: "draft" });
-    const published = await createGuide(t.db, building.id, { status: "published", position: 2 });
     const strangerCookie = await sessionCookie(t.db, await createUser(t.db));
     // When
     const edited = await t.app.request(
@@ -160,10 +160,6 @@ describe("creating and editing drafts", () => {
     const byStranger = await t.app.request(
       `/api/guides/${draft.id}`,
       jsonRequest("PATCH", { title: "남이 고친 제목" }, strangerCookie),
-    );
-    const onPublished = await t.app.request(
-      `/api/guides/${published.id}`,
-      jsonRequest("PATCH", { title: "공개 후 수정" }, managerCookie),
     );
     const empty = await t.app.request(
       `/api/guides/${draft.id}`,
@@ -175,10 +171,9 @@ describe("creating and editing drafts", () => {
       title: "고친 제목",
       body: "본문",
       status: "draft",
+      revision: null,
     });
     expect(byStranger.status).toBe(403);
-    expect(onPublished.status).toBe(409);
-    expect(await onPublished.json()).toEqual({ error: { code: "CONFLICT" } });
     expect(empty.status).toBe(400);
     const [stored] = await t.db.select().from(guides).where(eq(guides.id, draft.id));
     expect(stored?.title).toBe("고친 제목");
@@ -221,7 +216,7 @@ describe("publishing", () => {
     expect((await response.json()).buildingOpened).toBe(false);
   });
 
-  it("answers 409 when the guide was already published", async () => {
+  it("answers 409 when the guide was already published and has no saved revision", async () => {
     // Given
     const { building, managerCookie } = await createManagedBuilding(t.db, "open");
     const published = await createGuide(t.db, building.id, { status: "published" });
@@ -241,7 +236,10 @@ describe("publishing", () => {
     const draft = await createGuide(t.db, building.id, { status: "draft" });
     const strangerCookie = await sessionCookie(t.db, await createUser(t.db));
     // When
-    const anonymous = await t.app.request(`/api/guides/${draft.id}/publish`, { method: "POST" });
+    const anonymous = await t.app.request(`/api/guides/${draft.id}/publish`, {
+      method: "POST",
+      headers: { Origin: TEST_ORIGIN },
+    });
     const stranger = await t.app.request(
       `/api/guides/${draft.id}/publish`,
       withCookie(strangerCookie, { method: "POST" }),

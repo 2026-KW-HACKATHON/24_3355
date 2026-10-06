@@ -33,12 +33,15 @@ describe("API foundation", () => {
     // Given
     const app = createApp(deps);
     // When
-    const response = await app.request("/api/health", { method: "POST" });
+    const response = await app.request("/api/health", {
+      method: "POST",
+      headers: { Origin: "http://localhost:5173" },
+    });
     // Then
     expect(response.status).toBe(404);
   });
 
-  it("publishes a machine-readable contract for every slice A route", async () => {
+  it("publishes a machine-readable contract for every slice A to F route", async () => {
     // Given
     const app = createApp(deps);
     // When
@@ -56,16 +59,65 @@ describe("API foundation", () => {
         "/api/guides/{guideId}": { get: expect.any(Object), patch: expect.any(Object) },
         "/api/guides/{guideId}/publish": { post: expect.any(Object) },
         "/api/manage/buildings": { get: expect.any(Object) },
-        "/api/manage/buildings/{buildingId}": { get: expect.any(Object) },
+        "/api/manage/buildings/{buildingId}": {
+          get: expect.any(Object),
+          patch: expect.any(Object),
+        },
+        "/api/manage/buildings/{buildingId}/confirm": { post: expect.any(Object) },
         "/api/manager-invites/preview": { post: expect.any(Object) },
         "/api/manager-invites/accept": { post: expect.any(Object) },
         "/api/me": { get: expect.any(Object) },
+        "/api/me/terms-consent": { post: expect.any(Object) },
         "/api/auth/kakao/start": { get: expect.any(Object) },
         "/api/auth/kakao/callback": { get: expect.any(Object) },
         "/api/auth/logout": { post: expect.any(Object) },
+        "/api/buildings/{buildingId}/join-code": {
+          get: expect.any(Object),
+          post: expect.any(Object),
+        },
+        "/api/buildings/{buildingId}/join-code/check": { post: expect.any(Object) },
+        "/api/buildings/{buildingId}/occupancies": { post: expect.any(Object) },
+        "/api/buildings/{buildingId}/notices": {
+          get: expect.any(Object),
+          post: expect.any(Object),
+        },
+        "/api/buildings/{buildingId}/notices/audience": { get: expect.any(Object) },
+        "/api/notices/{noticeId}": { get: expect.any(Object) },
+        "/api/push-subscriptions": { post: expect.any(Object), delete: expect.any(Object) },
+        "/api/push-subscriptions/public-key": { get: expect.any(Object) },
+        "/api/guides/{guideId}/revision": { get: expect.any(Object), delete: expect.any(Object) },
+        "/api/guides/{guideId}/correction-memos": {
+          get: expect.any(Object),
+          post: expect.any(Object),
+        },
+        "/api/buildings/{buildingId}/correction-memos": { get: expect.any(Object) },
+        "/api/correction-memos/{memoId}": { get: expect.any(Object) },
+        "/api/correction-memos/{memoId}/keep": { post: expect.any(Object) },
+        "/api/occupancies/{occupancyId}/reconfirm": { post: expect.any(Object) },
+        "/api/occupancies/{occupancyId}/move-out": { post: expect.any(Object) },
+        "/api/notices/{noticeId}/opened": { post: expect.any(Object) },
+        "/api/buildings/{buildingId}/reports": {
+          get: expect.any(Object),
+          post: expect.any(Object),
+        },
+        "/api/buildings/{buildingId}/reports/lookup": { post: expect.any(Object) },
+        "/api/reports/{reportId}": { get: expect.any(Object) },
+        "/api/reports/{reportId}/acknowledge": { post: expect.any(Object) },
+        "/api/reports/{reportId}/resolve": { post: expect.any(Object) },
+        "/api/me/reports": { get: expect.any(Object) },
+        "/api/buildings/{buildingId}/tips": { get: expect.any(Object), post: expect.any(Object) },
+        "/api/tips/{tipId}": { patch: expect.any(Object), delete: expect.any(Object) },
+        "/api/tips/{tipId}/content-reports": { post: expect.any(Object) },
+        "/api/me/tips": { get: expect.any(Object) },
       },
     });
     expect(spec.paths["/api/dev/login"]).toBeUndefined();
+    expect(spec.paths["/api/dev/demo"]).toBeUndefined();
+    expect(spec.paths["/api/dev/reset"]).toBeUndefined();
+    // 비회원 조회 토큰은 헤더로만 받습니다(쿼리 파라미터 없음).
+    expect(spec.paths["/api/reports/{reportId}"].get.parameters).toEqual(
+      expect.arrayContaining([expect.objectContaining({ in: "header", name: "X-Report-Token" })]),
+    );
   });
 
   it("marks API responses no-store and echoes a request id, but lets docs be cached", async () => {
