@@ -29,7 +29,7 @@ flowchart LR
 ```
 
 - 웹과 API는 **모든 환경에서 같은 출처**입니다. 로컬은 Vite 프록시, 배포 환경은 Amplify의 `/api/*` 재작성 규칙이 API로 넘깁니다. 그래서 CORS 설정이 없고, 로그인 쿠키가 iOS Safari에서도 제3자 쿠키로 막히지 않습니다.
-- API 문서는 모든 환경에서 `/api/swagger`(Swagger UI), `/api/docs`(Scalar), `/api/openapi.json`에 있습니다.
+- API 문서는 dev에서 `/api/swagger`(Swagger UI), `/api/docs`(Scalar), `/api/openapi.json`으로 봅니다. prod는 `API_DOCS=true`를 설정했을 때만 열립니다.
 
 ## 환경
 
@@ -39,6 +39,8 @@ flowchart LR
 | preview | Amplify dev 앱의 PR 미리 보기 | dev API를 같이 씀 | PR에 커밋을 올릴 때 | 안 됨 (주소가 PR마다 바뀜). 비로그인 흐름으로 확인 |
 | dev | Amplify dev 앱 (`main`) | EC2 `api-dev` + `wolgyeham_dev` | `main`에 병합할 때 | 가능 |
 | prod | Amplify prod 앱 (`release`) | EC2 `api-prod` + `wolgyeham_prod` | 관리자가 `release`를 올릴 때 | 가능 |
+
+dev 웹은 Amplify의 GitHub 연결이 빌드합니다. prod 웹은 GitHub Actions가 API 배포 성공 뒤 같은 `release`의 정적 빌드를 Amplify에 올립니다(D-33).
 
 - dev는 팀이 매일 확인하는 곳이고 데이터가 초기화될 수 있습니다.
 - prod는 파일럿 건물의 실제 사용자가 씁니다. 실제 사용자 데이터가 들어가므로 초기화하지 않고, 시연용 시드를 넣지 않습니다.
@@ -69,7 +71,7 @@ flowchart LR
 4. 로그인은 API가 카카오와 직접 주고받고, 세션 쿠키 `wh_session`을 웹과 같은 출처로 내려줍니다.
 5. 응답 로그는 CloudWatch Logs로 갑니다.
 
-API 응답은 캐시하지 않습니다. CloudFront는 캐시를 끈 정책을 쓰고, API는 인증이 걸린 응답에 `Cache-Control: no-store`를 붙입니다(아직 구현 전).
+API 응답은 캐시하지 않습니다. CloudFront는 캐시를 끈 정책을 쓰고, API는 응답에 `Cache-Control: no-store`를 붙입니다.
 
 ## 한계와 위험
 

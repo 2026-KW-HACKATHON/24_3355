@@ -29,6 +29,7 @@
     "react-doctor": "0.9.14",
     "react-grab": "0.2.0",
     "react-scan": "0.5.7",
+    "typescript": "7.0.2",
     "vite": "8.3.1"
   }
 }

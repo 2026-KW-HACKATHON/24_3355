@@ -117,9 +117,9 @@ describe("privacy draft matches what the code does", () => {
 
   it("says precisely which part of the connection is HTTPS", () => {
     const privacy = render("/privacy");
-    expect(privacy).toContain("CloudFront)까지는 HTTPS로 암호화해요");
-    expect(privacy).toContain("CloudFront에서 서버까지의 구간은 아직 HTTPS가 아니어서");
-    expect(privacy).not.toContain("서버와 주고받는 내용은 HTTPS로 암호화해요");
+    expect(privacy).toContain("CloudFront에서 서버까지 모두 HTTPS로 암호화해요");
+    expect(privacy).toContain("원본 확인 헤더가 맞는 요청만 받아요");
+    expect(privacy).not.toContain("아직 HTTPS가 아니어서");
   });
 
   it("names Kakao once, consistently, including what the team relays over KakaoTalk", () => {
