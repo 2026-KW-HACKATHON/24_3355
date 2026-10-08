@@ -19,6 +19,7 @@ lofi/
 │   ├── building.css        공개 화면과 거주자 홈이 공유하는 건물 헤더·공지·안내 타일·자주 쓰는 말·팁 카드
 │   └── chrome.js           상태바·Safari 하단 막대·탭바·키보드·3D 자리표시·QR 자리표시 자동 삽입
 ├── assets/hami/            design 원본과 같은 확정 함이 13종
+├── assets/splash/          00 화면에서 쓰는 9:19.5 스플래시 합성 사본
 ├── scripts/export.py       PNG 내보내기
 └── out/                    생성물 (export.py가 만듦)
     ├── screens/NN-*.png    화면 1170×2532
