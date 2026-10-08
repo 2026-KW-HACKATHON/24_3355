@@ -118,6 +118,25 @@ Deliver a 1:1 square PNG with genuine transparent alpha background. Character an
 
 </details>
 
+### splash-screen
+
+출력: [스플래시 전체 화면](images/hami-splash-screen.png)
+참조: 사용자 스플래시 구도 + `hami-turnaround-transparent.png` + `house.png`
+
+개별 포즈가 아니라 00 화면 전용 9:19.5 합성입니다. design의 파일이 원본이고, 로파이는 `lofi/assets/splash/00-splash-art.png`에 같은 바이트의 현재 사용본만 둡니다.
+
+```text
+Use case: precise-object-edit
+Asset type: mobile splash screen artwork for a 390×844 point (9:19.5) interface
+Input images: Image 1 is the exact edit target and composition reference. Image 2 is the canonical Hami identity/turnaround reference. Image 3 is the canonical Hami house pose and prop reference.
+Primary request: Rebuild Image 1 as a complete 9:19.5 vertical splash artwork. Preserve its soft sky-blue dreamy city-and-cloud composition, status bar, centered Wolgyeham brand, headline hierarchy, subtitle, moon and star accents. Replace only the central mascot with canonical Hami from Images 2 and 3.
+Subject: one canonical Hami, warm white rounded ghost-like body, short flipper arms, curled tail, dark rounded eyes, pale pink cheeks, navy scalloped forehead stamp with gold crescent on the front, holding the same cream house-shaped card from Image 3 and waving gently. Full silhouette visible. Identity and proportions must match the references, not a generic ghost.
+Composition: exact 9:19.5 portrait. Keep safe margins for iPhone status bar. Brand near upper quarter, headline and subtitle above the mascot, mascot centered in the middle-lower area, cloud city behind it, generous cloud space at the bottom. Extend the original scene vertically rather than stretching it. No cropping of headline, mascot, tail, or house prop.
+Text (verbatim, Korean): "월계함"; "건물이 기억해요."; "집주인의 안내를 다음 세입자에게 이어주는 생활안내 서비스"; status time "9:41". Preserve correct Korean spelling exactly. No other text.
+Style: polished soft 3D clay illustration, airy pastel blue sky, diffused cloud edges, warm glowing windows, navy and moon-gold brand accents.
+Constraints: retain the exact overall visual idea of Image 1; use one Hami only; no envelope; canonical stamp shape and placement; no duplicated limbs; no watermark; no app buttons; no extra text.
+```
+
 ## 4. 확정 선택
 
 | 선택 | 파일 | 이유 |
@@ -126,14 +145,16 @@ Deliver a 1:1 square PNG with genuine transparent alpha background. Character an
 | 기존 유지 | envelope | 작은 화면에서 단순한 봉투가 더 명확함 |
 | 새 이미지 적용 | tip-saved, bell, clipboard, wave | 저장·선택·작성·환영 동작의 구분 |
 | 신규 추가 | hami-mini, tray-empty, qr-sign, lost | 작은 자리·빈 상태·QR 진입·예외 장면 |
+| 새 합성 적용 | hami-splash-screen | 정식 함이 외형을 반영한 00 전용 전체 화면 |
 | 미채택 | house-ask | 거주 재확인은 house를 함께 쓰기로 결정 |
 
 기존 유지 5종은 이번 새 프롬프트의 결과라고 표시하지 않습니다. 해당 이미지를 기준으로 유지하며, 이번에 생성했으나 선택하지 않은 후보의 요청은 보관하지 않습니다.
 
 ## 5. 검토와 전달
 
-- 13종 모두 1254×1254 RGBA PNG이며 실제 투명 픽셀이 있습니다. 전체 실루엣과 소품을 확인했습니다.
+- 개별 포즈 13종은 모두 1254×1254 RGBA PNG이며 실제 투명 픽셀이 있습니다. 전체 실루엣과 소품을 확인했습니다.
+- 스플래시 합성은 1170×2532 RGB PNG이며 390×844 HTML과 같은 9:19.5 비율입니다.
 - 흰색·연한 남색 카드 위에서 비교했고, mini는 24/40, tip-saved는 34 크기로 확인했습니다.
 - tip-saved와 tray-empty는 같은 남색 보관함을 공유합니다.
-- design 원본과 lofi/assets/hami 사본의 바이트 일치를 확인합니다. lofi에는 확정 파일 13장만 둡니다.
+- design 원본과 lofi/assets/hami 사본의 바이트 일치를 확인합니다. lofi에는 확정 포즈 13장만 둡니다. 스플래시는 design 원본과 `lofi/assets/splash`의 현재 사용본이 바이트가 같아야 합니다.
 - 파일명에 candidate를 남기지 않습니다. 13종의 화면 배치는 [README 4절](README.md#4-화면별-포즈)과 lofi/board.html의 ‘함이 에셋 배치’가 기준입니다.
