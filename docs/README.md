@@ -1,12 +1,11 @@
 # 개발 문서
 
-월계함을 어떻게 만들고 배포하는지 정리한 문서입니다. 서비스 소개는 [../README.md](../README.md), 상세 제품 기획은 [product.md](product.md), 화면과 권한·데이터 계약은 [../lofi/screens.md](../lofi/screens.md), 함께 일하는 규칙은 [../CONTRIBUTING.md](../CONTRIBUTING.md)가 기준입니다.
+월계함을 어떻게 만들고 배포하는지 정리한 문서입니다. 서비스 소개는 [../README.md](../README.md), 화면과 권한·데이터 계약은 [../lofi/screens.md](../lofi/screens.md), 함께 일하는 규칙은 [../CONTRIBUTING.md](../CONTRIBUTING.md)가 기준입니다.
 
 ## 문서
 
 | 문서 | 내용 | 주로 읽는 사람 |
 |---|---|---|
-| [product.md](product.md) | 문제 정의, 조사, 이해관계자, 요구사항과 검증 계획 | 모두 |
 | [architecture.md](architecture.md) | 시스템 구조, 환경(local·preview·dev·prod), AWS 구성, 한계 | 모두 |
 | [backend.md](backend.md) | API 구조, contracts부터 쓰는 순서, 오류 형식, 로그인·권한, 로그, 테스트 | 백엔드 |
 | [database.md](database.md) | Postgres·Drizzle 규칙, 테이블, 마이그레이션, 시드, 백업 | 백엔드 |

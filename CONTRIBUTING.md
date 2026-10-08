@@ -18,7 +18,6 @@
 | 내용 | 기준 문서 |
 |---|---|
 | 서비스 소개·데모·기술 요약 | [README.md](README.md) |
-| 제품 기획 상세 (문제·근거·요구사항·검증) | [docs/product.md](docs/product.md) |
 | 화면 흐름, 화면 목록, 개발 계약 (권한·데이터·상태) | [lofi/screens.md](lofi/screens.md), [lofi/board.html](lofi/board.html) |
 | 로파이 제작 방법 | [lofi/README.md](lofi/README.md) |
 | 함이 외형·사용 규칙 / 생성 프롬프트와 검토 상태 | [design/characters/hami/README.md](design/characters/hami/README.md) / [PROMPTS.md](design/characters/hami/PROMPTS.md) |

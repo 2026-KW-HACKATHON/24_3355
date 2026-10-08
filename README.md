@@ -14,8 +14,6 @@
   <a href="https://main.d3oykk6yk6i4p7.amplifyapp.com/b/5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f01">공개 건물 화면</a>
   ·
   <a href="https://main.d3oykk6yk6i4p7.amplifyapp.com/api/docs">API 문서</a>
-  ·
-  <a href="docs/product.md">제품 기획 상세</a>
 </p>
 
 월계함은 관리사무소 없이 집주인이 직접 안내를 맡는 월계1동 소규모 임대건물을 위한 모바일 웹 서비스입니다. 집주인이 한 번 남긴 생활안내는 건물의 현관 QR에 남고, 사람이 바뀌어도 다음 입주자가 같은 곳에서 이어서 읽습니다.
@@ -149,7 +147,6 @@ pnpm dev
 
 ## 문서
 
-- [제품 기획 상세](docs/product.md)
 - [화면 흐름과 개발 계약](lofi/screens.md)
 - [로파이 보드](lofi/board.html)
 - [함이 캐릭터 가이드](design/characters/hami/README.md)
