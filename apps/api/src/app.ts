@@ -11,6 +11,7 @@ import { describeRoute, openAPIRouteHandler, resolver } from "hono-openapi";
 import { sessionMiddleware } from "./lib/auth.ts";
 import type { AppEnv } from "./lib/context.ts";
 import type { Database } from "./lib/db.ts";
+import { demoReadOnly } from "./lib/demoScope.ts";
 import { apiDocsEnabled, type Env } from "./lib/env.ts";
 import { AppError } from "./lib/errors.ts";
 import { log } from "./lib/log.ts";
@@ -89,6 +90,8 @@ export function createApp(deps: {
       : bodyLimitDefault(c, next),
   );
   app.use("/api/*", sessionMiddleware);
+  // 발표 시연(햇살빌라·새봄하우스와 그 시연 계정)은 둘러보기만 합니다(D-35).
+  app.use("/api/*", demoReadOnly);
 
   app.get(
     "/api/health",

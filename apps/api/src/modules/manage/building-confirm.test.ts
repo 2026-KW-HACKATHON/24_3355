@@ -49,6 +49,7 @@ describe("building confirmation (LF-12·23)", () => {
       displayAddress: "서울 노원구 월계동 OO길",
       fullAddress: "서울 노원구 월계동 000-99",
       status: "preparing",
+      demo: false,
       openedAt: null,
       confirmedAt: expect.any(String),
     });

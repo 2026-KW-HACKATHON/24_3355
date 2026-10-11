@@ -24,7 +24,11 @@ export async function findUserIdByKakaoId(db: Database, kakaoUserId: string) {
 
 export async function findTermsConsent(db: Database, userId: string) {
   const [row] = await db
-    .select({ termsVersion: users.termsVersion, termsAgreedAt: users.termsAgreedAt })
+    .select({
+      termsVersion: users.termsVersion,
+      termsAgreedAt: users.termsAgreedAt,
+      kakaoUserId: users.kakaoUserId,
+    })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);

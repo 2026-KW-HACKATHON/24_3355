@@ -15,8 +15,9 @@ import {
 import { Hono } from "hono";
 import { describeRoute, validator } from "hono-openapi";
 import { requireUser } from "../../lib/auth.ts";
-import { reportClientKey } from "../../lib/client.ts";
+import { ipKey, reportClientKey } from "../../lib/client.ts";
 import type { AppEnv } from "../../lib/context.ts";
+import { actsAsGuestHere } from "../../lib/demoScope.ts";
 import { errorResponses, jsonResponse, onInvalid } from "../../lib/errors.ts";
 import * as reportService from "./service.ts";
 
@@ -36,10 +37,13 @@ export const reportRoutes = new Hono<AppEnv>()
     validator("json", CreateReportBody, onInvalid),
     async (c) => {
       const { buildingId } = c.req.valid("param");
+      // 시연 계정이 실제 건물에 보내면 비회원 제보로 받습니다(D-35, 막지 않음): 계정에 붙이지 않고 확인 토큰을 줍니다.
+      const asGuest =
+        c.var.user !== null && (await actsAsGuestHere(c.var.db, c.var.user.id, buildingId));
       const result = await reportService.createReport(
         c.var.db,
-        c.var.user,
-        reportClientKey(c),
+        asGuest ? null : c.var.user,
+        asGuest ? ipKey(c) : reportClientKey(c),
         buildingId,
         c.req.valid("json"),
       );

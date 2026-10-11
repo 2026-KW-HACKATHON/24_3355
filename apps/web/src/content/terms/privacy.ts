@@ -108,9 +108,14 @@ export const PRIVACY_DOC: LegalDoc = {
               detail: "거주 확인을 하루에 한 번만 먼저 물으려고 둬요(wh.reconfirmAsked).",
             },
             {
+              term: "연결하려고 확인한 가입코드",
+              detail:
+                "가입코드를 확인하고 카카오 로그인을 하는 동안 둔 코드와 건물이에요(wh.connect). 카카오톡 앱에서 로그인하고 새 탭으로 돌아와도 이어서 연결하도록 탭이 아니라 브라우저에 둬요. 연결하거나 로그아웃하거나 10분이 지나면 지워요.",
+            },
+            {
               term: "로그인하는 동안의 값",
               detail:
-                "확인한 가입코드(wh.connect)와 집주인 초대 링크 값(wh.inviteToken)이에요. 연결하거나 초대를 수락하거나 로그아웃하면 지우고, 가입코드는 30분이 지나도 지워요.",
+                "집주인 초대 링크 값(wh.inviteToken)이에요. 초대를 수락하거나 로그아웃하면 지워요.",
             },
             {
               term: "다시 로그인하는 동안의 글",
@@ -120,7 +125,7 @@ export const PRIVACY_DOC: LegalDoc = {
             {
               term: "이번에 연 동안의 표시",
               detail:
-                "약관 다시 동의에서 ‘나중에’를 눌렀는지(wh.termsAsked), 홈 화면 앱의 시작 화면을 보였는지(wh.splash), 시연 주소에서 고른 시연 역할(wh.demoRole)이에요. 시연 역할은 로그아웃하면 지워요.",
+                "약관 다시 동의에서 ‘나중에’를 눌렀는지(wh.termsAsked)와 홈 화면 앱의 시작 화면을 보였는지(wh.splash)예요.",
             },
           ],
         },

@@ -6,7 +6,6 @@ import { loadLocalDraft, saveLocalDraft } from "../guides/localDraft";
 import { loadInviteToken, stashInviteToken } from "../invites/token";
 import { loadConnectDraft, saveConnectDraft } from "../occupancy/connectDraft";
 import { loadTipDraft, saveTipDraft } from "../tips/tipDraft";
-import { readDemoRole, saveDemoRole } from "./demoRole";
 import { logout } from "./session";
 
 vi.mock("../../lib/api", () => ({
@@ -39,7 +38,6 @@ beforeEach(() => {
     returnTo: "/",
   });
   saveTipDraft({ buildingId: BUILDING, tipId: null }, { category: null, body: "분리수거 팁" });
-  saveDemoRole({ userId: "user-a", label: "입주자 A" });
 });
 
 afterEach(() => {
@@ -61,7 +59,6 @@ describe("logout", () => {
     expect(loadInviteToken()).toBeUndefined();
     expect(loadConnectDraft(BUILDING)).toBeUndefined();
     expect(loadTipDraft({ buildingId: BUILDING, tipId: null })).toBeUndefined();
-    expect(readDemoRole()).toBeUndefined();
   });
 
   it("asks the server to drop this browser's notification subscription in the same request", async () => {

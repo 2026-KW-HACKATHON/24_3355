@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { noticeDeliveries, notices, pushSubscriptions } from "../../db/schema.ts";
+import { noticeDeliveries, notices, pushSubscriptions, users } from "../../db/schema.ts";
 import type { PushResult, PushSender, PushTarget } from "../../lib/push.ts";
 import {
   createBuilding,
@@ -380,6 +380,39 @@ describe("push subscriptions", () => {
     const response = await t.app.request("/api/push-subscriptions/public-key");
     // Then
     expect(await response.json()).toEqual({ publicKey: "test-vapid-public-key" });
+  });
+
+  it("refuses a demo account so it cannot take over a real account's endpoint (D-35)", async () => {
+    // Given: 실제 거주자가 이 휴대폰에서 알림을 켰고, 같은 휴대폰에서 시연 계정으로 로그인했습니다.
+    const building = await createBuilding(t.db, "open");
+    const real = await resident(building.id, "active");
+    const body = subscription();
+    await t.app.request("/api/push-subscriptions", jsonRequest("POST", body, real.cookie));
+    const [found] = await t.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.kakaoUserId, "demo-e2e-landlord"))
+      .limit(1);
+    const demoId =
+      found?.id ??
+      (await t.db.insert(users).values({ kakaoUserId: "demo-e2e-landlord" }).returning())[0]?.id ??
+      "";
+    const demoCookie = await sessionCookie(t.db, demoId);
+    // When
+    const response = await t.app.request(
+      "/api/push-subscriptions",
+      jsonRequest("POST", body, demoCookie),
+    );
+    // Then
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({
+      error: { code: "FORBIDDEN", fields: { account: "demo" } },
+    });
+    const rows = await t.db
+      .select({ userId: pushSubscriptions.userId })
+      .from(pushSubscriptions)
+      .where(eq(pushSubscriptions.endpoint, body.endpoint));
+    expect(rows).toEqual([{ userId: real.userId }]);
   });
 
   it("lets an active resident subscribe and unsubscribe the same browser", async () => {

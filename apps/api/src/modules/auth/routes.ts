@@ -17,6 +17,7 @@ import { describeRoute, validator } from "hono-openapi";
 import { z } from "zod";
 import {
   createToken,
+  DEMO_SESSION_MS,
   endSession,
   isSameOriginRequest,
   isSecureOrigin,
@@ -24,7 +25,8 @@ import {
 } from "../../lib/auth.ts";
 import { resolveClientAddress } from "../../lib/client.ts";
 import type { AppEnv } from "../../lib/context.ts";
-import { errorResponses, jsonResponse, onInvalid } from "../../lib/errors.ts";
+import { isDemoAccount } from "../../lib/demoScope.ts";
+import { AppError, errorResponses, jsonResponse, onInvalid } from "../../lib/errors.ts";
 import { log } from "../../lib/log.ts";
 import * as meService from "../me/service.ts";
 import * as noticeService from "../notices/service.ts";
@@ -205,8 +207,28 @@ export const devRoutes = new Hono<AppEnv>()
       const userId = await authService.findDemoUser(c.var.db, as);
       // JSON POST라 다른 사이트는 보낼 수 없습니다(JSON은 CORS 사전 요청에서, 폼 형식은 hono/csrf에서 막힘).
       await authService.recordLoginConsent(c.var.db, userId, consent);
-      await startSession(c, userId);
+      // 시연 세션은 3시간, 연장하지 않습니다(D-35).
+      await startSession(c, userId, { lifetimeMs: DEMO_SESSION_MS });
       return c.json(await meService.getMe(c.var.db, userId), 200);
+    },
+  )
+  .post(
+    "/dev/end-demo",
+    describeRoute({
+      tags: ["dev"],
+      summary:
+        "시연 끝내기 (DEMO_MODE 전용). 지금 세션이 시연 계정일 때만 세션과 쿠키를 지움. 실제 계정이면 409, 로그인 전이면 204",
+      responses: {
+        204: { description: "시연 세션을 끝냄(또는 끝낼 세션이 없음)" },
+        ...errorResponses(409),
+      },
+    }),
+    async (c) => {
+      // 웹이 오래된 내 정보(시연 계정)를 보고 부르더라도, 그 사이 카카오로 로그인한 세션은 끝내지 않습니다(D-35).
+      const user = c.var.user;
+      if (user && !(await isDemoAccount(c.var.db, user.id))) throw new AppError(409, "CONFLICT");
+      if (user) await endSession(c);
+      return c.body(null, 204);
     },
   )
   .get(

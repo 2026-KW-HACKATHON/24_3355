@@ -7,6 +7,7 @@ export function testUser(id: string, overrides: Partial<Me["user"]> = {}): Me["u
     termsVersion: TERMS_VERSION,
     termsAgreedAt: "2026-09-30T00:00:00.000Z",
     termsUpToDate: true,
+    demo: null,
     ...overrides,
   };
 }

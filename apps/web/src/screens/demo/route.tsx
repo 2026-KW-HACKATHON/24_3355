@@ -9,12 +9,13 @@ import { Hami } from "../../components/Hami";
 import { Icon } from "../../components/Icon";
 import { Screen } from "../../components/Screen";
 import { Delayed, LoadError } from "../../components/ScreenState";
-import { clearDemoRole, saveDemoRole } from "../../features/auth/demoRole";
 import {
+  authKeys,
   demoLoginMutationOptions,
   logoutMutationOptions,
   useMe,
 } from "../../features/auth/queries";
+import { fetchMe } from "../../features/auth/session";
 import { BuildingNotFound } from "../../features/buildings/BuildingNotFound";
 import { usePublicGuides } from "../../features/buildings/queries";
 import { useReport } from "../../features/reports/queries";
@@ -31,6 +32,7 @@ import {
   fetchDemoOverview,
   forgetDemoGuestLinks,
   guestReportRef,
+  needsSwitchConfirm,
   resetErrorMessage,
   roleSubtitle,
 } from "./demo";
@@ -71,6 +73,8 @@ function DemoStart({ overview }: { overview: DemoOverview }) {
   const login = useMutation(demoLoginMutationOptions(queryClient));
   const logout = useMutation(logoutMutationOptions(queryClient));
   const [picked, setPicked] = useState<string>();
+  // 카카오 계정으로 로그인한 채 역할을 고르면 먼저 묻습니다(D-35). 고른 역할을 여기 두었다가 ‘시연 보기’로 이어 갑니다.
+  const [confirming, setConfirming] = useState<{ role: DemoRole; key: string }>();
   const inFlight = useRef(false);
   const roles = demoRoles(overview);
   const home = demoHomeBuilding(overview);
@@ -87,21 +91,37 @@ function DemoStart({ overview }: { overview: DemoOverview }) {
 
   async function choose(role: DemoRole, key: string) {
     if (inFlight.current) return;
+    // 다른 탭에서 카카오로 로그인했을 수 있어 고르기 직전에 내 정보를 새로 받아 판단합니다.
+    const fresh = await queryClient
+      .fetchQuery({ queryKey: authKeys.me(), queryFn: fetchMe, staleTime: 0 })
+      .catch(() => me.data);
+    if (needsSwitchConfirm(fresh)) {
+      setConfirming({ role, key });
+      return;
+    }
+    void switchTo(role, key, false);
+  }
+
+  /**
+   * 역할로 바꿉니다. `fromRealAccount`면 카카오 계정에서 먼저 로그아웃하는데, 그 계정의 연결·알림 구독은 그대로
+   * 둡니다(`keepPush`: 서버 구독도, 이 휴대폰의 구독도 지우지 않음). 시연 중·로그인 전에는 묻지 않고 바로 바꿉니다.
+   */
+  async function switchTo(role: DemoRole, key: string, fromRealAccount: boolean) {
+    if (inFlight.current) return;
     inFlight.current = true;
     setPicked(key);
     login.reset();
     logout.reset();
     try {
+      if (fromRealAccount) await logout.mutateAsync({ keepPush: true });
       if (role.kind === "guest") {
-        if (me.data) await logout.mutateAsync();
-        clearDemoRole();
+        if (me.data && !fromRealAccount) await logout.mutateAsync(undefined);
         void navigate(demoDestination(role, null, overview));
       } else {
         // 시연 계정이라 약관 판을 함께 남겨, 역할을 바꿀 때마다 다시 동의 시트가 뜨지 않게 합니다.
+        // 시연 계정이면 내 정보의 `user.demo`로 ‘시연 중 · 역할’ 막대(components/DemoBar)가 뜹니다.
         const next = await login.mutateAsync({ as: role.account.as, consent: TERMS_VERSION });
         forgetDemoGuestLinks(overview);
-        // 다른 화면 위에 ‘시연 중 · 역할’ 막대(components/DemoBar)를 띄우려고 이 탭에 남깁니다.
-        saveDemoRole({ userId: next.user.id, label: role.account.label });
         void navigate(demoDestination(role, next, overview));
       }
     } catch {
@@ -155,7 +175,7 @@ function DemoStart({ overview }: { overview: DemoOverview }) {
             ))}
           </ol>
           <p className="dm-tour__caption">
-            쓰기는 팀 기기에서 보여 드려요. 둘러보기만 해도 흐름이 이어져요.
+            시연은 둘러보기만 할 수 있어요. 실제로 해 보려면 부스 입구의 QR을 찍어 주세요.
           </p>
         </section>
 
@@ -167,6 +187,16 @@ function DemoStart({ overview }: { overview: DemoOverview }) {
           </p>
         ) : null}
 
+        {me.isError ? (
+          // 로그인 상태를 모르면 카카오 계정인지(전환 전에 물을지) 알 수 없어 역할을 고르지 않게 합니다.
+          <p className="wh-dock__error dm-error" role="alert">
+            로그인 상태를 확인하지 못했어요.{" "}
+            <button type="button" className="wh-text-action" onClick={() => void me.refetch()}>
+              다시 확인
+            </button>
+          </p>
+        ) : null}
+
         <ul className="dm-roles">
           {roles.map((role) => {
             const key = role.kind === "guest" ? "guest" : role.account.as;
@@ -175,7 +205,7 @@ function DemoStart({ overview }: { overview: DemoOverview }) {
                 <button
                   type="button"
                   className="dm-role"
-                  disabled={busy}
+                  disabled={busy || me.isPending || me.isError}
                   aria-busy={picked === key || undefined}
                   onClick={() => void choose(role, key)}
                 >
@@ -209,6 +239,49 @@ function DemoStart({ overview }: { overview: DemoOverview }) {
         </p>
         <ResetBox />
       </div>
+      <Dialog.Root
+        open={confirming !== undefined}
+        onOpenChange={(next) => {
+          if (!next) setConfirming(undefined);
+        }}
+      >
+        <Portal>
+          <Dialog.Positioner>
+            <Dialog.Backdrop />
+            <Dialog.Content>
+              <Dialog.Header>
+                <Dialog.Title>카카오 계정으로 로그인돼 있어요</Dialog.Title>
+                <Dialog.Description>
+                  시연을 보면 지금 계정에서 로그아웃돼요. 연결과 알림 설정은 그대로 남아요.
+                </Dialog.Description>
+              </Dialog.Header>
+              <Dialog.Footer>
+                <div className="wh-btn-row">
+                  <ActionButton
+                    className="wh-btn wh-btn--neutral"
+                    size="large"
+                    variant="neutralWeak"
+                    onClick={() => setConfirming(undefined)}
+                  >
+                    그만두기
+                  </ActionButton>
+                  <ActionButton
+                    className="wh-btn"
+                    size="large"
+                    onClick={() => {
+                      const next = confirming;
+                      setConfirming(undefined);
+                      if (next) void switchTo(next.role, next.key, true);
+                    }}
+                  >
+                    시연 보기
+                  </ActionButton>
+                </div>
+              </Dialog.Footer>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
     </Screen>
   );
 }
@@ -259,7 +332,7 @@ function ResetBox() {
   return (
     <div className="dm-reset">
       <div className="dm-reset__row">
-        <span className="dm-reset__label">처음 상태로 되돌리기</span>
+        <span className="dm-reset__label">운영자용 · 처음 상태로 되돌리기</span>
         <button
           type="button"
           className="wh-text-action dm-reset__btn"

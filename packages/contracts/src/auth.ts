@@ -64,22 +64,6 @@ export const MeOccupancy = Occupancy.extend({ buildingName: z.string() });
 export type MeOccupancy = z.infer<typeof MeOccupancy>;
 
 /**
- * `termsVersion`·`termsAgreedAt`: 마지막으로 동의한 약관 판과 시각(기록이 없으면 null). `termsUpToDate`: 지금 판
- * (`TERMS_VERSION`)에 동의했는지. false여도 세션·기능은 막지 않고, 웹이 다시 동의를 받습니다(D-28).
- */
-export const Me = z.object({
-  user: z.object({
-    id: z.uuid(),
-    termsVersion: z.string().nullable(),
-    termsAgreedAt: z.iso.datetime().nullable(),
-    termsUpToDate: z.boolean(),
-  }),
-  managedBuildings: z.array(z.object({ id: z.uuid(), name: z.string() })),
-  occupancy: MeOccupancy.nullable(),
-});
-export type Me = z.infer<typeof Me>;
-
-/**
  * 시연 모드(DEMO_MODE=true)에서만 열리는 로그인. 시드된 시연 사용자만 고를 수 있습니다.
  * 집주인, 햇살빌라에 연결된 입주자 A, 아직 연결하지 않은 다음 입주자 B, 그리고 끝까지 해보는 테스트(e2e)
  * 전용 건물 ‘테스트빌라’만 관리하는 집주인(e2e가 햇살빌라를 바꾸지 않도록).
@@ -92,6 +76,26 @@ export const DEMO_USERS = [
 ] as const;
 export const DemoUser = z.enum(DEMO_USERS);
 export type DemoUser = z.infer<typeof DemoUser>;
+
+/**
+ * `termsVersion`·`termsAgreedAt`: 마지막으로 동의한 약관 판과 시각(기록이 없으면 null). `termsUpToDate`: 지금 판
+ * (`TERMS_VERSION`)에 동의했는지. false여도 세션·기능은 막지 않고, 웹이 다시 동의를 받습니다(D-28).
+ * `demo`: 시연 로그인으로 고른 시연 계정(`DemoUser`)이면 그 이름, 카카오로 로그인한 실제 계정이면 null(D-35). 웹은
+ * 이 값으로 시연 중 막대를 띄우고, 실제 건물 화면에서 시연을 끝냅니다. 이 필드가 없는 이전 API 응답은 null로 읽습니다.
+ */
+export const Me = z.object({
+  user: z.object({
+    id: z.uuid(),
+    termsVersion: z.string().nullable(),
+    termsAgreedAt: z.iso.datetime().nullable(),
+    termsUpToDate: z.boolean(),
+    demo: DemoUser.nullable().default(null),
+  }),
+  managedBuildings: z.array(z.object({ id: z.uuid(), name: z.string() })),
+  occupancy: MeOccupancy.nullable(),
+});
+export type Me = z.infer<typeof Me>;
+
 /**
  * `consent`: 현재 판일 때만 계정에 남깁니다. JSON POST라 다른 사이트는 보낼 수 없습니다(CORS 사전 요청, 폼 형식은
  * CSRF 403).

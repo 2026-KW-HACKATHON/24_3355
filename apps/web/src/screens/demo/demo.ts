@@ -87,10 +87,10 @@ export function demoHomeBuilding(overview: DemoOverview) {
 
 /** 29 위 ‘둘러보는 순서’. 카드는 lofi 순서 그대로 두고, 이 글이 시연 이야기의 차례를 알려 줍니다. */
 export const DEMO_TOUR = [
-  { who: "입주자 A", what: "홈에서 안내 → 안내 상세의 ‘내용이 달라요’ 메모 상태 보기" },
-  { who: "옆 건물 주민", what: "가입 없이 보낸 제보의 상태" },
-  { who: "집주인", what: "‘확인할 것’에서 메모 검토·제보 확인" },
-  { who: "다음 입주자 B", what: "가입코드로 연결하면 같은 안내가 그대로" },
+  { who: "입주자 A", what: "안내와 남긴 메모 상태 보기" },
+  { who: "옆 건물 주민", what: "보낸 제보 상태 보기" },
+  { who: "집주인", what: "받은 메모·제보 보기" },
+  { who: "다음 입주자 B", what: "가입코드 입력 화면까지 보기" },
 ] as const;
 
 /**
@@ -246,4 +246,12 @@ export function resetErrorMessage(error: unknown): string {
     return "되돌렸는지 확인하지 못했어요. 목록을 새로 불러왔으니 확인한 뒤 다시 눌러 주세요";
   }
   return "되돌리지 못했어요. 잠시 뒤 다시 눌러 주세요";
+}
+
+/**
+ * 역할을 고르기 전에 물어야 하는지(D-35). 카카오로 로그인한 실제 계정이면 시연을 보면 그 계정에서 로그아웃되므로
+ * 묻습니다. 로그인 전·시연 중(`user.demo`)이면 묻지 않고 바로 바꿉니다. 내 정보를 모르면(로딩·오류) 묻지 않습니다.
+ */
+export function needsSwitchConfirm(me: Me | null | undefined): boolean {
+  return Boolean(me && me.user.demo === null);
 }

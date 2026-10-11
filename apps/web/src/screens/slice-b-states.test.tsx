@@ -48,6 +48,7 @@ const building: PublicBuilding = {
   name: "햇살빌라",
   displayAddress: "서울 노원구 월계동 OO길",
   status: "open",
+  demo: false,
 };
 const guide: Guide = {
   id: "5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f11",

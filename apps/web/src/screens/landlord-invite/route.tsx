@@ -6,6 +6,7 @@ import { Icon } from "../../components/Icon";
 import { Brand, Dock, Screen, TopBar } from "../../components/Screen";
 import { EmptyState, LoadError } from "../../components/ScreenState";
 import { DEMO_ACCOUNT_BLOCKED, isDemoAccountBlocked } from "../../features/auth/demoRole";
+import { useEndDemoOn } from "../../features/auth/endDemo";
 import { LoginActions } from "../../features/auth/LoginActions";
 import { useMe } from "../../features/auth/queries";
 import { CATEGORY } from "../../features/guides/categories";
@@ -37,6 +38,13 @@ export function Component() {
 
   const me = useMe();
   const preview = useInvitePreview(token);
+  // 시연 계정으로 실제 건물 초대를 열면 시연을 끝내고 카카오 로그인부터 받습니다(D-35). 로그아웃이 지운 초대
+  // 토큰은 이 화면이 들고 있는 값으로 다시 남겨, 로그인하고 돌아와도 같은 초대를 봅니다.
+  const endingDemo = useEndDemoOn(preview.data);
+  const signedOut = me.data === null;
+  useEffect(() => {
+    if (token && signedOut && !loadInviteToken()) stashInviteToken(token);
+  }, [token, signedOut]);
 
   if (!token) {
     return (
@@ -84,7 +92,8 @@ export function Component() {
   return (
     <InviteShell
       dock={
-        me.isPending ? (
+        // 시연 계정이면 초대한 건물이 시연 건물인지(미리보기의 `demo`) 알 때까지 수락 버튼을 보이지 않습니다.
+        me.isPending || endingDemo || (me.data?.user.demo && preview.isPending) ? (
           <Dock hint={HINT}>
             <ActionButton className="wh-btn" size="large" loading disabled>
               확인하는 중

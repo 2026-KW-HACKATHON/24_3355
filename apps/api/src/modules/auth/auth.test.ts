@@ -1,10 +1,12 @@
-import { TERMS_VERSION } from "@wolgyeham/contracts";
+import { DEMO_USERS, TERMS_VERSION } from "@wolgyeham/contracts";
 import { eq } from "drizzle-orm";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createApp } from "../../app.ts";
 import { DEMO_BUILDING_ID, DEMO_E2E_BUILDING_ID, seedDemo } from "../../db/demo.ts";
 import { pushSubscriptions, users } from "../../db/schema.ts";
 import {
+  createBuilding,
+  createInvite,
   createManagedBuilding,
   createPushSubscription,
   createUser,
@@ -56,7 +58,13 @@ describe("me and sessions", () => {
     // Then
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
-      user: { id: managerId, termsVersion: null, termsAgreedAt: null, termsUpToDate: false },
+      user: {
+        id: managerId,
+        termsVersion: null,
+        termsAgreedAt: null,
+        termsUpToDate: false,
+        demo: null,
+      },
       managedBuildings: [{ id: building.id, name: "테스트빌라" }],
       occupancy: null,
     });
@@ -180,7 +188,8 @@ describe("demo login", () => {
     });
     const setCookie = login.headers.getSetCookie().join();
     expect(setCookie).toMatch(
-      /wh_session=[\w-]{43}; Max-Age=2592000; Path=\/; HttpOnly; SameSite=Lax/,
+      // 시연 세션은 3시간(D-35)
+      /wh_session=[\w-]{43}; Max-Age=10800; Path=\/; HttpOnly; SameSite=Lax/,
     );
     expect(setCookie).not.toContain("Secure");
     const cookie = cookiePair(login, "wh_session") ?? "";
@@ -220,6 +229,84 @@ describe("demo login", () => {
       managedBuildings: [{ id: DEMO_E2E_BUILDING_ID, name: "테스트빌라" }],
       occupancy: null,
     });
+  });
+
+  it("says which demo account is signed in (Me.user.demo, D-35)", async () => {
+    for (const as of DEMO_USERS) {
+      // When
+      const login = await demo.app.request("/api/dev/login", jsonRequest("POST", { as }));
+      const cookie = cookiePair(login, "wh_session") ?? "";
+      const me = await demo.app.request("/api/me", withCookie(cookie));
+      // Then
+      expect((await login.json()).user.demo).toBe(as);
+      expect((await me.json()).user.demo).toBe(as);
+    }
+  });
+
+  it("keeps a real account's push subscription when a demo session on that phone logs out (D-35)", async () => {
+    // Given: 카카오 계정이 이 휴대폰에서 알림을 켜 둔 채 시연 로그인을 했습니다.
+    const realUser = await createUser(t.db);
+    const endpoint = await createPushSubscription(t.db, realUser);
+    const login = await demo.app.request(
+      "/api/dev/login",
+      jsonRequest("POST", { as: "demo-resident-a" }),
+    );
+    const cookie = cookiePair(login, "wh_session") ?? "";
+    // When: 시연을 끝내며 이 휴대폰의 구독 주소를 함께 보내도
+    const logout = await demo.app.request(
+      "/api/auth/logout",
+      jsonRequest("POST", { pushEndpoint: endpoint }, cookie),
+    );
+    // Then: 지우는 것은 지금 세션 사용자(시연 계정)의 구독뿐이라 실제 계정의 구독은 남습니다.
+    expect(logout.status).toBe(204);
+    expect(await endpointsOf(realUser)).toEqual([endpoint]);
+  });
+
+  it("ends only a demo session at POST /api/dev/end-demo (D-35)", async () => {
+    // Given
+    const login = await demo.app.request(
+      "/api/dev/login",
+      jsonRequest("POST", { as: "demo-resident-a" }),
+    );
+    const demoCookie = cookiePair(login, "wh_session") ?? "";
+    const realCookie = await sessionCookie(t.db, await createUser(t.db));
+    // When
+    const real = await demo.app.request("/api/dev/end-demo", jsonRequest("POST", {}, realCookie));
+    const ended = await demo.app.request("/api/dev/end-demo", jsonRequest("POST", {}, demoCookie));
+    const anonymous = await demo.app.request("/api/dev/end-demo", jsonRequest("POST", {}));
+    const off = await t.app.request("/api/dev/end-demo", jsonRequest("POST", {}, demoCookie));
+    // Then: 실제 계정 세션은 409이고 그대로, 시연 세션만 끝납니다. DEMO_MODE가 아니면 경로가 없습니다.
+    expect(real.status).toBe(409);
+    expect((await demo.app.request("/api/me", withCookie(realCookie))).status).toBe(200);
+    expect(ended.status).toBe(204);
+    expect((await demo.app.request("/api/me", withCookie(demoCookie))).status).toBe(401);
+    expect(anonymous.status).toBe(204);
+    expect(off.status).toBe(404);
+  });
+
+  it("marks seeded demo buildings as demo even when DEMO_MODE is off", async () => {
+    // Given
+    const real = await createBuilding(t.db, "open");
+    // When: DEMO_MODE가 꺼진 앱(t)으로 묻습니다.
+    const sunny = await t.app.request(`/api/buildings/${DEMO_BUILDING_ID}`);
+    const e2e = await t.app.request(`/api/buildings/${DEMO_E2E_BUILDING_ID}`);
+    const other = await t.app.request(`/api/buildings/${real.id}`);
+    // Then
+    expect(await sunny.json()).toMatchObject({ id: DEMO_BUILDING_ID, demo: true });
+    expect(await e2e.json()).toMatchObject({ id: DEMO_E2E_BUILDING_ID, demo: true });
+    expect(await other.json()).toMatchObject({ id: real.id, demo: false });
+  });
+
+  it("marks an invite to a demo building as demo in its preview", async () => {
+    // Given
+    const token = await createInvite(t.db, DEMO_E2E_BUILDING_ID);
+    // When
+    const response = await t.app.request(
+      "/api/manager-invites/preview",
+      jsonRequest("POST", { token }),
+    );
+    // Then
+    expect(await response.json()).toMatchObject({ demo: true });
   });
 
   it("rejects unknown demo roles", async () => {

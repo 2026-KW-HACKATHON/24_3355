@@ -14,7 +14,7 @@ import { type Blocker, Link, useNavigate } from "react-router";
 import { Icon } from "../../components/Icon";
 import { LEAVE_OK } from "../../components/leaveOk";
 import { SheetLeaveGuard } from "../../components/SheetLeaveGuard";
-import { type AppErrorCode, toAppError } from "../../lib/errors";
+import { type AppErrorCode, isDemoReadOnly, toAppError } from "../../lib/errors";
 import { reportPath, saveReportAccess } from "../../lib/reportAccess";
 import { cleanText } from "../../lib/text";
 import {
@@ -97,7 +97,11 @@ export function ReportConfirmSheet({
   const [adding, setAdding] = useState(false);
   const [discarding, setDiscarding] = useState(false);
   const [leaving, setLeaving] = useState<Blocker>();
-  const [error, setError] = useState<{ code: AppErrorCode; message: string }>();
+  const [error, setError] = useState<{
+    code: AppErrorCode;
+    message: string;
+    demoReadOnly: boolean;
+  }>();
   const inFlight = useRef(false);
   // 앞서 보낸 요청의 결과를 모르면(시간 초과·연결 끊김) 다음 반복 제한(429)을 ‘이미 접수됐을 수 있음’으로 읽습니다.
   const unknownResult = useRef(false);
@@ -163,6 +167,7 @@ export function ReportConfirmSheet({
       const appError = toAppError(caught);
       setError({
         code: appError.code,
+        demoReadOnly: isDemoReadOnly(appError),
         message: reportSendError(appError, { afterUnknown: unknownResult.current }),
       });
       unknownResult.current = appError.code === "NETWORK" || appError.code === "INTERNAL_ERROR";
@@ -324,7 +329,7 @@ export function ReportConfirmSheet({
                   {error ? (
                     <div className="rp-sheet__error" role="alert">
                       <p className="wh-dock__error">{error.message}</p>
-                      {error.code === "FORBIDDEN" ? (
+                      {error.code === "FORBIDDEN" && !error.demoReadOnly ? (
                         <Link className="rp-sheet__error-link" to={`/manage/${buildingId}/inbox`}>
                           받은 내용 보기
                           <Icon name="chevron-right" />

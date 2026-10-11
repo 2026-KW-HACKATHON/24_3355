@@ -1,14 +1,16 @@
 // CORE 5 재확인(LF-09, lofi 40): 연결 뒤 일정 기간이 지나면 ‘아직 살고 있나요?’를 묻고, 14일 동안 답이 없으면
 // reconfirm_needed(쓰기·알림 멈춤, 읽기는 그대로). 홈 위 배너와 시트 40은 하루에 한 번 먼저 뜹니다.
 //
-// 기간을 기다릴 수 없어 입주자 A(햇살빌라)로 로그인한 뒤 `/api/me`의 연결 상태만 바꿔서 봅니다. ‘아직 살아요’는
+// 기간을 기다릴 수 없어 e2e 계정 A(테스트빌라, 발표 시연은 둘러보기 전용이라 D-35)로 로그인한 뒤 `/api/me`의 연결 상태만 바꿔서 봅니다. ‘아직 살아요’는
 // 실제 서버에 보내고(active인 A의 확인 시각만 갱신됨), 그 뒤에는 원래 응답을 그대로 돌려줍니다.
 import type { Page } from "@playwright/test";
-import { ensureResident } from "./support/api";
-import { loginAs, publishedGuides, RESIDENT_A, SUNNY } from "./support/demo";
+import { deleteMyTips, ensureResident, moveOutIfConnected, writeMemo } from "./support/api";
+import { E2E_BUILDING, E2E_RESIDENT_A, loginAs, publishedGuides, stamp } from "./support/demo";
 import { sheet } from "./support/flows";
 import { expect, test } from "./support/test";
 
+const SUNNY = E2E_BUILDING;
+const RESIDENT_A = E2E_RESIDENT_A;
 const home = `/b/${SUNNY.id}`;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -44,9 +46,31 @@ async function mockOccupancy(page: Page, patch: Patch) {
   };
 }
 
-test.beforeAll(async () => {
-  // 이사 흐름이 A를 다시 연결했을 수 있어 햇살빌라 거주자인지 먼저 맞춥니다.
-  const a = await ensureResident(RESIDENT_A, SUNNY.id, "demo-landlord");
+test.beforeAll(async ({ browser }) => {
+  // A는 테스트빌라 거주자이고, 첫 공개 안내에 메모 하나와 팁 하나를 남긴 상태에서 시작합니다(읽기는 그대로인지 봄).
+  const a = await ensureResident(RESIDENT_A, SUNNY.id);
+  const page = await browser.newPage();
+  const [guide] = await publishedGuides(page, SUNNY.id);
+  await page.close();
+  if (!guide) throw new Error("테스트빌라에 공개 안내가 없어요");
+  const memos = (await (await a.get(`/api/guides/${guide.id}/correction-memos`)).json()) as {
+    memos: { mine: boolean }[];
+  };
+  if (!memos.memos.some((memo) => memo.mine)) {
+    await writeMemo(a, guide.id, `분리수거 요일이 바뀌었어요 ${stamp()}`);
+  }
+  await deleteMyTips(a, SUNNY.id);
+  const tip = await a.post(`/api/buildings/${SUNNY.id}/tips`, {
+    data: { category: "recycling", body: `페트병은 라벨을 떼요 ${stamp()}` },
+  });
+  expect(tip.status(), "A의 팁(준비)").toBe(201);
+  await a.dispose();
+});
+
+test.afterAll(async () => {
+  const a = await ensureResident(RESIDENT_A, SUNNY.id);
+  await deleteMyTips(a, SUNNY.id);
+  await moveOutIfConnected(a);
   await a.dispose();
 });
 
@@ -143,7 +167,7 @@ test.describe("재확인 필요(reconfirm_needed): 읽기는 그대로, 쓰기·
       "확인하기 전까지 새 메모를 남길 수 없어요. 안내와 남긴 메모는 계속 볼 수 있어요.",
     );
     await expect(page.getByRole("button", { name: "메모 남기기" })).toHaveCount(0);
-    // 시드: 분리수거 안내(첫 안내)에 A가 남긴 메모가 있습니다.
+    // 준비: 첫 공개 안내에 A가 남긴 메모가 있습니다.
     await expect(page.getByRole("region", { name: /이 안내에 남긴 메모/ })).toContainText(
       "내 메모",
     );

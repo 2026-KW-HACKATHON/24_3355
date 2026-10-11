@@ -1,5 +1,10 @@
 import type { TipCategory } from "@wolgyeham/contracts";
-import { type AppError, errorMessage } from "../../lib/errors";
+import {
+  type AppError,
+  DEMO_READONLY_MESSAGE,
+  errorMessage,
+  isDemoReadOnly,
+} from "../../lib/errors";
 
 // 생활 팁(LF-06·07). 작성자는 누구에게도 보이지 않고, 날짜는 작성 월만 씁니다(screens.md §4).
 
@@ -20,6 +25,7 @@ export function formatTipMonth(month: string): string {
 
 /** 팁 쓰기·고치기·지우기 실패 문구. 쓴 내용은 그대로 둡니다. */
 export function tipWriteError(error: AppError, action: "save" | "delete"): string {
+  if (isDemoReadOnly(error)) return DEMO_READONLY_MESSAGE;
   switch (error.code) {
     case "NETWORK":
     case "INTERNAL_ERROR":

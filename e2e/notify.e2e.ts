@@ -4,18 +4,14 @@
 // 카카오톡 링크: 카카오톡 안 브라우저로 받은 링크 → 연결 → 17 카카오톡 분기(‘Safari·Chrome으로 열기’)
 //           → 외부 브라우저에서 `/me?notify=1` → 로그인하고 돌아오면 17(설정)이 바로 열림 → 알림 받기 → 켜짐.
 //
-// 연결 전 사람은 입주자 B(테스트 전에 연결을 끝내 둠), 건물은 테스트빌라입니다. 헤드리스 Chrome은 푸시
+// 연결 전 사람은 카카오 계정처럼 보이는 e2e 계정입니다(시연 계정은 알림을 켤 수 없음, D-35; 테스트 전에 연결을
+// 끝내 둠, support/dev-db.ts). 이미 로그인한 채 연결하므로 로그인 단계(16)는 건너뜁니다(16은 다른 흐름에서 봄).
+// 건물은 테스트빌라입니다. 헤드리스 Chrome은 푸시
 // 서비스에 구독할 수 없어 권한·PushManager만 흉내 내고(support/flows.ts), 서버 저장은 실제로 보냅니다.
-import type { APIRequestContext, CDPSession, Page } from "@playwright/test";
-import { apiAs, joinCodeOf, meOf, moveOutIfConnected } from "./support/api";
-import { E2E_BUILDING, E2E_LANDLORD, RESIDENT_B, TERMS_CONSENT } from "./support/demo";
-import {
-  agreeBeforeLogin,
-  connectWithCode,
-  fakePushSupport,
-  permissionAsks,
-  sheet,
-} from "./support/flows";
+import type { APIRequestContext, BrowserContext, CDPSession, Page } from "@playwright/test";
+import { apiAs, apiWithSession, joinCodeOf, meOf, moveOutIfConnected } from "./support/api";
+import { cleanRealAccount, E2E_BUILDING, E2E_LANDLORD, realAccountSession } from "./support/demo";
+import { agreeBeforeLogin, fakePushSupport, permissionAsks, sheet } from "./support/flows";
 import { expect, hideDevOverlays, test } from "./support/test";
 
 const home = `/b/${E2E_BUILDING.id}`;
@@ -28,22 +24,42 @@ const ANDROID_CHROME_UA =
 
 let landlord: APIRequestContext;
 let resident: APIRequestContext;
+let token: string;
 let code: string;
 
 test.beforeAll(async () => {
   landlord = await apiAs(E2E_LANDLORD);
-  resident = await apiAs(RESIDENT_B);
+  ({ token } = realAccountSession());
+  resident = await apiWithSession(token);
   code = await joinCodeOf(landlord, E2E_BUILDING.id);
 });
 
 test.afterAll(async () => {
+  // 테스트빌라에 연결을 남기지 않고, 만든 세션·구독을 지웁니다.
+  await moveOutIfConnected(resident);
   await landlord.dispose();
   await resident.dispose();
+  cleanRealAccount();
 });
 
 test.beforeEach(async () => {
   await moveOutIfConnected(resident);
 });
+
+/** 이 브라우저를 e2e 계정으로 로그인한 상태로 둡니다(카카오 왕복 대신). */
+async function signIn(context: BrowserContext) {
+  const url = test.info().project.use.baseURL ?? "http://localhost:5173";
+  await context.addCookies([{ name: "wh_session", value: token, url }]);
+}
+
+/** 로그인한 채 연결 화면에서 가입코드를 넣어 바로 연결합니다(다른 건물 연결이 없으면 로그인 단계 없음). */
+async function connectSignedIn(page: Page) {
+  await expect(
+    page.getByRole("heading", { level: 1, name: "이 건물에 살고 있나요?" }),
+  ).toBeVisible();
+  await page.getByRole("textbox", { name: "가입코드 6자리" }).fill(code);
+  await page.getByRole("button", { name: "다음" }).click();
+}
 
 /** 공개 화면(01)의 연결 카드에서 연결을 시작합니다. */
 async function startConnectFromPublic(page: Page) {
@@ -56,6 +72,7 @@ async function startConnectFromPublic(page: Page) {
 test.describe("알림 거절(lofi 17 ‘나중에’)", () => {
   test.beforeEach(async ({ context }) => {
     await fakePushSupport(context);
+    await signIn(context);
   });
 
   test("연결 뒤 알림 선택에서 ‘나중에’를 골라도 연결은 끝났고 안내·메모 쓰기가 그대로다", async ({
@@ -69,7 +86,7 @@ test.describe("알림 거절(lofi 17 ‘나중에’)", () => {
     });
 
     await startConnectFromPublic(page);
-    await connectWithCode(page, code, E2E_BUILDING.name);
+    await connectSignedIn(page);
 
     await test.step("10 거주자 홈 위에 17이 뜬다: 알림 받기·나중에, 연결은 끝났다는 안내", async () => {
       await expect(page).toHaveURL(new RegExp(`${home}$`));
@@ -131,13 +148,14 @@ test.describe("카카오톡 링크(카카오톡 안 브라우저 → Safari·Chr
     browser,
   }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await signIn(context);
     const cdp: CDPSession = await context.newCDPSession(page);
     await cdp.send("Page.enable");
     const external: string[] = [];
     cdp.on("Page.frameRequestedNavigation", (event: { url: string }) => external.push(event.url));
 
     await startConnectFromPublic(page);
-    await connectWithCode(page, code, E2E_BUILDING.name);
+    await connectSignedIn(page);
 
     const notify = sheet(page, "카카오톡 안에서는 알림을 켤 수 없어요");
     const notifyUrl = `${new URL(page.url()).origin}/me?notify=1`;
@@ -169,14 +187,11 @@ test.describe("카카오톡 링크(카카오톡 안 브라우저 → Safari·Chr
       await fakePushSupport(outside);
       const phone = await outside.newPage();
       const returnTos: string[] = [];
-      // 카카오 로그인 왕복을 흉내 냅니다: 시작 주소가 오면 입주자 B로 로그인하고 returnTo로 돌려보냅니다.
+      // 카카오 로그인 왕복을 흉내 냅니다: 시작 주소가 오면 같은 e2e 계정 세션을 이 브라우저에 두고 returnTo로 돌려보냅니다.
       await phone.route("**/api/auth/kakao/start**", async (route) => {
         const returnTo = new URL(route.request().url()).searchParams.get("returnTo") ?? "/";
         returnTos.push(returnTo);
-        const login = await outside.request.post("/api/dev/login", {
-          data: { as: RESIDENT_B, consent: TERMS_CONSENT },
-        });
-        expect(login.status()).toBe(200);
+        await signIn(outside);
         await route.fulfill({ status: 302, headers: { location: returnTo } });
       });
       try {

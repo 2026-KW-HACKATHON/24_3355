@@ -6,6 +6,7 @@ import { Brand, Screen, TopBar } from "../../components/Screen";
 import { Delayed, EmptyState, LoadError } from "../../components/ScreenState";
 import { toAppError } from "../../lib/errors";
 import { useManagedBuilding } from "../buildings/queries";
+import { useEndDemoOn } from "./endDemo";
 import { LoginActions } from "./LoginActions";
 import { useLogout, useMe } from "./queries";
 
@@ -147,6 +148,9 @@ function ManagedBuildingLoader({
 }) {
   const { pathname, search } = useLocation();
   const detail = useManagedBuilding(buildingId);
+  // 시연 계정으로 실제 건물 관리 화면을 열면 시연을 끝냅니다(D-35). 끝나면 로그인 안내(LoginRequired)가 보입니다.
+  const endingDemo = useEndDemoOn(buildingId);
+  if (endingDemo) return <GateLoading />;
   if (detail.isError) {
     const { code } = toAppError(detail.error);
     if (code === "UNAUTHENTICATED") return <LoginRequired returnTo={`${pathname}${search}`} />;

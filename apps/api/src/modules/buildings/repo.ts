@@ -13,13 +13,20 @@ import {
   managerInvites,
 } from "../../db/schema.ts";
 import type { Database } from "../../lib/db.ts";
+import { isDemoBuilding } from "../../lib/demoScope.ts";
 
 type BuildingRow = typeof buildings.$inferSelect;
 type InviteRow = typeof managerInvites.$inferSelect;
 type JoinCodeRow = typeof joinCodes.$inferSelect;
 
 export function toPublicBuilding(row: BuildingRow): PublicBuilding {
-  return { id: row.id, name: row.name, displayAddress: row.displayAddress, status: row.status };
+  return {
+    id: row.id,
+    name: row.name,
+    displayAddress: row.displayAddress,
+    status: row.status,
+    demo: isDemoBuilding(row.id),
+  };
 }
 
 export function toManagedBuilding(row: BuildingRow): ManagedBuilding {

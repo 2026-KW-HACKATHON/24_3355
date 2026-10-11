@@ -53,6 +53,8 @@ describe("old API tolerance for /api/me", () => {
       termsVersion: null,
       termsAgreedAt: null,
       termsUpToDate: true,
+      // 시연 계정 여부가 없는 이전 API는 실제 계정(null)으로 읽습니다(시연을 끝내지 않음).
+      demo: null,
     });
   });
 

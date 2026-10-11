@@ -8,9 +8,9 @@ import { apiAs, ensureResident } from "./support/api";
 import {
   E2E_BUILDING,
   E2E_LANDLORD,
+  E2E_RESIDENT_B,
   loginAs,
   loginAsE2eLandlord,
-  RESIDENT_B,
   SUNNY,
   stamp,
 } from "./support/demo";
@@ -37,7 +37,7 @@ test.describe("공지 올리기와 읽기(LF-15, lofi 34 → 37 → 15)", () => 
     browser,
   }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    const resident = await ensureResident(RESIDENT_B, E2E_BUILDING.id);
+    const resident = await ensureResident(E2E_RESIDENT_B, E2E_BUILDING.id);
     await resident.dispose();
     const title = `e2e 계단 청소 안내 ${stamp()}`;
     const body = "10월 2일 오전에 계단 물청소를 해요.\n그동안 계단이 미끄러울 수 있어요.";
@@ -125,7 +125,7 @@ test.describe("공지 올리기와 읽기(LF-15, lofi 34 → 37 → 15)", () => 
       await hideDevOverlays(home);
       const phone = await home.newPage();
       try {
-        await loginAs(phone, RESIDENT_B);
+        await loginAs(phone, E2E_RESIDENT_B);
         await phone.goto(`/b/${E2E_BUILDING.id}`);
         await expect(phone.getByText("거주 중", { exact: true })).toBeVisible();
         await phone.getByRole("link", { name: new RegExp(title) }).click();

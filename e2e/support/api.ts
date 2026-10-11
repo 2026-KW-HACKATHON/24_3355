@@ -1,5 +1,12 @@
 import { type APIRequestContext, expect, request, test } from "@playwright/test";
-import { type DemoUser, E2E_LANDLORD, type PublicGuide, TERMS_CONSENT } from "./demo";
+import {
+  type Account,
+  E2E_LANDLORD,
+  e2eSessionToken,
+  isE2eUser,
+  type PublicGuide,
+  TERMS_CONSENT,
+} from "./demo";
 
 // 화면 테스트의 준비·확인에 쓰는 API 요청. 브라우저 쿠키와 따로 로그인하므로 화면에서 로그인한 사람과
 // 섞이지 않습니다. 준비는 API로 하고, 테스트하려는 행동은 화면에서 합니다.
@@ -40,7 +47,8 @@ function baseURL(): string {
  * 시연 사용자로 로그인한 API 요청 묶음. `Origin`을 붙여서 본문 없는 POST·DELETE도 서버의 CSRF(폼) 검사를
  * 통과합니다(브라우저 fetch와 같음). 다 쓰면 `dispose()`합니다.
  */
-export async function apiAs(user: DemoUser): Promise<APIRequestContext> {
+export async function apiAs(user: Account): Promise<APIRequestContext> {
+  if (isE2eUser(user)) return apiWithSession(e2eSessionToken(user));
   const url = baseURL();
   const api = await request.newContext({
     baseURL: url,
@@ -51,6 +59,18 @@ export async function apiAs(user: DemoUser): Promise<APIRequestContext> {
   });
   expect(response.status(), `API 시연 로그인(${user})`).toBe(200);
   return api;
+}
+
+/**
+ * 이미 만든 세션(카카오 계정처럼 보이는 e2e 계정, support/demo.ts `realAccountSession`)으로 보내는 API 요청 묶음.
+ * 시연 계정은 알림을 켤 수 없어(D-35) 알림 흐름은 이 계정으로 봅니다.
+ */
+export async function apiWithSession(token: string): Promise<APIRequestContext> {
+  const url = baseURL();
+  return request.newContext({
+    baseURL: url,
+    extraHTTPHeaders: { Origin: new URL(url).origin, Cookie: `wh_session=${token}` },
+  });
 }
 
 async function json<T>(response: Awaited<ReturnType<APIRequestContext["get"]>>, what: string) {
@@ -91,9 +111,9 @@ export async function moveOutIfConnected(api: APIRequestContext) {
  * 집주인 계정(`landlordUser`)으로 읽습니다.
  */
 export async function ensureResident(
-  user: DemoUser,
+  user: Account,
   buildingId: string,
-  landlordUser: DemoUser = E2E_LANDLORD,
+  landlordUser: Account = E2E_LANDLORD,
 ): Promise<APIRequestContext> {
   const api = await apiAs(user);
   const { occupancy } = await meOf(api);

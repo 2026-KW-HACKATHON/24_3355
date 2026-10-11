@@ -1,4 +1,7 @@
 import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, type Page, test } from "@playwright/test";
 import { TERMS_VERSION } from "../../packages/contracts/src/auth.ts";
@@ -42,6 +45,19 @@ export type DemoUser =
   | typeof RESIDENT_B
   | typeof E2E_LANDLORD;
 
+/**
+ * 쓰기 테스트용 거주자(카카오 계정처럼 보이는 e2e 계정, support/dev-db.ts `session`). 발표 시연 계정(입주자 A·B·
+ * 집주인)은 둘러보기 전용이라(D-35) 테스트빌라에서 연결·메모·팁·이사를 해 보는 테스트는 이 계정으로 합니다.
+ */
+export const E2E_RESIDENT_A = "e2e-resident-a";
+export const E2E_RESIDENT_B = "e2e-resident-b";
+export type E2eUser = typeof E2E_RESIDENT_A | typeof E2E_RESIDENT_B;
+export type Account = DemoUser | E2eUser;
+
+export function isE2eUser(as: Account): as is E2eUser {
+  return as.startsWith("e2e-");
+}
+
 export type PublicGuide = {
   id: string;
   buildingId: string;
@@ -63,7 +79,13 @@ export const TERMS_CONSENT = TERMS_VERSION;
  * 시연 로그인(POST /api/dev/login). page.request는 브라우저 컨텍스트와 쿠키를 함께 써서
  * 이후 페이지 요청에 세션이 붙습니다. 본문이 JSON이라 CSRF(폼) 검사에 걸리지 않습니다.
  */
-export async function loginAs(page: Page, as: DemoUser) {
+export async function loginAs(page: Page, as: Account) {
+  if (isE2eUser(as)) {
+    await page
+      .context()
+      .addCookies([{ name: "wh_session", value: e2eSessionToken(as), url: appUrl() }]);
+    return;
+  }
   const response = await page.request.post("/api/dev/login", {
     data: { as, consent: TERMS_CONSENT },
   });
@@ -112,6 +134,88 @@ export function issueInvite(buildingId: string, validDays = 1): string {
   const token = /\/invite#t=(\S+)/.exec(output)?.[1];
   if (!token) throw new Error("db:invite 출력에서 초대 링크를 찾지 못했어요");
   return token;
+}
+
+/** e2e 전용 개발 DB 준비(support/dev-db.ts). 출력의 마지막 줄을 돌려줍니다. */
+function devDb(...args: string[]): string {
+  const output = execFileSync(
+    "node",
+    ["--env-file-if-exists=apps/api/.env", "e2e/support/dev-db.ts", ...args],
+    { cwd: REPO_ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+  );
+  return output.trim().split("\n").at(-1) ?? "";
+}
+
+/**
+ * 시연 건물이 아닌 ‘실제 건물’(전시 건물처럼 관리자 없이 열려 있고 가입코드만 있음)을 개발 DB에 두고 가입코드를
+ * 돌려줍니다. 시연 계정을 실제 건물에서 끝내는지(D-35) 볼 때만 씁니다.
+ */
+export const REAL_BUILDING = {
+  id: "7e2e0000-0000-4000-8000-00000000e2e1",
+  name: "실제빌라",
+} as const;
+
+export function ensureRealBuilding(): string {
+  const code = devDb("building");
+  if (!/^[A-Z0-9]{6}$/.test(code)) throw new Error("실제 건물 가입코드를 받지 못했어요");
+  return code;
+}
+
+/**
+ * 카카오로 로그인한 실제 계정처럼 보이는 세션(시연 계정이 아님)과 그 계정의 알림 구독 하나. 카카오 왕복 없이
+ * 실제 계정 → 시연 전환(D-35)을 보려고 씁니다. `cookie`는 브라우저에 넣을 세션 토큰입니다.
+ */
+export function realAccountSession({ withPush = false }: { withPush?: boolean } = {}): {
+  token: string;
+  endpoint: string | undefined;
+  userId: string;
+} {
+  // 세션 토큰은 출력(로그)에 남기지 않고 이 사용자만 읽는 임시 파일로 받습니다.
+  const dir = mkdtempSync(join(tmpdir(), "wh-e2e-"));
+  const file = join(dir, "token");
+  try {
+    const args = ["real-account", TERMS_CONSENT, file, ...(withPush ? ["with-push"] : [])];
+    const [endpoint = "", userId = ""] = devDb(...args).split(" ");
+    const token = readFileSync(file, "utf8");
+    if (!token || !userId) throw new Error("실제 계정 세션을 만들지 못했어요");
+    return { token, endpoint: endpoint === "-" ? undefined : endpoint, userId };
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+/** `realAccountSession`이 만든 세션·알림 구독을 지웁니다(뒷정리). */
+export function cleanRealAccount() {
+  devDb("clean-real-account");
+}
+
+/** 테스트가 붙는 개발 서버 주소(playwright.config.ts와 같음). */
+export function appUrl() {
+  return process.env["E2E_BASE_URL"] ?? "http://localhost:5173";
+}
+
+/** e2e 계정의 새 세션 토큰. 출력(로그)에 남기지 않고 이 사용자만 읽는 임시 파일로 받습니다. */
+export function e2eSessionToken(as: E2eUser): string {
+  const dir = mkdtempSync(join(tmpdir(), "wh-e2e-"));
+  const file = join(dir, "token");
+  try {
+    devDb("session", as, TERMS_CONSENT, file);
+    const token = readFileSync(file, "utf8");
+    if (!token) throw new Error("e2e 계정 세션을 만들지 못했어요");
+    return token;
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+/** 실제빌라에 테스트로 보낸 제보를 지웁니다(뒷정리). */
+export function cleanRealReports() {
+  devDb("clean-real-reports");
+}
+
+/** 그 주소의 알림 구독 행 수. */
+export function pushSubscriptionCount(endpoint: string): number {
+  return Number(devDb("push-count", endpoint));
 }
 
 /** 테스트끼리 겹치지 않는 짧은 표식(제목 80자 제한 안). */

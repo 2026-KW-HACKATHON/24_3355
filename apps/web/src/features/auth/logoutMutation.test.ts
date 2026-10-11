@@ -6,7 +6,12 @@ import { AppError } from "../../lib/errors";
 import { testUser } from "../../test/me";
 import { memoryStorage } from "../../test/memoryStorage";
 import { loadLocalDraft, saveLocalDraft } from "../guides/localDraft";
-import { authKeys, demoLoginMutationOptions, logoutMutationOptions } from "./queries";
+import {
+  authKeys,
+  demoLoginMutationOptions,
+  logoutMutationOptions,
+  logoutTouchesPush,
+} from "./queries";
 
 vi.mock("../../lib/api", () => ({
   postEmpty: vi.fn(),
@@ -43,12 +48,13 @@ const ACCOUNT_DATA: readonly (readonly unknown[])[] = [
 
 function withAccountData(queryClient: QueryClient) {
   for (const queryKey of ACCOUNT_DATA) queryClient.setQueryData(queryKey, { from: "user-a" });
-  // 누구나 보는 공개 건물 정보는 남깁니다.
   queryClient.setQueryData(["building", BUILDING], { name: "햇살빌라" });
+  // 누가 보든 같은 시연 모드 확인은 남깁니다(29에서 역할을 고르는 동안).
+  queryClient.setQueryData(["dev", "login"], true);
 }
 
 function runLogout(queryClient: QueryClient) {
-  return new MutationObserver(queryClient, logoutMutationOptions(queryClient)).mutate();
+  return new MutationObserver(queryClient, logoutMutationOptions(queryClient)).mutate(undefined);
 }
 
 /** 이 브라우저에 알림 구독이 있는 상태. */
@@ -109,7 +115,9 @@ describe("useLogout", () => {
     for (const queryKey of ACCOUNT_DATA) {
       expect(queryClient.getQueryData(queryKey), JSON.stringify(queryKey)).toBeUndefined();
     }
-    expect(queryClient.getQueryData(["building", BUILDING])).toEqual({ name: "햇살빌라" });
+    // 계정이 바뀌면 캐시 전체를 되돌립니다(D-35, 공개 건물 정보 포함).
+    expect(queryClient.getQueryData(["building", BUILDING])).toBeUndefined();
+    expect(queryClient.getQueryData(["dev", "login"])).toBe(true);
   });
 
   it("keeps the signed-in state and returns the error when the logout request fails", async () => {
@@ -184,6 +192,79 @@ describe("useLogout", () => {
   });
 });
 
+describe("logout keeps another account's notifications (D-35)", () => {
+  it("leaves this phone's subscription alone when it was saved for another account", async () => {
+    // Given: 카카오 계정이 이 휴대폰에서 알림을 켜 둔 채 시연(입주자 A)을 보고 있습니다.
+    const queryClient = setup();
+    const subscription = withSubscription();
+    localStorage.setItem(
+      "wh.pushSaved",
+      JSON.stringify({ endpoint: subscription.endpoint, userId: "real-user" }),
+    );
+    vi.mocked(postEmpty).mockResolvedValueOnce(undefined);
+    // When: 시연을 끝냅니다(로그아웃).
+    await runLogout(queryClient);
+    // Then: 구독 주소를 보내지 않고, 브라우저 구독도 끊지 않습니다.
+    expect(postEmpty).toHaveBeenCalledWith("/api/auth/logout");
+    expect(sendJsonEmpty).not.toHaveBeenCalled();
+    expect(subscription.unsubscribe).not.toHaveBeenCalled();
+    expect(localStorage.getItem("wh.pushSaved")).not.toBeNull();
+  });
+
+  it("keeps the real account's subscription when leaving it to watch the demo", async () => {
+    // Given: 카카오 계정(user-a)이 알림을 켜 둔 휴대폰
+    const queryClient = setup();
+    const subscription = withSubscription();
+    localStorage.setItem(
+      "wh.pushSaved",
+      JSON.stringify({ endpoint: subscription.endpoint, userId: "user-a" }),
+    );
+    vi.mocked(postEmpty).mockResolvedValueOnce(undefined);
+    // When: 29에서 ‘시연 보기’로 로그아웃
+    await new MutationObserver(queryClient, logoutMutationOptions(queryClient)).mutate({
+      keepPush: true,
+    });
+    // Then
+    expect(postEmpty).toHaveBeenCalledWith("/api/auth/logout");
+    expect(subscription.unsubscribe).not.toHaveBeenCalled();
+    expect(localStorage.getItem("wh.pushSaved")).not.toBeNull();
+  });
+
+  it("decides in one place", () => {
+    expect(logoutTouchesPush("a", undefined)).toBe(true);
+    expect(logoutTouchesPush("a", { userId: "a" })).toBe(true);
+    expect(logoutTouchesPush("a", { userId: "b" })).toBe(false);
+    expect(logoutTouchesPush("a", { userId: "a" }, true)).toBe(false);
+  });
+});
+
+describe("in-flight writes of the previous account (D-35)", () => {
+  it("waits for them before resetting, so they cannot write old-account data afterwards", async () => {
+    // Given: 이전 계정의 쓰기(팁 저장)가 아직 끝나지 않았습니다.
+    const queryClient = setup();
+    let finish: () => void = () => undefined;
+    const write = new MutationObserver(queryClient, {
+      mutationFn: () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+      onSuccess: () => {
+        queryClient.setQueryData(["tips", "mine", "user-a"], { from: "user-a" });
+      },
+    }).mutate();
+    vi.mocked(postEmpty).mockResolvedValueOnce(undefined);
+    // When: 로그아웃하는 사이에 그 쓰기가 끝납니다.
+    const loggingOut = runLogout(queryClient);
+    await Promise.resolve();
+    finish();
+    await write;
+    await loggingOut;
+    // Then
+    expect(queryClient.getQueryData(["tips", "mine", "user-a"])).toBeUndefined();
+    expect(queryClient.getQueryData(authKeys.me())).toBeNull();
+  });
+});
+
 describe("demo login (switching accounts)", () => {
   it("drops the previous account's data and signs in as the new one", async () => {
     // Given
@@ -205,6 +286,8 @@ describe("demo login (switching accounts)", () => {
     for (const queryKey of ACCOUNT_DATA) {
       expect(queryClient.getQueryData(queryKey), JSON.stringify(queryKey)).toBeUndefined();
     }
-    expect(queryClient.getQueryData(["building", BUILDING])).toEqual({ name: "햇살빌라" });
+    // 계정이 바뀌면 캐시 전체를 되돌립니다(D-35, 공개 건물 정보 포함).
+    expect(queryClient.getQueryData(["building", BUILDING])).toBeUndefined();
+    expect(queryClient.getQueryData(["dev", "login"])).toBe(true);
   });
 });

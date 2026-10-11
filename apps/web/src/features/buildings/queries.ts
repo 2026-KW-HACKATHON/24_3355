@@ -22,10 +22,11 @@ export const buildingKeys = {
 };
 
 /** LF-01 건물 이름·도로명 주소·상태. 없는 건물은 NOT_FOUND, 잘못된 id는 VALIDATION_FAILED. */
-export function usePublicBuilding(buildingId: string) {
+export function usePublicBuilding(buildingId: string, enabled = true) {
   return useQuery({
     queryKey: buildingKeys.public(buildingId),
     queryFn: () => getJson(`/api/buildings/${seg(buildingId)}`, PublicBuilding),
+    enabled,
   });
 }
 

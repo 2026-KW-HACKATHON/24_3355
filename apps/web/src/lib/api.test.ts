@@ -45,8 +45,8 @@ describe("API client", () => {
     respond(200, building);
     // When
     const result = await getJson(URL, PublicBuilding);
-    // Then
-    expect(result).toEqual(building);
+    // Then: `demo`가 없는 이전 API 응답은 실제 건물(false)로 읽습니다.
+    expect(result).toEqual({ ...building, demo: false });
   });
 
   it("branches on the error code, not the HTTP status", async () => {

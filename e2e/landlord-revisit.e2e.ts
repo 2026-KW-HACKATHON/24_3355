@@ -18,9 +18,9 @@ import {
 import {
   E2E_BUILDING,
   E2E_LANDLORD,
+  E2E_RESIDENT_B,
   loginAsE2eLandlord,
   type PublicGuide,
-  RESIDENT_B,
   stamp,
 } from "./support/demo";
 import { expect, hideDevOverlays, test } from "./support/test";
@@ -47,7 +47,7 @@ async function freshGuide(label: string): Promise<PublicGuide> {
 
 /** 확인 전 메모 하나(입주자 B, 테스트빌라). */
 async function pendingMemo(guide: PublicGuide, body: string) {
-  const resident = await ensureResident(RESIDENT_B, E2E_BUILDING.id);
+  const resident = await ensureResident(E2E_RESIDENT_B, E2E_BUILDING.id);
   try {
     return await writeMemo(resident, guide.id, body);
   } finally {

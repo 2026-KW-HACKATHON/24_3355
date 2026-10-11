@@ -6,6 +6,7 @@ import { useToast } from "../../components/useToast";
 import { AppError, errorMessage } from "../../lib/errors";
 import type { PushEnv } from "../../lib/pushEnv";
 import { copyText } from "../../lib/share";
+import { useMe } from "../auth/queries";
 import { kakaoOpenExternalUrl, notifyLinkUrl } from "./notifyLink";
 import { disablePush, enablePush, loadSavedPush, resaveSubscription } from "./push";
 import { usePushEnv } from "./queries";
@@ -50,11 +51,14 @@ export function NotifyChoiceBody({
   env,
   context,
   actions,
+  demo = false,
   renderTitle = (text) => <h2 className="wh-sheet__title">{text}</h2>,
 }: {
   env: PushEnv | undefined;
   context: NotifyContext;
   actions: NotifyActions;
+  /** 시연 계정이면 알림을 켤 수 없다고만 알립니다(D-35, 서버도 403). */
+  demo?: boolean;
   renderTitle?: (text: string) => ReactNode;
 }) {
   const close = (label: string, variant: "primary" | "neutral" = "primary") => (
@@ -74,7 +78,11 @@ export function NotifyChoiceBody({
   let extra: ReactNode = null;
   let buttons: ReactNode;
 
-  if (!env) {
+  if (demo) {
+    title = "시연 계정에서는 알림을 켤 수 없어요";
+    lead = "카카오로 로그인한 계정에서 공지 알림을 받을 수 있어요.";
+    buttons = close("닫기");
+  } else if (!env) {
     // 공개키·구독 확인이 끝나기 전에는 누를 수 없는 ‘알림 받기’ 대신 자리만 보여줍니다.
     title = "알림 환경을 확인하는 중이에요";
     buttons = (
@@ -273,6 +281,7 @@ export function NotifyChoiceSheet({
 }) {
   const toast = useToast();
   const push = usePushEnv(open);
+  const demo = Boolean(useMe().data?.user.demo);
   const [phase, setPhase] = useState<Phase>("idle");
   const [resaving, setResaving] = useState(false);
   const [error, setError] = useState<string>();
@@ -285,6 +294,7 @@ export function NotifyChoiceSheet({
   const saved = push.unconfirmed ? loadSavedPush() : undefined;
   const resaveNeeded =
     open &&
+    !demo &&
     context === "settings" &&
     push.unconfirmed &&
     push.userId !== undefined &&
@@ -428,6 +438,7 @@ export function NotifyChoiceSheet({
                 env={resaving ? undefined : push.env}
                 context={context}
                 actions={actions}
+                demo={demo}
                 renderTitle={(text) => (
                   <BottomSheet.Title className="wh-sheet__title">{text}</BottomSheet.Title>
                 )}

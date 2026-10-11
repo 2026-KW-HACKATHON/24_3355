@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { safeReturnTo } from "../../lib/returnTo";
 import { memoryStorage } from "../../test/memoryStorage";
 import {
   clearConnectDraft,
@@ -14,6 +15,7 @@ const HOME = `/b/${BUILDING}`;
 const DRAFT = { buildingId: BUILDING, buildingName: "햇살빌라", code: "WK72P4", returnTo: HOME };
 
 beforeEach(() => {
+  vi.stubGlobal("localStorage", memoryStorage());
   vi.stubGlobal("sessionStorage", memoryStorage());
 });
 
@@ -66,7 +68,19 @@ describe("connect return path", () => {
     const withReturn = connectPath(BUILDING, guide);
     // Then
     expect(plain).toBe(`${HOME}/connect`);
-    expect(withReturn).toBe(`${HOME}/connect?returnTo=${encodeURIComponent(guide)}`);
+    expect(withReturn).toBe(`${HOME}/connect?returnTo=${guide}`);
+  });
+
+  it("keeps the connect URL (with its returnTo) as the Kakao login return path", () => {
+    // Given: 팁·메모에서 연결하러 오면 연결 화면 주소에 돌아갈 곳이 붙습니다.
+    const tips = `${HOME}/tips`;
+    const connect = connectPath(BUILDING, tips);
+    // When
+    const loginReturn = safeReturnTo(`${connect}&login=cancelled`);
+    // Then: 첫 화면(/)으로 떨어지지 않고 같은 연결 화면으로 돌아옵니다.
+    expect(loginReturn).toBe(connect);
+    expect(new URLSearchParams(connect.split("?")[1]).get("returnTo")).toBe(tips);
+    expect(resolveConnectReturnTo(tips, BUILDING)).toBe(tips);
   });
 });
 
@@ -89,19 +103,30 @@ describe("connect draft", () => {
     expect(loaded).toBeUndefined();
   });
 
-  it("forgets the code after 30 minutes", () => {
+  it("forgets the code after 10 minutes", () => {
     // Given
     saveConnectDraft(DRAFT, 0);
     // When
-    const loaded = loadConnectDraft(BUILDING, 30 * 60 * 1000);
+    const kept = loadConnectDraft(BUILDING, 10 * 60 * 1000 - 1);
+    const loaded = loadConnectDraft(BUILDING, 10 * 60 * 1000);
     // Then
+    expect(kept).toMatchObject(DRAFT);
     expect(loaded).toBeUndefined();
-    expect(sessionStorage.getItem("wh.connect")).toBeNull();
+    expect(localStorage.getItem("wh.connect")).toBeNull();
+  });
+
+  it("survives coming back from Kakao in a new tab (not tab-only storage)", () => {
+    // Given
+    saveConnectDraft(DRAFT, 1_000);
+    // When: 안드로이드에서 카카오톡 로그인 뒤 새 탭으로 돌아오면 sessionStorage는 비어 있습니다.
+    vi.stubGlobal("sessionStorage", memoryStorage());
+    // Then
+    expect(loadConnectDraft(BUILDING, 2_000)).toMatchObject(DRAFT);
   });
 
   it("ignores broken values and a stored returnTo that points elsewhere", () => {
     // Given
-    sessionStorage.setItem("wh.connect", "{not json");
+    localStorage.setItem("wh.connect", "{not json");
     const broken = loadConnectDraft(BUILDING, 1_000);
     saveConnectDraft({ ...DRAFT, returnTo: "https://evil.example" }, 1_000);
     // When

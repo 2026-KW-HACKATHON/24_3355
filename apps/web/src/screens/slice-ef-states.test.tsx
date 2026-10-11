@@ -313,6 +313,7 @@ describe("landlord inbox (LF-16)", () => {
       name: "테스트빌라",
       displayAddress: "서울 노원구 월계동 OO길",
       status: "open",
+      demo: false,
       fullAddress: "서울 노원구 월계동 1-1",
       openedAt: "2026-03-01T00:00:00.000Z",
       confirmedAt: "2026-02-28T00:00:00.000Z",
@@ -440,7 +441,7 @@ describe("tips (LF-06)", () => {
     const html = render({ pathname }, route, <TipsScreen />, queryClient);
     // Then
     expect(html).toContain("생활 팁은 이 건물에 연결한 거주자가 볼 수 있어요");
-    expect(html).toContain("returnTo=%2Fb%2F");
+    expect(html).toContain("returnTo=/b/");
   });
 
   it("lets the landlord read and report but not write", () => {
@@ -601,6 +602,7 @@ describe("report entry on the building page (LF-01 · LF-10)", () => {
     name: "테스트빌라",
     displayAddress: "서울 노원구 월계동 OO길",
     status: "open",
+    demo: false,
   };
   const guide: Guide = {
     id: "5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f11",

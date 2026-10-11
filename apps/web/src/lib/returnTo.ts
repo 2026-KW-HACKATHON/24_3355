@@ -6,10 +6,18 @@ export function safeReturnTo(path: string): string {
   return ReturnTo.safeParse(withoutLoginResult).success ? withoutLoginResult : "/";
 }
 
+/**
+ * `?login=` 결과만 뺍니다. 나머지 쿼리는 받은 그대로 둡니다(URLSearchParams로 다시 만들면 `/`가 `%2F`가 되어
+ * `ReturnTo`에 걸리고 첫 화면으로 돌아감).
+ */
 function stripLoginResult(path: string): string {
-  const [pathname = "/", query = ""] = path.split("?");
-  const params = new URLSearchParams(query);
-  params.delete(LOGIN_RESULT_PARAM);
-  const rest = params.toString();
+  const index = path.indexOf("?");
+  if (index < 0) return path;
+  const pathname = path.slice(0, index) || "/";
+  const rest = path
+    .slice(index + 1)
+    .split("&")
+    .filter((part) => part !== "" && part.split("=")[0] !== LOGIN_RESULT_PARAM)
+    .join("&");
   return rest ? `${pathname}?${rest}` : pathname;
 }

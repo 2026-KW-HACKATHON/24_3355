@@ -18,6 +18,7 @@ import {
   demoRoles,
   fetchDemoOverview,
   guestReportRef,
+  needsSwitchConfirm,
   resetErrorMessage,
   roleSubtitle,
   waitText,
@@ -315,8 +316,10 @@ describe("demo drift (시연 상태가 바뀌었어요)", () => {
     const html = render(overview, 4);
     // Then
     expect(html).toContain("둘러보는 순서");
-    expect(html).toContain("가입 없이 보낸 제보의 상태");
-    expect(html).toContain("쓰기는 팀 기기에서 보여 드려요. 둘러보기만 해도 흐름이 이어져요.");
+    expect(html).toContain("보낸 제보 상태 보기");
+    expect(html).toContain(
+      "시연은 둘러보기만 할 수 있어요. 실제로 해 보려면 부스 입구의 QR을 찍어 주세요.",
+    );
     expect(html.indexOf("둘러보는 순서")).toBeLessThan(html.indexOf("dm-roles"));
     expect(html).toContain('<p class="dm-drift" role="status"></p>');
   });
@@ -338,7 +341,7 @@ describe("demo reset (처음 상태로)", () => {
     queryClient.setQueryData(["manage", "buildings", SUNNY], { name: "햇살빌라" });
     localStorage.setItem(`wh.visited.${SUNNY}`, "1");
     localStorage.setItem("wh.visited.5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f99", "1");
-    sessionStorage.setItem("wh.connect", "{}");
+    localStorage.setItem("wh.connect", "{}");
     return queryClient;
   }
 
@@ -357,7 +360,7 @@ describe("demo reset (처음 상태로)", () => {
     expect(queryClient.getQueryState(demoKey)?.isInvalidated).toBe(true);
     expect(localStorage.getItem(`wh.visited.${SUNNY}`)).toBeNull();
     expect(localStorage.getItem("wh.visited.5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f99")).toBe("1");
-    expect(sessionStorage.getItem("wh.connect")).toBeNull();
+    expect(localStorage.getItem("wh.connect")).toBeNull();
   });
 
   it("keeps everything and says how long to wait when the reset is rate limited", async () => {
@@ -424,5 +427,17 @@ describe("/demo outside demo mode", () => {
     expect(html).toContain("다음 입주자 B");
     expect(html).not.toContain("테스트빌라 집주인");
     expect(html).toContain("시연 초기화");
+  });
+});
+
+describe("switching from a Kakao account to the demo (D-35)", () => {
+  it("asks only a real Kakao account before switching", () => {
+    const base = { managedBuildings: [], occupancy: null };
+    expect(needsSwitchConfirm({ ...base, user: testUser("real", { demo: null }) })).toBe(true);
+    expect(
+      needsSwitchConfirm({ ...base, user: testUser("demo", { demo: "demo-resident-a" }) }),
+    ).toBe(false);
+    expect(needsSwitchConfirm(null)).toBe(false);
+    expect(needsSwitchConfirm(undefined)).toBe(false);
   });
 });

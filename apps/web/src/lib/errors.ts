@@ -79,6 +79,15 @@ const messages: Readonly<Record<AppErrorCode, string>> = {
   PHOTO_STORAGE_UNAVAILABLE: "지금은 사진을 올릴 수 없어요. 글만 먼저 저장해 주세요",
 };
 
+/** 둘러보기 전용 시연(D-35)에서 쓰기를 막았을 때(403 `FORBIDDEN`, `fields.account = "demo-readonly"`). */
+export const DEMO_READONLY_MESSAGE = "시연에서는 둘러보기만 할 수 있어요";
+
+export function isDemoReadOnly(error: unknown): boolean {
+  const appError = toAppError(error);
+  return appError.code === "FORBIDDEN" && appError.fields["account"] === "demo-readonly";
+}
+
 export function errorMessage(error: unknown): string {
+  if (isDemoReadOnly(error)) return DEMO_READONLY_MESSAGE;
   return messages[toAppError(error).code];
 }

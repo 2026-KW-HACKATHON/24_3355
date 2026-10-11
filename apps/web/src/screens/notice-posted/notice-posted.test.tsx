@@ -29,6 +29,7 @@ const detail: ManagedBuildingDetail = {
     name: "테스트빌라",
     displayAddress: "서울 노원구 월계동 OO길",
     status: "open",
+    demo: false,
     fullAddress: "서울 노원구 월계동 1-1",
     openedAt: "2026-03-01T00:00:00.000Z",
     confirmedAt: "2026-03-01T00:00:00.000Z",

@@ -33,9 +33,21 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+/* ‘역할 바꾸기’·‘시연 끝내기’. 누르는 자리가 겹치지 않게 사이를 둡니다 */
+.wh-demobar__actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--wh-space-2);
+}
 /* 글자는 36px 막대 안에 두고, 누르는 자리는 위아래로 넓혀 44px를 맞춥니다 */
 .wh-demobar__link {
   position: relative;
+  margin: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
   display: flex;
   align-items: center;
   flex: none;
@@ -49,7 +61,11 @@
 .wh-demobar__link::after {
   content: "";
   position: absolute;
-  inset: calc((var(--wh-touch) - 36px) / -2) calc(var(--wh-space-2) * -1);
+  inset: calc((var(--wh-touch) - 36px) / -2) calc(var(--wh-space-1) * -1);
+}
+.wh-demobar__link:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 .wh-demobar__link:focus-visible {
   outline: 2px solid var(--wh-gray-0);

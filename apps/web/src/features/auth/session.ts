@@ -15,7 +15,6 @@ import { clearMemoDraft } from "../guides/memoDraft";
 import { clearInviteToken } from "../invites/token";
 import { clearConnectDraft } from "../occupancy/connectDraft";
 import { clearTipDraft } from "../tips/tipDraft";
-import { clearDemoRole } from "./demoRole";
 
 export { safeReturnTo };
 
@@ -95,7 +94,7 @@ export function agreeToTerms(version: string) {
 /**
  * 로그아웃합니다. 이 브라우저에 알림 구독이 있으면 그 주소(`pushEndpoint`)를 함께 보내 서버가 같은 요청에서 내
  * 구독을 지웁니다(contracts `LogoutBody`). 서버 응답과 상관없이 이 기기에 남은 그 사용자의 쓰던 안내, 초대 토큰,
- * 연결 중이던 가입코드, 다시 로그인하려고 남긴 메모·팁, 시연 중 표시(DemoBar)를 지웁니다.
+ * 연결 중이던 가입코드, 다시 로그인하려고 남긴 메모·팁을 지웁니다.
  */
 export async function logout(userId: string | undefined, pushEndpoint?: string): Promise<void> {
   try {
@@ -106,11 +105,24 @@ export async function logout(userId: string | undefined, pushEndpoint?: string):
       await postEmpty("/api/auth/logout");
     }
   } finally {
-    if (userId) clearUserDrafts(userId);
-    clearInviteToken();
-    clearConnectDraft();
-    clearMemoDraft();
-    clearTipDraft();
-    clearDemoRole();
+    clearDeviceState(userId);
   }
+}
+
+/** 이 기기에 남은 그 사용자의 쓰던 안내와, 로그인 사이에 둔 초대 토큰·가입코드·메모·팁. */
+function clearDeviceState(userId: string | undefined) {
+  if (userId) clearUserDrafts(userId);
+  clearInviteToken();
+  clearConnectDraft();
+  clearMemoDraft();
+  clearTipDraft();
+}
+
+/**
+ * 시연 끝내기(D-35, `POST /api/dev/end-demo`). 서버는 지금 세션이 시연 계정일 때만 끝내고, 그 사이 카카오로 로그인한
+ * 세션이면 409 `CONFLICT`로 그대로 둡니다. 끝냈을 때만 이 기기의 쓰던 내용을 지웁니다(실제 계정의 초안을 지우지 않게).
+ */
+export async function endDemoSession(userId: string): Promise<void> {
+  await postEmpty("/api/dev/end-demo");
+  clearDeviceState(userId);
 }

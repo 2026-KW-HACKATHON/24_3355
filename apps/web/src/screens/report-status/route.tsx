@@ -10,6 +10,7 @@ import { Icon } from "../../components/Icon";
 import { BackButton, Dock, Screen, TopBar } from "../../components/Screen";
 import { Delayed, EmptyState, LoadError, SkeletonLines } from "../../components/ScreenState";
 import { useToast } from "../../components/useToast";
+import { useEndDemoOn } from "../../features/auth/endDemo";
 import { LoginActions } from "../../features/auth/LoginActions";
 import { authKeys, useMe } from "../../features/auth/queries";
 import { formatReportTime, REPORT_STATUS, reportTitle } from "../../features/reports/labels";
@@ -46,6 +47,8 @@ function ReportStatusRoute({ reportId }: { reportId: string }) {
   const token = hashToken ?? linkToken ?? stored?.token;
   const report = useReport(reportId, token);
   const me = useMe();
+  // 시연 계정으로 실제 건물의 제보 상태를 열면 시연을 끝냅니다(D-35).
+  useEndDemoOn(report.data?.buildingId ?? stored?.buildingId);
   const sent = readReportSent(location.state);
 
   const errorCode = report.isError ? toAppError(report.error).code : undefined;

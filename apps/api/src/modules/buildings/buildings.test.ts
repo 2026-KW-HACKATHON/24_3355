@@ -28,6 +28,7 @@ describe("public building", () => {
       name: "테스트빌라",
       displayAddress: "서울 노원구 월계동 OO길",
       status: "open",
+      demo: false,
     });
   });
 
@@ -67,7 +68,7 @@ describe("manager invites", () => {
     );
     // Then
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ buildingName: "테스트빌라" });
+    expect(await response.json()).toEqual({ buildingName: "테스트빌라", demo: false });
   });
 
   it("accepts an invite once and makes the user a manager", async () => {

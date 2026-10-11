@@ -1,4 +1,5 @@
 import type { BrowserContext, Page } from "@playwright/test";
+import { E2E_RESIDENT_B, type E2eUser, loginAs } from "./demo";
 import { expect } from "./test";
 
 /** 제목(heading)으로 찾는 바텀 시트·대화상자. */
@@ -19,10 +20,16 @@ export async function agreeBeforeLogin(page: Page) {
 }
 
 /**
- * 연결 화면(LF-04)에서 가입코드(02, 1/2) → 로그인과 동의(16, 2/2) → 연결 확인까지. 로그인은 연결 화면의
- * ‘시연용 다음 입주자로 계속하기’(입주자 B)로 합니다. 누르기 전 화면으로 돌아가는 것은 부르는 쪽이 봅니다.
+ * 연결 화면(LF-04)에서 가입코드(02, 1/2) → 로그인과 동의(16, 2/2) → 연결 확인까지. 로그인은 2/2의 ‘카카오로
+ * 계속하기’를 누르면 카카오 왕복 대신 쓰기 테스트용 e2e 계정(`as`) 세션을 이 브라우저에 두고 돌아오게 흉내 냅니다
+ * (발표 시연 계정은 둘러보기 전용, D-35). 누르기 전 화면으로 돌아가는 것은 부르는 쪽이 봅니다.
  */
-export async function connectWithCode(page: Page, code: string, buildingName: string) {
+export async function connectWithCode(
+  page: Page,
+  code: string,
+  buildingName: string,
+  as: E2eUser = E2E_RESIDENT_B,
+) {
   await expect(
     page.getByRole("heading", { level: 1, name: "이 건물에 살고 있나요?" }),
   ).toBeVisible();
@@ -31,13 +38,29 @@ export async function connectWithCode(page: Page, code: string, buildingName: st
 
   await expect(page.getByRole("heading", { level: 1, name: /로그인이 필요해요/ })).toBeVisible();
   await expect(page.getByText(`가입코드 ${code} 확인`)).toBeVisible();
+  await fakeKakaoLogin(page, as);
   await page.getByRole("checkbox", { name: "모두 동의해요" }).check();
-  await page.getByRole("button", { name: "시연용 다음 입주자로 계속하기" }).click();
+  await page.getByRole("button", { name: "카카오로 계속하기" }).click();
 
   await expect(
     page.getByRole("heading", { level: 1, name: new RegExp(`${buildingName}에\\s*연결할까요\\?`) }),
   ).toBeVisible();
   await page.getByRole("button", { name: `${buildingName}에 연결하기` }).click();
+}
+
+/**
+ * 카카오 로그인 왕복 흉내: 이 화면에서 카카오 시작 주소가 열리면 e2e 계정 세션을 브라우저에 두고 `returnTo`로
+ * 돌려보냅니다. 돌려보낸 `returnTo`를 차례로 담은 배열을 돌려줍니다.
+ */
+export async function fakeKakaoLogin(page: Page, as: E2eUser = E2E_RESIDENT_B): Promise<string[]> {
+  const returnTos: string[] = [];
+  await page.route("**/api/auth/kakao/start**", async (route) => {
+    const returnTo = new URL(route.request().url()).searchParams.get("returnTo") ?? "/";
+    returnTos.push(returnTo);
+    await loginAs(page, as);
+    await route.fulfill({ status: 302, headers: { location: returnTo } });
+  });
+  return returnTos;
 }
 
 /**

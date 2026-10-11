@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   type ConnectResult,
   JOIN_CODE_LOCK_MINUTES,
+  LOGIN_RESULT_PARAM,
   type Me,
   type MeOccupancy,
   type PublicBuilding,
@@ -18,6 +19,7 @@ import { Delayed, EmptyState, LoadError } from "../../components/ScreenState";
 import { useToast } from "../../components/useToast";
 import { allAgreed, ConsentChecks, NO_CONSENT } from "../../features/auth/ConsentChecks";
 import { type ConsentDoc, ConsentSheet } from "../../features/auth/ConsentSheet";
+import { useEndDemoOn } from "../../features/auth/endDemo";
 import { LoginActions } from "../../features/auth/LoginActions";
 import { LoginConsentSheet } from "../../features/auth/LoginConsent";
 import { authKeys, useMe } from "../../features/auth/queries";
@@ -27,6 +29,7 @@ import { usePublicBuilding } from "../../features/buildings/queries";
 import {
   type ConnectDraft,
   clearConnectDraft,
+  connectPath,
   loadConnectDraft,
   resolveConnectReturnTo,
   saveConnectDraft,
@@ -56,6 +59,8 @@ export function Component() {
   const returnTo = resolveConnectReturnTo(params.get("returnTo"), buildingId);
   const building = usePublicBuilding(buildingId);
   const me = useMe();
+  // 시연 계정으로 실제 건물에 연결하러 오면 시연을 끝내고 카카오 로그인부터 받습니다(D-35).
+  const endingDemo = useEndDemoOn(building.data);
 
   if (building.isError) {
     const { code } = toAppError(building.error);
@@ -78,7 +83,7 @@ export function Component() {
       </ConnectShell>
     );
   }
-  if (building.isPending || me.isPending) {
+  if (building.isPending || me.isPending || endingDemo) {
     return (
       <ConnectShell returnTo={returnTo} busy>
         <Delayed label="연결 화면을 여는 중">
@@ -182,6 +187,20 @@ function AlreadyConnected({ building, returnTo }: { building: PublicBuilding; re
   );
 }
 
+/**
+ * 카카오에서 돌아올 연결 화면 주소. `connectPath`로 다시 만들고(돌아갈 곳의 `/`를 인코딩하지 않음), 지금 주소의
+ * 다른 쿼리(`via=qr` 등)는 그대로 붙입니다. `returnTo`와 로그인 결과(`login`)는 뺍니다.
+ */
+export function connectLoginReturn(buildingId: string, returnTo: string, search: string): string {
+  const base = connectPath(buildingId, returnTo);
+  const extra = new URLSearchParams(search);
+  extra.delete("returnTo");
+  extra.delete(LOGIN_RESULT_PARAM);
+  const rest = extra.toString();
+  if (!rest) return base;
+  return `${base}${base.includes("?") ? "&" : "?"}${rest}`;
+}
+
 function ConnectFlow({
   building,
   me,
@@ -191,8 +210,8 @@ function ConnectFlow({
   me: Me | null;
   returnTo: string;
 }) {
-  const location = useLocation();
   const navigate = useNavigate();
+  const { search } = useLocation();
   const queryClient = useQueryClient();
   const toast = useToast();
   const [draft, setDraft] = useState<ConnectDraft | undefined>(() => loadConnectDraft(building.id));
@@ -354,7 +373,9 @@ function ConnectFlow({
       <LoginStep
         draft={checked}
         returnTo={returnTo}
-        loginReturn={`${location.pathname}${location.search}`}
+        // 카카오에서 돌아올 곳은 이 건물의 연결 화면(돌아갈 곳 포함)으로 다시 만듭니다. 주소창 값을 그대로 쓰면
+        // 다시 인코딩된 `%2F`가 ReturnTo에 걸려 첫 화면으로 돌아갈 수 있습니다.
+        loginReturn={connectLoginReturn(building.id, returnTo, search)}
         onBack={backToCode}
       />
     );
@@ -653,7 +674,8 @@ function LoginStep({
           returnTo={loginReturn}
           label="카카오로 계속하기"
           hint="카카오 로그인은 거주 여부를 확인하는 절차가 아니에요"
-          demo={{ as: "demo-resident-b", label: "시연용 다음 입주자로 계속하기" }}
+          // 시연 계정으로는 연결할 수 없어(D-35: 실제 건물은 403, 발표 시연은 둘러보기 전용) 시연용 로그인을 두지 않습니다.
+          allowDemo={false}
           blocked={!all}
           blockedReason="필수 항목에 동의하면 계속할 수 있어요"
           consent={TERMS_VERSION}

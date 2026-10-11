@@ -15,7 +15,8 @@ import { Hono } from "hono";
 import { describeRoute, validator } from "hono-openapi";
 import { requireUser } from "../../lib/auth.ts";
 import type { AppEnv } from "../../lib/context.ts";
-import { errorResponses, jsonResponse, onInvalid } from "../../lib/errors.ts";
+import { isDemoAccount } from "../../lib/demoScope.ts";
+import { AppError, errorResponses, jsonResponse, onInvalid } from "../../lib/errors.ts";
 import * as noticeService from "./service.ts";
 
 export const noticeRoutes = new Hono<AppEnv>()
@@ -146,6 +147,10 @@ export const noticeRoutes = new Hono<AppEnv>()
     validator("json", PushSubscriptionBody, onInvalid),
     async (c) => {
       const user = requireUser(c);
+      // 시연 계정은 알림을 켤 수 없습니다(D-35). 같은 휴대폰의 실제 계정 구독(같은 endpoint)을 가져가지 않게 합니다.
+      if (await isDemoAccount(c.var.db, user.id)) {
+        throw new AppError(403, "FORBIDDEN", { account: "demo" });
+      }
       await noticeService.subscribe(c.var.db, user.id, c.req.valid("json"));
       return c.body(null, 204);
     },

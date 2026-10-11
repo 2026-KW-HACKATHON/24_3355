@@ -39,6 +39,7 @@ const detail: ManagedBuildingDetail = {
     name: "KW해커톤 전시관",
     displayAddress: "서울 노원구 광운로",
     status: "open",
+    demo: false,
     fullAddress: "서울 노원구 광운로 20",
     openedAt: "2026-10-01T01:00:00.000Z",
     confirmedAt: "2026-10-01T01:00:00.000Z",

@@ -8,6 +8,7 @@ import { Hami } from "../../components/Hami";
 import { Icon } from "../../components/Icon";
 import { BackButton, Dock, Screen, TopBar } from "../../components/Screen";
 import { Delayed, LoadError } from "../../components/ScreenState";
+import { useEndDemoOn } from "../../features/auth/endDemo";
 import { useMe } from "../../features/auth/queries";
 import { usePublicBuilding } from "../../features/buildings/queries";
 import { connectPath } from "../../features/occupancy/connectDraft";
@@ -22,6 +23,7 @@ export function Component() {
   const { buildingId = "" } = useParams();
   const me = useMe();
   const building = usePublicBuilding(buildingId);
+  useEndDemoOn(building.data);
 
   if (me.isError) {
     return (

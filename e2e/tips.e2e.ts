@@ -3,10 +3,19 @@
 // 남의 글은 신고(사유 한 줄, 신고만으로 가려지지 않음).
 //
 // 읽기·신고는 햇살빌라 시드 팁(입주자 A의 팁 1개 + 작성자 연결 없는 팁 3개)으로 봅니다(데이터는 신고 기록만
-// 남음). 쓰기·고치기·지우기와 빈 목록(18)은 테스트빌라에서 입주자 B로 하고, 끝나면 B의 팁은 남지 않습니다.
+// 남지 않음, 발표 시연은 둘러보기 전용). 신고·쓰기·고치기·지우기와 빈 목록(18)은 테스트빌라에서 e2e 계정 A·B로 하고,
+// 끝나면 팁은 남지 않습니다.
 import type { Locator, Page } from "@playwright/test";
 import { apiAs, deleteMyTips, ensureResident } from "./support/api";
-import { E2E_BUILDING, loginAs, RESIDENT_A, RESIDENT_B, SUNNY, stamp } from "./support/demo";
+import {
+  E2E_BUILDING,
+  E2E_RESIDENT_A,
+  E2E_RESIDENT_B,
+  loginAs,
+  RESIDENT_A,
+  SUNNY,
+  stamp,
+} from "./support/demo";
 import { sheet } from "./support/flows";
 import { expect, test } from "./support/test";
 
@@ -72,6 +81,42 @@ test.describe("생활 팁 목록(lofi 04)과 작성자 정책", () => {
   test("남의 팁은 한 줄 사유와 함께 신고하고, 신고만으로는 목록에서 사라지지 않는다", async ({
     page,
   }) => {
+    // 발표 시연(햇살빌라)은 둘러보기 전용이라(D-35) 테스트빌라에서 e2e 계정 A의 팁을 B가 신고합니다.
+    const writer = await ensureResident(E2E_RESIDENT_A, E2E_BUILDING.id);
+    const body = `분리수거 망은 계단 밑에 있어요 ${stamp()}`;
+    const created = await writer.post(`/api/buildings/${E2E_BUILDING.id}/tips`, {
+      data: { category: "recycling", body },
+    });
+    expect(created.status(), "남의 팁(준비)").toBe(201);
+    const resident = await ensureResident(E2E_RESIDENT_B, E2E_BUILDING.id);
+    try {
+      await loginAs(page, E2E_RESIDENT_B);
+      await page.goto(`/b/${E2E_BUILDING.id}/tips`);
+      await tipCard(page, body).getByRole("button", { name: "이 팁 신고하기" }).click();
+      const report = sheet(page, "이 팁을 신고할까요?");
+      await expect(report).toBeVisible();
+      await expect(report).toContainText("신고한 사람은 다른 거주자와 집주인에게 보이지");
+      const reason = report.getByRole("textbox", { name: /사유/ });
+      await reason.fill("특정인을 짐작할 수 있는\n내용이 있어요");
+      await expect(reason).not.toHaveValue(/\n/);
+      await report.getByRole("button", { name: "신고하기" }).click();
+
+      await expect(
+        page.getByText("신고를 받았어요. 운영팀이 확인할게요", { exact: true }),
+      ).toBeVisible();
+      await expect(report).toBeHidden();
+      await expect(tipCard(page, body)).toBeVisible();
+    } finally {
+      // 테스트빌라 팁 목록을 비워 둡니다(빈 목록 18 테스트).
+      await deleteMyTips(writer, E2E_BUILDING.id);
+      await writer.dispose();
+      await resident.dispose();
+    }
+  });
+
+  test("발표 시연(햇살빌라)에서는 신고해도 바꾸지 않고 둘러보기 안내를 보인다(D-35)", async ({
+    page,
+  }) => {
     await loginAs(page, RESIDENT_A);
     const other = (await tipsAs(page, SUNNY.id)).find((tip) => !tip.mine);
     if (!other) throw new Error("신고할 남의 팁이 없어요");
@@ -79,21 +124,9 @@ test.describe("생활 팁 목록(lofi 04)과 작성자 정책", () => {
     await page.goto(`/b/${SUNNY.id}/tips`);
     await tipCard(page, other.body).getByRole("button", { name: "이 팁 신고하기" }).click();
     const report = sheet(page, "이 팁을 신고할까요?");
-    await expect(report).toBeVisible();
-    await expect(report).toContainText("신고한 사람은 다른 거주자와 집주인에게 보이지");
-    const reason = report.getByRole("textbox", { name: /사유/ });
-    await reason.fill("특정인을 짐작할 수 있는\n내용이 있어요");
-    await expect(reason).not.toHaveValue(/\n/);
+    await report.getByRole("textbox", { name: /사유/ }).fill("시연에서 눌러 봐요");
     await report.getByRole("button", { name: "신고하기" }).click();
-
-    // 같은 팁을 이미 신고했으면(다시 돌린 테스트) ‘이미 신고한 팁이에요’입니다. 둘 다 운영팀이 확인한다는 뜻입니다.
-    await expect(
-      page.getByText(
-        /^(신고를 받았어요\. 운영팀이 확인할게요|이미 신고한 팁이에요\. 운영팀이 확인하고 있어요)$/,
-      ),
-    ).toBeVisible();
-    await expect(report).toBeHidden();
-    await expect(tipCard(page, other.body)).toBeVisible();
+    await expect(page.getByText("시연에서는 둘러보기만 할 수 있어요")).toBeVisible();
   });
 });
 
@@ -101,12 +134,12 @@ test.describe("생활 팁 쓰기·고치기·지우기(lofi 19 → 04, 18 없음
   test("빈 목록(18)에서 팁을 남기면 hami-mini 토스트와 ‘내 팁’이 보이고, 고치고 지우면 다시 빈 목록이다", async ({
     page,
   }) => {
-    const resident = await ensureResident(RESIDENT_B, E2E_BUILDING.id);
+    const resident = await ensureResident(E2E_RESIDENT_B, E2E_BUILDING.id);
     await deleteMyTips(resident, E2E_BUILDING.id);
     await resident.dispose();
     const first = `택배 상자는 펼쳐서 내놓으면 수거함이 덜 차요 ${stamp()}`;
     const edited = `${first} (고침)`;
-    await loginAs(page, RESIDENT_B);
+    await loginAs(page, E2E_RESIDENT_B);
 
     await test.step("18: 아직 남겨진 팁이 없어요(재촉하지 않음) → 남기기", async () => {
       await page.goto(`/b/${E2E_BUILDING.id}/tips`);
@@ -168,7 +201,7 @@ test.describe("생활 팁 쓰기·고치기·지우기(lofi 19 → 04, 18 없음
       ).toBeVisible();
     });
 
-    const check = await apiAs(RESIDENT_B);
+    const check = await apiAs(E2E_RESIDENT_B);
     try {
       const left = await check.get(`/api/buildings/${E2E_BUILDING.id}/tips`);
       expect(((await left.json()) as { tips: TipRow[] }).tips).toEqual([]);
@@ -187,7 +220,8 @@ test.describe("생활 팁 쓰기·고치기·지우기(lofi 19 → 04, 18 없음
     const connect = page.getByRole("link", { name: "우리 건물로 연결하기" });
     await expect(connect).toHaveAttribute(
       "href",
-      `/b/${E2E_BUILDING.id}/connect?returnTo=${encodeURIComponent(`/b/${E2E_BUILDING.id}/tips`)}`,
+      // 돌아갈 곳의 `/`는 인코딩하지 않습니다(`%2F`는 로그인 돌아올 곳 ReturnTo가 받지 않음, D-35).
+      `/b/${E2E_BUILDING.id}/connect?returnTo=/b/${E2E_BUILDING.id}/tips`,
     );
   });
 
@@ -196,10 +230,10 @@ test.describe("생활 팁 쓰기·고치기·지우기(lofi 19 → 04, 18 없음
   }) => {
     // lofi 04는 토스트를 dock 위에 띄웁니다. QA 2차 때 토스트가 화면 맨 아래에서 3초 동안 ‘생활 팁 남기기’를
     // 덮었고(겹침 56px), Dock·탭바를 Snackbar.AvoidOverlap으로 감싸 고쳐졌습니다.
-    const resident = await ensureResident(RESIDENT_B, E2E_BUILDING.id);
+    const resident = await ensureResident(E2E_RESIDENT_B, E2E_BUILDING.id);
     await deleteMyTips(resident, E2E_BUILDING.id);
     try {
-      await loginAs(page, RESIDENT_B);
+      await loginAs(page, E2E_RESIDENT_B);
       await page.goto(`/b/${E2E_BUILDING.id}/tips/new`);
       await page.getByRole("radio", { name: "겨울" }).check();
       await page

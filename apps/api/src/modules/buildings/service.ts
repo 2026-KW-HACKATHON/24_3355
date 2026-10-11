@@ -13,7 +13,12 @@ import {
 } from "@wolgyeham/contracts";
 import { createToken, hashToken, isManager, requireManager } from "../../lib/auth.ts";
 import { type Database, isUniqueViolation } from "../../lib/db.ts";
-import { assertDemoScope } from "../../lib/demoScope.ts";
+import {
+  assertDemoScope,
+  demoReadOnlyError,
+  isDemoBuilding,
+  isReadOnlyDemoBuilding,
+} from "../../lib/demoScope.ts";
 import { AppError } from "../../lib/errors.ts";
 import { log } from "../../lib/log.ts";
 import * as repo from "./repo.ts";
@@ -97,7 +102,7 @@ function assertUsable(invite: Invite | undefined): asserts invite is Invite {
 export async function previewInvite(db: Database, token: string): Promise<ManagerInvitePreview> {
   const invite = await repo.findInviteByTokenHash(db, hashToken(token));
   assertUsable(invite);
-  return { buildingName: invite.buildingName };
+  return { buildingName: invite.buildingName, demo: isDemoBuilding(invite.buildingId) };
 }
 
 /** 수락과 building_managers 생성은 한 트랜잭션입니다. 이미 관리자면 초대 상태를 바꾸지 않습니다. */
@@ -112,6 +117,8 @@ export function acceptInvite(
       return { buildingId: invite.buildingId, alreadyManager: true };
     }
     assertUsable(invite);
+    // 발표 시연 건물(새봄하우스 등)은 둘러보기 전용이라 누구도 초대로 관리자가 되지 않습니다(D-35).
+    if (isReadOnlyDemoBuilding(invite.buildingId)) throw demoReadOnlyError();
     await assertDemoScope(tx, userId, invite.buildingId);
     if (!(await repo.markInviteAccepted(tx, invite.id, userId))) {
       throw new AppError(409, "CONFLICT");

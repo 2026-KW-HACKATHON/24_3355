@@ -2,16 +2,35 @@
 // lofi 45 내 정보 → 08 이사 확인 → 09 연결 종료 → (A) 01 공개 화면은 그대로, 팁 44·메모 쓰기 막힘
 // → (B) 01 → 02 → 16 → 연결 → 17 → 10 거주자 홈: 같은 건물의 안내·팁(A의 팁은 작성자 없이 남음)
 //
-// 이 흐름은 시연 이야기 그대로 햇살빌라에서 합니다. 입주자 A의 연결을 끝내므로 끝나면(성공·실패 모두)
-// B의 연결을 끝내고 A를 가입코드로 다시 연결해 둡니다(연결 id는 바뀜, 완전한 복원은 `--reset-demo`).
+// 발표 시연(햇살빌라)은 둘러보기 전용이라(D-35) 이 흐름은 테스트빌라에서 e2e 계정 A·B로 합니다. A는 팁 하나를
+// 남긴 거주자로 시작하고, 끝나면(성공·실패 모두) B의 연결을 끝내고 A를 다시 연결해 그 팁을 지운 뒤 연결도 끝냅니다
+// (생활 팁 빈 목록 18 테스트가 테스트빌라를 빈 목록으로 봄).
 import type { APIRequestContext } from "@playwright/test";
-import { apiAs, ensureResident, joinCodeOf, meOf, moveOutIfConnected } from "./support/api";
-import { loginAs, publishedGuides, RESIDENT_A, RESIDENT_B, SUNNY } from "./support/demo";
+import {
+  apiAs,
+  deleteMyTips,
+  ensureResident,
+  joinCodeOf,
+  meOf,
+  moveOutIfConnected,
+} from "./support/api";
+import {
+  E2E_BUILDING,
+  E2E_LANDLORD,
+  E2E_RESIDENT_A,
+  E2E_RESIDENT_B,
+  loginAs,
+  publishedGuides,
+  stamp,
+} from "./support/demo";
 import { connectWithCode, sheet } from "./support/flows";
 import { expect, guideLink, hideDevOverlays, test } from "./support/test";
 
+const SUNNY = E2E_BUILDING;
+const RESIDENT_A = E2E_RESIDENT_A;
+const RESIDENT_B = E2E_RESIDENT_B;
 const home = `/b/${SUNNY.id}`;
-const SUNNY_LANDLORD = "demo-landlord";
+const SUNNY_LANDLORD = E2E_LANDLORD;
 
 type TipRow = { id: string; body: string; mine: boolean };
 
@@ -19,8 +38,13 @@ let landlord: APIRequestContext;
 
 test.beforeAll(async () => {
   landlord = await apiAs(SUNNY_LANDLORD);
-  // A는 햇살빌라 거주자, B는 연결 없음에서 시작합니다.
+  // A는 테스트빌라 거주자(팁 하나), B는 연결 없음에서 시작합니다.
   const a = await ensureResident(RESIDENT_A, SUNNY.id, SUNNY_LANDLORD);
+  await deleteMyTips(a, SUNNY.id);
+  const tip = await a.post(`/api/buildings/${SUNNY.id}/tips`, {
+    data: { category: "parcel", body: `택배는 관리실 앞 선반이 편해요 ${stamp()}` },
+  });
+  expect(tip.status(), "A의 팁(준비)").toBe(201);
   await a.dispose();
   const b = await apiAs(RESIDENT_B);
   await moveOutIfConnected(b);
@@ -32,6 +56,8 @@ test.afterAll(async () => {
   await moveOutIfConnected(b);
   await b.dispose();
   const a = await ensureResident(RESIDENT_A, SUNNY.id, SUNNY_LANDLORD);
+  await deleteMyTips(a, SUNNY.id);
+  await moveOutIfConnected(a);
   await a.dispose();
   await landlord.dispose();
 });

@@ -16,6 +16,7 @@ import { Icon } from "../../components/Icon";
 import { LeaveConfirm } from "../../components/LeaveConfirm";
 import { BackButton, Dock, Screen, SoonNote, TopBar } from "../../components/Screen";
 import { Delayed, EmptyState, LoadError } from "../../components/ScreenState";
+import { useEndDemoOn } from "../../features/auth/endDemo";
 import { usePublicBuilding } from "../../features/buildings/queries";
 import { REPORT_KIND_LABEL, REPORT_LOCATION_LABEL } from "../../features/reports/labels";
 import { ReportConfirmSheet, type ReportDraft } from "../../features/reports/ReportConfirmSheet";
@@ -32,6 +33,8 @@ export function Component() {
   const { buildingId = "" } = useParams();
   const building = usePublicBuilding(buildingId);
   const home = `/b/${buildingId}`;
+  // 시연 계정으로 실제 건물에 알리러 오면 시연을 끝내고 비회원처럼 보냅니다(D-35).
+  useEndDemoOn(building.data);
 
   if (building.isError) {
     const { code } = toAppError(building.error);

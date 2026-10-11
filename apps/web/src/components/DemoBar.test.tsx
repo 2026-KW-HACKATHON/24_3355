@@ -1,11 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { DEMO_USERS, type DemoUser } from "@wolgyeham/contracts";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { demoBarLabel, readDemoRole, saveDemoRole } from "../features/auth/demoRole";
+import { describe, expect, it, vi } from "vitest";
+import { DEMO_USER_LABELS, demoBarLabel, demoEndPath } from "../features/auth/demoRole";
 import { authKeys } from "../features/auth/queries";
 import { testUser } from "../test/me";
-import { memoryStorage } from "../test/memoryStorage";
 import { DemoBar } from "./DemoBar";
 
 vi.mock("../lib/api", () => ({
@@ -17,56 +17,51 @@ vi.mock("../lib/api", () => ({
 }));
 
 const USER = "5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f99";
-const mark = { userId: USER, label: "입주자 A" };
-
-beforeEach(() => {
-  vi.stubGlobal("sessionStorage", memoryStorage());
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
 
 describe("demo bar condition", () => {
-  const base = { pathname: "/b/x", available: true, userId: USER, mark };
+  it("shows the role of the signed-in demo account, in any tab", () => {
+    expect(demoBarLabel({ pathname: "/b/x", demo: "demo-resident-a" })).toBe("입주자 A");
+    expect(demoBarLabel({ pathname: "/b/x", demo: "demo-landlord" })).toBe("집주인");
+    expect(demoBarLabel({ pathname: "/b/x", demo: "demo-resident-b" })).toBe("다음 입주자 B");
+    expect(demoBarLabel({ pathname: "/b/x", demo: "demo-e2e-landlord" })).toBe("테스트빌라 집주인");
+  });
 
-  it("shows the chosen role only for that demo account in demo mode", () => {
-    expect(demoBarLabel(base)).toBe("입주자 A");
-    expect(demoBarLabel({ ...base, available: false })).toBeUndefined();
-    expect(demoBarLabel({ ...base, available: undefined })).toBeUndefined();
-    expect(demoBarLabel({ ...base, userId: undefined })).toBeUndefined();
-    expect(demoBarLabel({ ...base, mark: undefined })).toBeUndefined();
-    // 같은 탭에서 카카오로 다른 계정에 로그인했으면 숨깁니다.
-    expect(demoBarLabel({ ...base, userId: "someone-else" })).toBeUndefined();
+  it("stays hidden for real accounts and signed-out visitors", () => {
+    expect(demoBarLabel({ pathname: "/b/x", demo: null })).toBeUndefined();
+    expect(demoBarLabel({ pathname: "/b/x", demo: undefined })).toBeUndefined();
   });
 
   it("hides on the demo start and the legal pages", () => {
     for (const pathname of ["/demo", "/demo/", "/terms", "/privacy"]) {
-      expect(demoBarLabel({ ...base, pathname })).toBeUndefined();
+      expect(demoBarLabel({ pathname, demo: "demo-resident-a" })).toBeUndefined();
     }
-    expect(demoBarLabel({ ...base, pathname: "/" })).toBe("입주자 A");
+    expect(demoBarLabel({ pathname: "/", demo: "demo-resident-a" })).toBe("입주자 A");
   });
 
-  it("ignores a broken mark in storage", () => {
-    sessionStorage.setItem("wh.demoRole", "{oops");
-    expect(readDemoRole()).toBeUndefined();
-    sessionStorage.setItem("wh.demoRole", JSON.stringify({ userId: USER }));
-    expect(readDemoRole()).toBeUndefined();
-    saveDemoRole(mark);
-    expect(readDemoRole()).toEqual(mark);
+  it("ends the demo on the public page of the building in view, otherwise the home", () => {
+    expect(demoEndPath("/b/abc")).toBe("/b/abc");
+    expect(demoEndPath("/b/abc/guides/g1")).toBe("/b/abc");
+    expect(demoEndPath("/manage/abc/inbox")).toBe("/b/abc");
+    expect(demoEndPath("/me")).toBe("/");
+    expect(demoEndPath("/")).toBe("/");
+  });
+
+  it("has a label for every demo account", () => {
+    for (const as of DEMO_USERS) expect(DEMO_USER_LABELS[as]).toBeTruthy();
   });
 });
 
 describe("DemoBar", () => {
-  function render(pathname: string, available: boolean, signedIn = true) {
+  function render(pathname: string, demo: DemoUser | null | "signed-out") {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false, staleTime: Number.POSITIVE_INFINITY } },
     });
     queryClient.setQueryData(
       authKeys.me(),
-      signedIn ? { user: testUser(USER), managedBuildings: [], occupancy: null } : null,
+      demo === "signed-out"
+        ? null
+        : { user: testUser(USER, { demo }), managedBuildings: [], occupancy: null },
     );
-    queryClient.setQueryData(authKeys.demo(), available);
     return renderToStaticMarkup(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={[pathname]}>
@@ -77,23 +72,17 @@ describe("DemoBar", () => {
   }
 
   it("says which role is on and links back to the demo start", () => {
-    // Given
-    saveDemoRole({ userId: USER, label: "집주인" });
-    // When
-    const html = render("/manage/x", true);
-    // Then
+    const html = render("/manage/x", "demo-landlord");
     expect(html).toContain('aria-label="시연 안내"');
     expect(html).toContain("시연 중 · 집주인");
     expect(html).toContain('href="/demo"');
     expect(html).toContain("역할 바꾸기");
+    expect(html).toContain("시연 끝내기");
   });
 
-  it("stays hidden outside demo mode, without a mark, signed out, or on /demo", () => {
-    saveDemoRole(mark);
-    expect(render("/b/x", false)).toBe("");
-    expect(render("/b/x", true, false)).toBe("");
-    expect(render("/demo", true)).toBe("");
-    sessionStorage.clear();
-    expect(render("/b/x", true)).toBe("");
+  it("stays hidden for a real account, signed out, or on /demo", () => {
+    expect(render("/b/x", null)).toBe("");
+    expect(render("/b/x", "signed-out")).toBe("");
+    expect(render("/demo", "demo-resident-a")).toBe("");
   });
 });

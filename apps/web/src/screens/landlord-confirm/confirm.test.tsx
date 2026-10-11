@@ -31,6 +31,7 @@ function detail(overrides: Partial<ManagedBuildingDetail["building"]> = {}, guid
       name: "준비빌라",
       displayAddress: "서울 노원구 월계동 OO길",
       status: "preparing",
+      demo: false,
       fullAddress: "서울 노원구 월계동 123-4",
       openedAt: null,
       confirmedAt: null,

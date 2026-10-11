@@ -6,6 +6,7 @@ import { Link, Navigate, useParams } from "react-router";
 import { Icon } from "../../components/Icon";
 import { BackButton, Dock, Screen, TopBar } from "../../components/Screen";
 import { Delayed, EmptyState, LoadError, SkeletonLines } from "../../components/ScreenState";
+import { useEndDemoOn } from "../../features/auth/endDemo";
 import { useMe } from "../../features/auth/queries";
 import { usePublicBuilding } from "../../features/buildings/queries";
 import { recordNoticeOpened, useNotice } from "../../features/notices/queries";
@@ -19,6 +20,7 @@ export function Component() {
   const { buildingId = "", noticeId = "" } = useParams();
   const notice = useNotice(noticeId);
   const home = `/b/${buildingId}`;
+  useEndDemoOn(buildingId);
 
   if (notice.isError) {
     const { code } = toAppError(notice.error);

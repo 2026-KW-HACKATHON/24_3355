@@ -12,9 +12,9 @@ import { apiAs, ensureResident, reportsOf } from "./support/api";
 import {
   E2E_BUILDING,
   E2E_LANDLORD,
+  E2E_RESIDENT_B,
   loginAs,
   loginAsE2eLandlord,
-  RESIDENT_B,
   SUNNY,
   stamp,
 } from "./support/demo";
@@ -216,9 +216,9 @@ test.describe("비회원 제보(LF-10·11·16, lofi 01 → 20 → 06 → 30 → 
     // 비회원 제보는 같은 IP·건물에 한 시간 10건까지라, 이 테스트는 로그인한 입주자 B로 보내 비회원 몫을 아낍니다
     // (06의 접수 화면·상태 전환은 보낸 사람이 누구든 같음).
     const text = `분리수거함 옆 봉투가 골목까지 나와 있어요 ${stamp()}`;
-    const resident = await ensureResident(RESIDENT_B, E2E_BUILDING.id);
+    const resident = await ensureResident(E2E_RESIDENT_B, E2E_BUILDING.id);
     await resident.dispose();
-    await loginAs(page, RESIDENT_B);
+    await loginAs(page, E2E_RESIDENT_B);
 
     // 거주자 홈(03)의 ‘집주인에게 알리기’ → 고르기 시트 → 직접 적기(05)
     await page.goto(home);

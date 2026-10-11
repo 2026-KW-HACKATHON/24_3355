@@ -10,6 +10,11 @@ const ConnectedNotifyPrompt = lazy(() =>
   import("./ConnectedNotifyPrompt").then((module) => ({ default: module.ConnectedNotifyPrompt })),
 );
 
+// 시연을 끝냈을 때의 토스트(D-35). 토스트 라이브러리를 첫 화면 번들에 넣지 않게 따로 불러옵니다.
+const DemoEndedToast = lazy(() =>
+  import("../features/auth/DemoEndedToast").then((module) => ({ default: module.DemoEndedToast })),
+);
+
 // 약관 다시 동의 시트(D-28)도 지금 판에 동의하지 않은 로그인 사용자에게만 필요해서 그때 불러옵니다.
 const TermsConsentPrompt = lazy(() =>
   import("../features/auth/TermsConsentSheet").then((module) => ({
@@ -131,8 +136,11 @@ export function RootLayout() {
   const connected = readConnectedState(state);
   return (
     <div className="wh-app" ref={root}>
-      {/* 시연 역할로 둘러보는 탭에서만 보이는 막대. 화면 위에 자리를 차지해 상단 막대를 가리지 않습니다. */}
+      {/* 시연 계정으로 로그인했을 때 보이는 막대. 화면 위에 자리를 차지해 상단 막대를 가리지 않습니다. */}
       <DemoBar />
+      <Suspense fallback={null}>
+        <DemoEndedToast />
+      </Suspense>
       <Outlet />
       {connected ? (
         <Suspense fallback={null}>

@@ -6,6 +6,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { Brand, LargeModeToggle, Screen, TopBar } from "../components/Screen";
 import { Delayed } from "../components/ScreenState";
+import { useEndDemoOn } from "../features/auth/endDemo";
 import { useMe } from "../features/auth/queries";
 import { BuildingSkeleton } from "../features/buildings/BuildingSkeleton";
 import { usePublicBuilding, usePublicGuides } from "../features/buildings/queries";
@@ -61,6 +62,8 @@ export function Component() {
   const building = usePublicBuilding(buildingId);
   usePublicGuides(buildingId);
   useNotices(buildingId);
+  // 시연 계정으로 실제 건물을 열면 시연을 끝내고 처음 온 사람처럼 봅니다(D-35).
+  const endingDemo = useEndDemoOn(building.data);
   const [waited, setWaited] = useState(false);
 
   useEffect(() => {
@@ -69,7 +72,7 @@ export function Component() {
     return () => window.clearTimeout(timer);
   }, [me.isPending]);
 
-  if (me.isPending && !(waited && building.isSuccess)) return <Loading />;
+  if (endingDemo || (me.isPending && !(waited && building.isSuccess))) return <Loading />;
   const resident = me.data?.occupancy?.buildingId === buildingId;
   // 공개 화면에는 판정한 `me`를 넘깁니다. 공개 화면이 다시 useMe를 부르면 실패한 /api/me를 마운트마다
   // 다시 보내 pending ↔ error를 오가며 이 화면과 로딩을 반복했습니다(리뷰 H1).

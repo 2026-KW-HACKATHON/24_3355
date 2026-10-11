@@ -7,7 +7,12 @@ import type {
   ReportStatus,
 } from "@wolgyeham/contracts";
 import type { IconName } from "../../components/Icon";
-import { type AppError, errorMessage } from "../../lib/errors";
+import {
+  type AppError,
+  DEMO_READONLY_MESSAGE,
+  errorMessage,
+  isDemoReadOnly,
+} from "../../lib/errors";
 
 // 제보(LF-10·11·16)의 화면 문구. 상태는 색과 글자를 함께 씁니다(frontend.md §7).
 
@@ -109,6 +114,7 @@ export function reportSendError(
   error: AppError,
   { afterUnknown = false }: { afterUnknown?: boolean } = {},
 ): string {
+  if (isDemoReadOnly(error)) return DEMO_READONLY_MESSAGE;
   const minutes = minutesLeft(error);
   switch (error.code) {
     case "REPORT_TOO_FREQUENT":

@@ -37,6 +37,17 @@ const actions: NotifyActions = {
 };
 
 describe("notification choice (17) states", () => {
+  it("tells a demo account that it cannot turn notifications on (D-35)", () => {
+    // When
+    const html = renderToStaticMarkup(
+      <NotifyChoiceBody env={{ kind: "available" }} context="settings" actions={actions} demo />,
+    );
+    // Then
+    expect(html).toContain("시연 계정에서는 알림을 켤 수 없어요");
+    expect(html).not.toContain("알림 받기");
+    expect(html).toContain("닫기");
+  });
+
   it("waits for the server key instead of offering a button that would fail", () => {
     // When
     const html = renderToStaticMarkup(

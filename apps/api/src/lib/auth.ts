@@ -1,10 +1,10 @@
 import { createHash, randomBytes } from "node:crypto";
-import type { OccupancyStatus } from "@wolgyeham/contracts";
+import { DEMO_USERS, type OccupancyStatus } from "@wolgyeham/contracts";
 import { and, eq, gt, ne } from "drizzle-orm";
 import type { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
-import { buildingManagers, occupancies, sessions } from "../db/schema.ts";
+import { buildingManagers, occupancies, sessions, users } from "../db/schema.ts";
 import type { AppEnv, SessionUser } from "./context.ts";
 import type { Database } from "./db.ts";
 import type { Env } from "./env.ts";
@@ -16,6 +16,13 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const SESSION_DAYS = 30;
 /** 쓰면서 연장해도 로그인한 날부터 이 기간이 지나면 끝납니다. */
 const SESSION_MAX_DAYS = 90;
+/**
+ * 시연 계정 세션(`POST /dev/login`)의 길이. 연장하지 않고 로그인한 때부터 이 시간이 지나면 끝납니다(D-35).
+ * 포스터 QR로 시연을 본 휴대폰에 시연 세션이 오래 남지 않게 합니다.
+ */
+export const DEMO_SESSION_MS = 3 * 60 * 60 * 1000;
+/** 시연 계정의 카카오 자리 값(lib/demoScope와 같음. db/demo.ts가 이 파일을 불러 순환을 피하려고 따로 둠). */
+const DEMO_KAKAO_IDS: ReadonlySet<string> = new Set(DEMO_USERS);
 
 /** 32바이트 난수 토큰(base64url). 세션·초대 토큰에 씁니다. */
 export function createToken(): string {
@@ -48,27 +55,34 @@ export function isSameOriginRequest(c: Context<AppEnv>): boolean {
   }
 }
 
-function setSessionCookie(c: Context<AppEnv>, token: string) {
+function setSessionCookie(c: Context<AppEnv>, token: string, maxAgeMs = SESSION_DAYS * DAY_MS) {
   setCookie(c, SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "Lax",
     path: "/",
     secure: isSecureOrigin(c.var.env),
-    maxAge: SESSION_DAYS * 24 * 60 * 60,
+    maxAge: Math.floor(maxAgeMs / 1000),
   });
 }
 
-/** 요청에 있던 세션은 먼저 끝내고 새 세션을 만듭니다(로그인할 때마다 토큰이 바뀜). */
-export async function startSession(c: Context<AppEnv>, userId: string) {
+/**
+ * 요청에 있던 세션은 먼저 끝내고 새 세션을 만듭니다(로그인할 때마다 토큰이 바뀜). 시연 로그인은
+ * `lifetimeMs: DEMO_SESSION_MS`로 짧은 세션을 만듭니다.
+ */
+export async function startSession(
+  c: Context<AppEnv>,
+  userId: string,
+  { lifetimeMs = SESSION_DAYS * DAY_MS }: { lifetimeMs?: number } = {},
+) {
   const previous = getCookie(c, SESSION_COOKIE);
   if (previous) await c.var.db.delete(sessions).where(eq(sessions.tokenHash, hashToken(previous)));
   const token = createToken();
   await c.var.db.insert(sessions).values({
     userId,
     tokenHash: hashToken(token),
-    expiresAt: new Date(Date.now() + SESSION_DAYS * DAY_MS),
+    expiresAt: new Date(Date.now() + lifetimeMs),
   });
-  setSessionCookie(c, token);
+  setSessionCookie(c, token, lifetimeMs);
 }
 
 export async function endSession(c: Context<AppEnv>) {
@@ -77,7 +91,10 @@ export async function endSession(c: Context<AppEnv>) {
   deleteCookie(c, SESSION_COOKIE, { path: "/", secure: isSecureOrigin(c.var.env) });
 }
 
-/** 쿠키가 있을 때만 세션을 조회해 `c.var.user`를 채웁니다. 연장(rolling)은 하루 한 번 이하로 씁니다. */
+/**
+ * 쿠키가 있을 때만 세션을 조회해 `c.var.user`를 채웁니다. 연장(rolling)은 하루 한 번 이하로 씁니다. 시연 계정의
+ * 세션은 연장하지 않고, 이전에 길게 만든 것이라도 로그인한 때부터 `DEMO_SESSION_MS`가 지나면 끝난 것으로 봅니다.
+ */
 export const sessionMiddleware = createMiddleware<AppEnv>(async (c, next) => {
   c.set("user", null);
   const token = getCookie(c, SESSION_COOKIE);
@@ -89,8 +106,10 @@ export const sessionMiddleware = createMiddleware<AppEnv>(async (c, next) => {
         userId: sessions.userId,
         lastSeenAt: sessions.lastSeenAt,
         createdAt: sessions.createdAt,
+        kakaoUserId: users.kakaoUserId,
       })
       .from(sessions)
+      .innerJoin(users, eq(users.id, sessions.userId))
       .where(
         and(
           eq(sessions.tokenHash, hashToken(token)),
@@ -99,9 +118,14 @@ export const sessionMiddleware = createMiddleware<AppEnv>(async (c, next) => {
         ),
       )
       .limit(1);
-    if (session) {
+    const demo = session ? DEMO_KAKAO_IDS.has(session.kakaoUserId) : false;
+    const demoExpired =
+      session !== undefined &&
+      demo &&
+      now.getTime() - session.createdAt.getTime() >= DEMO_SESSION_MS;
+    if (session && !demoExpired) {
       c.set("user", { id: session.userId, sessionId: session.id });
-      if (now.getTime() - session.lastSeenAt.getTime() >= DAY_MS) {
+      if (!demo && now.getTime() - session.lastSeenAt.getTime() >= DAY_MS) {
         await c.var.db
           .update(sessions)
           .set({

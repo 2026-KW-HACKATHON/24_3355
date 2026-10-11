@@ -1,6 +1,7 @@
 import { type DevLoginBody, TERMS_VERSION } from "@wolgyeham/contracts";
 import { z } from "zod";
 import type { Database } from "../../lib/db.ts";
+import { demoUserOf } from "../../lib/demoScope.ts";
 import type { Env } from "../../lib/env.ts";
 import { AppError } from "../../lib/errors.ts";
 import * as repo from "./repo.ts";
@@ -111,7 +112,10 @@ export async function findDemoUser(db: Database, as: DevLoginBody["as"]) {
   return userId;
 }
 
-/** 내 약관 동의 상태(`/me`). `termsUpToDate`는 지금 판(`TERMS_VERSION`)에 동의했는지입니다. */
+/**
+ * 내 약관 동의 상태와 시연 계정 여부(`/me`의 `user`). `termsUpToDate`는 지금 판(`TERMS_VERSION`)에 동의했는지,
+ * `demo`는 시연 계정이면 그 이름이고 실제 계정이면 null입니다(D-35).
+ */
 export async function getTermsConsent(db: Database, userId: string) {
   const row = await repo.findTermsConsent(db, userId);
   const termsVersion = row?.termsVersion ?? null;
@@ -119,6 +123,7 @@ export async function getTermsConsent(db: Database, userId: string) {
     termsVersion,
     termsAgreedAt: row?.termsAgreedAt?.toISOString() ?? null,
     termsUpToDate: termsVersion === TERMS_VERSION,
+    demo: row ? demoUserOf(row.kakaoUserId) : null,
   };
 }
 

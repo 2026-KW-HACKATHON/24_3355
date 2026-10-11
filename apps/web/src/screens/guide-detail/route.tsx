@@ -7,6 +7,7 @@ import { useAutoSheetTurn } from "../../components/autoSheet";
 import { Icon } from "../../components/Icon";
 import { BackButton, Screen, TopBar } from "../../components/Screen";
 import { Delayed, EmptyState, LoadError, SkeletonLines } from "../../components/ScreenState";
+import { useEndDemoOn } from "../../features/auth/endDemo";
 import { useMe } from "../../features/auth/queries";
 import { CATEGORY } from "../../features/guides/categories";
 import { GuideBody } from "../../features/guides/GuideBody";
@@ -33,6 +34,7 @@ export function Component() {
   const { buildingId = "", guideId = "" } = useParams();
   const guide = useGuide(guideId);
   const home = `/b/${buildingId}`;
+  useEndDemoOn(buildingId);
 
   if (guide.isError) {
     const { code } = toAppError(guide.error);

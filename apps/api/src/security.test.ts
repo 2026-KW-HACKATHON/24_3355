@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
-import { guides, sessions } from "./db/schema.ts";
-import { createToken, hashToken, SESSION_COOKIE } from "./lib/auth.ts";
+import { guides, sessions, users } from "./db/schema.ts";
+import { createToken, DEMO_SESSION_MS, hashToken, SESSION_COOKIE } from "./lib/auth.ts";
 import {
   createGuide,
   createManagedBuilding,
@@ -123,6 +123,45 @@ describe("sessions", () => {
     const [stored] = await t.db.select().from(sessions).where(eq(sessions.tokenHash, tokenHash));
     const cap = Date.now() - 85 * DAY_MS + 90 * DAY_MS;
     expect(stored?.expiresAt.getTime()).toBeLessThanOrEqual(cap + 1000);
+  });
+
+  it("never extends a demo session and ends it 3 hours after login (D-35)", async () => {
+    // Given: 시연 계정(시드 이름과 같은 kakao_user_id)의 세션. 길게 남은 예전 세션도 같은 규칙입니다.
+    const [existing] = await t.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.kakaoUserId, "demo-resident-b"))
+      .limit(1);
+    const userId =
+      existing?.id ??
+      (await t.db.insert(users).values({ kakaoUserId: "demo-resident-b" }).returning())[0]?.id ??
+      "";
+    const fresh = await insertSession({
+      userId,
+      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      lastSeenAt: new Date(Date.now() - 2 * DAY_MS),
+    });
+    const old = await insertSession({
+      userId,
+      createdAt: new Date(Date.now() - DEMO_SESSION_MS - 60_000),
+      lastSeenAt: new Date(),
+    });
+    const [before] = await t.db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.tokenHash, fresh.tokenHash));
+    // When
+    const used = await t.app.request("/api/me", withCookie(fresh.cookie));
+    const expired = await t.app.request("/api/me", withCookie(old.cookie));
+    // Then
+    expect(used.status).toBe(200);
+    expect(cookiePair(used, SESSION_COOKIE)).toBeUndefined();
+    const [after] = await t.db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.tokenHash, fresh.tokenHash));
+    expect(after?.expiresAt.getTime()).toBe(before?.expiresAt.getTime());
+    expect(expired.status).toBe(401);
   });
 
   it("ends a session 90 days after login even if it was used every day", async () => {

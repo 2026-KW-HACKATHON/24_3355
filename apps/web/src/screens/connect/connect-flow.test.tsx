@@ -9,7 +9,7 @@ import { buildingKeys } from "../../features/buildings/queries";
 import { saveConnectDraft } from "../../features/occupancy/connectDraft";
 import { testUser } from "../../test/me";
 import { memoryStorage } from "../../test/memoryStorage";
-import { Component as ConnectScreen } from "./route";
+import { Component as ConnectScreen, connectLoginReturn } from "./route";
 
 // SEED 컴포넌트는 CSS를 함께 불러와 node에서 읽을 수 없어, 글자와 disabled만 남기는 대역으로 바꿉니다.
 vi.mock("@seed-design/react", () => {
@@ -41,6 +41,7 @@ const building: PublicBuilding = {
   name: "햇살빌라",
   displayAddress: "서울 노원구 월계동 OO길",
   status: "open",
+  demo: false,
 };
 
 function occupancy(overrides: Partial<MeOccupancy> = {}): MeOccupancy {
@@ -130,5 +131,53 @@ describe("connect (LF-04) paths", () => {
     expect(html).toContain('aria-label="서비스 이용약관 보기"');
     expect(html).toContain('aria-label="개인정보 수집·이용 보기"');
     expect(html).not.toMatch(/<label[^>]*>(?:(?!<\/label>).)*<button/s);
+  });
+
+  it("resumes at 2/2 after Kakao login even when the browser comes back in a new tab", () => {
+    // Given: 1/2에서 확인한 코드를 남기고 카카오 로그인으로 갔습니다.
+    saveConnectDraft({
+      buildingId: BUILDING_ID,
+      buildingName: "햇살빌라",
+      code: "WK72P4",
+      returnTo: `/b/${BUILDING_ID}`,
+    });
+    // When: 안드로이드에서 카카오톡 앱을 거쳐 새 탭으로 돌아오면 탭 저장소(sessionStorage)는 비어 있습니다.
+    vi.stubGlobal("sessionStorage", memoryStorage());
+    const html = render(me(null));
+    // Then: 코드 단계가 아니라 2/2 확인 화면, 누르기 전에는 보내지 않는 연결 버튼 하나
+    expect(html).toContain("2 / 2 · 연결 확인");
+    expect(html).toContain("연결할까요?");
+    expect(html.match(/햇살빌라에 연결하기/g)).toHaveLength(1);
+    expect(html).not.toContain("이 건물에 살고 있나요?");
+  });
+
+  it("does not show the move screen to a demo account on a real building (D-35)", () => {
+    // Given: 시연 입주자 A(햇살빌라 연결)가 실제 건물(demo: false)의 연결 화면을 엽니다.
+    const demo: Me = {
+      ...me(occupancy({ buildingId: "5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f02" })),
+      user: testUser("user-a", { demo: "demo-resident-a" }),
+    };
+    // When
+    const html = render(demo);
+    // Then: 시연을 끝내는 동안 기다리고, ‘옮길까요’로 가지 않습니다.
+    expect(html).toContain('aria-busy="true"');
+    expect(html).not.toContain("옮길까요");
+  });
+});
+
+describe("Kakao return path from the connect screen", () => {
+  it("rebuilds the connect URL and keeps other query values such as via=qr", () => {
+    const home = `/b/${BUILDING_ID}`;
+    expect(connectLoginReturn(BUILDING_ID, home, "")).toBe(`${home}/connect`);
+    expect(connectLoginReturn(BUILDING_ID, home, "?via=qr&login=failed")).toBe(
+      `${home}/connect?via=qr`,
+    );
+    expect(
+      connectLoginReturn(
+        BUILDING_ID,
+        `${home}/tips`,
+        `?returnTo=%2Fb%2F${BUILDING_ID}%2Ftips&via=qr`,
+      ),
+    ).toBe(`${home}/connect?returnTo=${home}/tips&via=qr`);
   });
 });

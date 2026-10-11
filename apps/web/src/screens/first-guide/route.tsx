@@ -7,6 +7,7 @@ import { Hami } from "../../components/Hami";
 import { Icon } from "../../components/Icon";
 import { Dock, Screen, TopBar, useGoBack } from "../../components/Screen";
 import { Delayed, EmptyState, LoadError } from "../../components/ScreenState";
+import { useEndDemoOn } from "../../features/auth/endDemo";
 import { useMe } from "../../features/auth/queries";
 import { BuildingNotFound } from "../../features/buildings/BuildingNotFound";
 import { usePublicBuilding, usePublicGuides } from "../../features/buildings/queries";
@@ -19,6 +20,7 @@ export function Component() {
   const { buildingId = "" } = useParams();
   const building = usePublicBuilding(buildingId);
   const guides = usePublicGuides(buildingId);
+  useEndDemoOn(building.data);
   const home = `/b/${buildingId}`;
 
   if (building.isError) {

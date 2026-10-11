@@ -25,6 +25,7 @@ import { LeaveConfirm } from "../../components/LeaveConfirm";
 import { BackButton, Screen, TopBar } from "../../components/Screen";
 import { Delayed, EmptyState, LoadError, SkeletonLines } from "../../components/ScreenState";
 import { useToast } from "../../components/useToast";
+import { useEndDemoOn } from "../../features/auth/endDemo";
 import { LoginAgainButton } from "../../features/auth/LoginAgainButton";
 import { authKeys, useMe } from "../../features/auth/queries";
 import { TIP_CATEGORY_LABEL, tipWriteError } from "../../features/tips/labels";
@@ -58,6 +59,7 @@ const CATEGORY_OPTIONS = TIP_CATEGORIES.map((value) => ({
 export function Component() {
   const { buildingId = "", tipId } = useParams();
   const me = useMe();
+  useEndDemoOn(buildingId);
   const list = `/b/${buildingId}/tips`;
   const title = tipId ? "팁 고치기" : "생활 팁 남기기";
 

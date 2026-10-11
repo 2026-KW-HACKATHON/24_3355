@@ -19,13 +19,13 @@ import {
 import {
   E2E_BUILDING,
   E2E_LANDLORD,
+  E2E_RESIDENT_B,
   loginAs,
   loginAsE2eLandlord,
   type PublicGuide,
-  RESIDENT_B,
   stamp,
 } from "./support/demo";
-import { sheet } from "./support/flows";
+import { fakeKakaoLogin, sheet } from "./support/flows";
 import { expect, hideDevOverlays, test } from "./support/test";
 
 const home = `/b/${E2E_BUILDING.id}`;
@@ -71,7 +71,7 @@ test.describe("수정 메모 진입(LF-02·04·17, lofi 11 → 44 → 02 → 16 
     browser,
   }) => {
     const guide = await freshGuide();
-    const resident = await apiAs(RESIDENT_B);
+    const resident = await apiAs(E2E_RESIDENT_B);
     await moveOutIfConnected(resident);
     const code = await joinCodeOf(landlord, E2E_BUILDING.id);
     const memoText = `재활용 수거일이 월·목으로 바뀌었어요 ${stamp()}`;
@@ -100,8 +100,9 @@ test.describe("수정 메모 진입(LF-02·04·17, lofi 11 → 44 → 02 → 16 
         page.getByRole("heading", { level: 1, name: /로그인이 필요해요/ }),
       ).toBeVisible();
       await expect(page.getByText(`가입코드 ${code} 확인`)).toBeVisible();
+      await fakeKakaoLogin(page);
       await page.getByRole("checkbox", { name: "모두 동의해요" }).check();
-      await page.getByRole("button", { name: "시연용 다음 입주자로 계속하기" }).click();
+      await page.getByRole("button", { name: "카카오로 계속하기" }).click();
       await expect(
         page.getByRole("heading", { level: 1, name: /테스트빌라에\s*연결할까요\?/ }),
       ).toBeVisible();
@@ -181,7 +182,7 @@ test.describe("수정 메모 진입(LF-02·04·17, lofi 11 → 44 → 02 → 16 
     browser,
   }) => {
     const guide = await freshGuide();
-    const resident = await ensureResident(RESIDENT_B, E2E_BUILDING.id);
+    const resident = await ensureResident(E2E_RESIDENT_B, E2E_BUILDING.id);
     const memoText = `재활용이 수요일로 바뀐 것 같아요 ${stamp()}`;
     const memo = await writeMemo(resident, guide.id, memoText);
     await resident.dispose();
@@ -214,7 +215,7 @@ test.describe("수정 메모 진입(LF-02·04·17, lofi 11 → 44 → 02 → 16 
     expect((await publicGuide(landlord, guide.id)).body).toBe(guide.body);
 
     await test.step("거주자: 안내 아래에서 ‘기존 유지’와 사유를 본다", async () => {
-      await loginAs(page, RESIDENT_B);
+      await loginAs(page, E2E_RESIDENT_B);
       await page.goto(`${home}/guides/${guide.id}`);
       const mine = memoSection(page).getByRole("listitem").filter({ hasText: memoText });
       await expect(mine).toContainText("기존 유지");
@@ -230,9 +231,9 @@ test.describe("수정 메모 진입(LF-02·04·17, lofi 11 → 44 → 02 → 16 
     // lofi 13은 버튼과 아래 여백까지 보입니다. QA 2차 때 SEED 시트가 12(키보드)용 높이를 그대로 두어 버튼 아래
     // 약 20px가 잘렸고(보이는 비율 0.63), 13으로 바뀔 때 높이를 풀도록 고쳐졌습니다(MemoSheet.tsx).
     const guide = await freshGuide();
-    const resident = await ensureResident(RESIDENT_B, E2E_BUILDING.id);
+    const resident = await ensureResident(E2E_RESIDENT_B, E2E_BUILDING.id);
     await resident.dispose();
-    await loginAs(page, RESIDENT_B);
+    await loginAs(page, E2E_RESIDENT_B);
     await page.goto(`${home}/guides/${guide.id}`);
     await page.getByRole("button", { name: "메모 남기기" }).click();
     const write = sheet(page, "어떤 부분이 달라졌나요?");

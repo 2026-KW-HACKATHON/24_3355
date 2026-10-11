@@ -1,7 +1,7 @@
 import { randomInt } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import { reportAccessTokens, reportSubmissions, reports } from "../../db/schema.ts";
+import { reportAccessTokens, reportSubmissions, reports, users } from "../../db/schema.ts";
 import { hashToken } from "../../lib/auth.ts";
 import {
   createBuilding,
@@ -187,6 +187,38 @@ describe("POST /buildings/:buildingId/reports", () => {
       stranger: "member",
       neighbour: "member",
     });
+  });
+
+  it("takes a demo account's report on a real building as a guest report (D-35)", async () => {
+    // Given: 시연 계정(시드 이름의 kakao_user_id) 세션과 실제 건물
+    const [found] = await t.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.kakaoUserId, "demo-e2e-landlord"))
+      .limit(1);
+    const demoId =
+      found?.id ??
+      (await t.db.insert(users).values({ kakaoUserId: "demo-e2e-landlord" }).returning())[0]?.id ??
+      "";
+    const cookie = await sessionCookie(t.db, demoId);
+    const real = await createBuilding(t.db, "open");
+    // When
+    const response = await send(
+      real.id,
+      { source: "custom", kind: "other", body: "시연 중 제보" },
+      {
+        cookie,
+      },
+    );
+    const mine = await t.app.request("/api/me/reports", withCookie(cookie));
+    // Then: 막지 않고 비회원처럼 받아 확인 토큰을 주고, 시연 계정에 붙이지 않습니다.
+    expect(response.status).toBe(201);
+    const created = await response.json();
+    expect(created.accessToken).toEqual(expect.any(String));
+    const [row] = await t.db.select().from(reports).where(eq(reports.id, created.report.id));
+    expect(row).toMatchObject({ reporterKind: "guest", reporterUserId: null });
+    const listed = (await mine.json()).reports as { id: string }[];
+    expect(listed.map((report) => report.id)).not.toContain(created.report.id);
   });
 });
 

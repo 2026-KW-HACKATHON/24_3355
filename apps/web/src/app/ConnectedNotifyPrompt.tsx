@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router";
 import { useAutoSheetTurn } from "../components/autoSheet";
+import { useMe } from "../features/auth/queries";
 import { readConnectedState } from "../features/occupancy/connectedState";
 import { NotifyChoiceSheet } from "../features/push/NotifyChoiceSheet";
 
@@ -11,7 +12,9 @@ export function ConnectedNotifyPrompt() {
   const location = useLocation();
   const navigate = useNavigate();
   const connected = readConnectedState(location.state);
-  const wants = connected?.first === true && connected.notifyAsked !== true;
+  // 시연 계정은 알림을 켤 수 없어 연결 뒤에도 묻지 않습니다(D-35).
+  const demo = Boolean(useMe().data?.user.demo);
+  const wants = connected?.first === true && connected.notifyAsked !== true && !demo;
   // 다른 자동 시트(약관 등)가 떠 있으면 닫힌 뒤에 뜹니다.
   const turn = useAutoSheetTurn("notify-connected", wants);
 
