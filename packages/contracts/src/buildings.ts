@@ -41,14 +41,14 @@ export type ConfirmManagedBuildingBody = z.infer<typeof ConfirmManagedBuildingBo
 /**
  * 공개 응답. 주소는 도로명까지(`displayAddress`)만 담습니다. preparing이면 공개 안내가 없습니다(LF-14).
  * `demo`: 시드한 시연 건물(햇살빌라·새봄하우스·테스트빌라·준비빌라)이면 true. `DEMO_MODE`와 상관없이 id로 정합니다.
- * 웹은 시연 계정으로 실제 건물(false)을 열면 시연을 끝냅니다(D-35). 이 필드가 없는 이전 API 응답은 false로 읽습니다.
+ * 웹은 시연 계정으로 실제 건물(false)을 열면 시연을 끝냅니다(D-35).
  */
 export const PublicBuilding = z.object({
   id: z.uuid(),
   name: z.string(),
   displayAddress: z.string(),
   status: BuildingStatus,
-  demo: z.boolean().default(false),
+  demo: z.boolean(),
 });
 export type PublicBuilding = z.infer<typeof PublicBuilding>;
 
@@ -89,10 +89,10 @@ export type ManagedBuildingDetail = z.infer<typeof ManagedBuildingDetail>;
 export const ManagerInviteBody = z.object({ token: z.string().min(16).max(128) });
 export type ManagerInviteBody = z.infer<typeof ManagerInviteBody>;
 
-/** `demo`: 초대한 건물이 시연 건물인지(`PublicBuilding.demo`와 같음, 없으면 false). */
+/** `demo`: 초대한 건물이 시연 건물인지(`PublicBuilding.demo`와 같음). */
 export const ManagerInvitePreview = z.object({
   buildingName: z.string(),
-  demo: z.boolean().default(false),
+  demo: z.boolean(),
 });
 export type ManagerInvitePreview = z.infer<typeof ManagerInvitePreview>;
 

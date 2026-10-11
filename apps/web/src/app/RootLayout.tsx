@@ -92,14 +92,20 @@ function useFocusHeadingOnNavigate(root: RefObject<HTMLDivElement | null>) {
   }, [pathname, root]);
 }
 
-/** service worker가 보낸 경로. 같은 출처의 경로만 받습니다. */
+/**
+ * service worker가 보낸 경로. 같은 출처의 경로만 받습니다. `//`·`/\`로 시작하거나 정리하면 `//`로 시작하는
+ * 경로(`/a/..//x`)는 다른 사이트 주소로 읽힐 수 있어 받지 않습니다.
+ */
 export function readNavigateMessage(data: unknown, origin: string): string | undefined {
   if (typeof data !== "object" || data === null) return undefined;
   const { type, path } = data as Record<string, unknown>;
-  if (type !== "wh:navigate" || typeof path !== "string" || !path.startsWith("/")) return undefined;
+  if (type !== "wh:navigate" || typeof path !== "string" || !/^\/(?![/\\])/.test(path)) {
+    return undefined;
+  }
   try {
     const url = new URL(path, origin);
-    return url.origin === origin ? url.pathname + url.search + url.hash : undefined;
+    if (url.origin !== origin || url.pathname.startsWith("//")) return undefined;
+    return url.pathname + url.search + url.hash;
   } catch {
     return undefined;
   }

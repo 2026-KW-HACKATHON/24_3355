@@ -41,10 +41,10 @@ export const tipRoutes = new Hono<AppEnv>()
     "/buildings/:buildingId/tips",
     describeRoute({
       tags: ["tips"],
-      summary: "생활 팁 남기기 (이 건물 active 거주자만)",
+      summary: "생활 팁 남기기 (이 건물 active 거주자만, 사람마다 1시간에 20번)",
       responses: {
         201: jsonResponse("남긴 팁", Tip),
-        ...errorResponses(400, 401, 403, 404),
+        ...errorResponses(400, 401, 403, 404, 429),
       },
     }),
     validator("param", BuildingParams, onInvalid),

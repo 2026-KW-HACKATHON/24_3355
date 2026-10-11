@@ -3,7 +3,8 @@ import { eq } from "drizzle-orm";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createApp } from "../../app.ts";
 import { DEMO_BUILDING_ID, DEMO_E2E_BUILDING_ID, seedDemo } from "../../db/demo.ts";
-import { pushSubscriptions, users } from "../../db/schema.ts";
+import { pushSubscriptions, sessions, users } from "../../db/schema.ts";
+import { createToken, hashToken, SESSION_COOKIE } from "../../lib/auth.ts";
 import {
   createBuilding,
   createInvite,
@@ -18,7 +19,9 @@ import {
 } from "../../test/helpers.ts";
 
 const t = useTestApp();
-const demo = useTestApp({ DEMO_MODE: "true" });
+const demo = useTestApp({ DEMO_MODE: "true", E2E_LOGIN: "true" });
+/** 배포(dev)처럼 e2e 전용 계정의 시연 로그인을 끈 시연 모드. */
+const deployedDemo = useTestApp({ DEMO_MODE: "true" });
 const kakaoEnv = {
   KAKAO_REST_API_KEY: "test-rest-api-key",
   KAKAO_CLIENT_SECRET: "test-client-secret",
@@ -48,6 +51,40 @@ describe("me and sessions", () => {
     // Then
     expect(response.status).toBe(401);
     expect(await response.json()).toEqual({ error: { code: "UNAUTHENTICATED" } });
+  });
+
+  it("extends a session's cookie only until the session really ends (90 days after login)", async () => {
+    // Given: 80일 전에 로그인해 이틀 전에 마지막으로 쓴 세션(남은 상한 10일)과, 어제 로그인한 세션
+    const DAY = 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const userId = await createUser(t.db);
+    const oldToken = createToken();
+    const newToken = createToken();
+    await t.db.insert(sessions).values([
+      {
+        userId,
+        tokenHash: hashToken(oldToken),
+        createdAt: new Date(now - 80 * DAY),
+        lastSeenAt: new Date(now - 2 * DAY),
+        expiresAt: new Date(now + 5 * DAY),
+      },
+      {
+        userId,
+        tokenHash: hashToken(newToken),
+        createdAt: new Date(now - DAY),
+        lastSeenAt: new Date(now - DAY),
+        expiresAt: new Date(now + 29 * DAY),
+      },
+    ]);
+    // When
+    const old = await t.app.request("/api/me", withCookie(`${SESSION_COOKIE}=${oldToken}`));
+    const fresh = await t.app.request("/api/me", withCookie(`${SESSION_COOKIE}=${newToken}`));
+    // Then
+    const maxAge = (response: Response) =>
+      Number(/Max-Age=(\d+)/.exec(response.headers.getSetCookie().join(";"))?.[1]);
+    expect(old.status).toBe(200);
+    expect(Math.abs(maxAge(old) - 10 * 24 * 60 * 60)).toBeLessThan(60);
+    expect(Math.abs(maxAge(fresh) - 30 * 24 * 60 * 60)).toBeLessThan(60);
   });
 
   it("returns the user with managed buildings and no occupancy", async () => {
@@ -229,6 +266,23 @@ describe("demo login", () => {
       managedBuildings: [{ id: DEMO_E2E_BUILDING_ID, name: "테스트빌라" }],
       occupancy: null,
     });
+  });
+
+  it("hides the e2e landlord from demo login unless E2E_LOGIN is on", async () => {
+    // When
+    const e2e = await deployedDemo.app.request(
+      "/api/dev/login",
+      jsonRequest("POST", { as: "demo-e2e-landlord" }),
+    );
+    const presentation = await deployedDemo.app.request(
+      "/api/dev/login",
+      jsonRequest("POST", { as: "demo-landlord" }),
+    );
+    // Then
+    expect(e2e.status).toBe(404);
+    expect(await e2e.json()).toEqual({ error: { code: "NOT_FOUND" } });
+    expect(e2e.headers.getSetCookie()).toEqual([]);
+    expect(presentation.status).toBe(200);
   });
 
   it("says which demo account is signed in (Me.user.demo, D-35)", async () => {

@@ -40,7 +40,8 @@ export async function listNotices(db: Database, buildingId: string): Promise<Not
 export async function getNotice(db: Database, noticeId: string): Promise<Notice> {
   const row = await repo.findNotice(db, noticeId);
   if (!row || row.publishedAt.getTime() > Date.now()) throw new AppError(404, "NOT_FOUND");
-  if (row.status === "expired" || row.endsAt.getTime() < Date.now()) {
+  // 만료는 `ends_at`으로만 정합니다(database.md §5). `status = 'expired'`는 쓰는 코드가 없습니다.
+  if (row.endsAt.getTime() < Date.now()) {
     throw new AppError(410, "NOTICE_ENDED");
   }
   return repo.toNotice(row);
@@ -72,13 +73,16 @@ const PUSH_CONCURRENCY = 10;
 const PUSH_FAILURE_LIMIT = 3;
 /** 사용자마다 두는 브라우저 구독 수. 넘으면 오래된 것부터 지웁니다. */
 const PUSH_SUBSCRIPTIONS_PER_USER = 5;
+/** 공지 올리기 반복 제한: 사용자마다 1시간에 10번(공지마다 거주자에게 푸시가 가므로). */
+export const NOTICE_CREATE_LIMIT = { limit: 10, windowSeconds: 60 * 60 };
 /** 구독 저장 반복 제한: 사용자마다 10분에 10번. */
 const PUSH_SUBSCRIBE_LIMIT = { limit: 10, windowSeconds: 10 * 60 };
 
 /**
  * 공지를 올립니다. 한 트랜잭션에서 `notices`와 알림 대상(발송 시점에 active이고 푸시 구독이 있는 거주자)의
  * `notice_deliveries`를 만들고 응답합니다. 푸시가 설정돼 있으면 `attemptedCount`는 만든 발송 행 수(알림 대상 수)이고,
- * 실제 발송은 응답 뒤 `tasks`에서 합니다(`sendNoticePush`). 발송이 실패해도 공지는 올라간 상태입니다.
+ * 실제 발송은 응답 뒤 `tasks`에서 합니다(`sendNoticePush`). 발송이 실패해도 공지는 올라간 상태입니다. 집주인 확인
+ * 뒤 사용자마다 1시간에 10번까지이고, 넘으면 429 `RATE_LIMITED`(`Retry-After`)입니다.
  */
 export async function createNotice(
   db: Database,
@@ -95,6 +99,8 @@ export async function createNotice(
     throw new AppError(400, "VALIDATION_FAILED", { endsAt: "endsAt must be in the future" });
   }
   await photoService.requirePhotoKeys(deps.photos, building.id, input.photos);
+  // 입력이 틀려 거절된 시도는 세지 않습니다(전시처럼 한 계정으로 계속 올리는 경우).
+  await hitRateLimit(db, "notice_create", userId, NOTICE_CREATE_LIMIT);
   const { notice, deliveries } = await db.transaction(async (tx) => {
     const row = await repo.insertNotice(tx, {
       buildingId: building.id,

@@ -9,15 +9,18 @@ export class AppError extends Error {
   readonly code: AppErrorCode;
   readonly fields: Readonly<Record<string, string>>;
   readonly retryAfterSeconds: number | undefined;
+  /** 서버가 답한 HTTP 상태. 응답을 받지 못했거나(NETWORK) 응답이 계약과 달랐으면 undefined. */
+  readonly status: number | undefined;
 
   constructor(
     code: AppErrorCode,
-    options: { fields?: Record<string, string>; retryAfterSeconds?: number } = {},
+    options: { fields?: Record<string, string>; retryAfterSeconds?: number; status?: number } = {},
   ) {
     super(code);
     this.code = code;
     this.fields = options.fields ?? {};
     this.retryAfterSeconds = options.retryAfterSeconds;
+    this.status = options.status;
   }
 }
 
@@ -34,9 +37,11 @@ export function toAppError(error: unknown): AppError {
   if (isHTTPError(error)) {
     const parsed = ErrorResponse.safeParse(error.data);
     const seconds = retryAfter(error.response.headers);
-    if (!parsed.success) return new AppError("INTERNAL_ERROR");
+    const status = error.response.status;
+    if (!parsed.success) return new AppError("INTERNAL_ERROR", { status });
     const { code, fields } = parsed.data.error;
     return new AppError(code, {
+      status,
       ...(fields ? { fields } : {}),
       ...(seconds === undefined ? {} : { retryAfterSeconds: seconds }),
     });
@@ -47,10 +52,14 @@ export function toAppError(error: unknown): AppError {
   return new AppError("INTERNAL_ERROR");
 }
 
-/** 다시 시도해서 나아질 수 있는 오류만 자동 재시도합니다. */
+/**
+ * 다시 시도해서 나아질 수 있는 오류만 자동 재시도합니다: 연결 실패(NETWORK)와 서버의 5xx 내부 오류. 응답이
+ * 계약과 다른 경우(SchemaValidationError, status 없음)는 다시 받아도 같으므로 재시도하지 않습니다.
+ */
 export function isRetryable(error: unknown): boolean {
-  const { code } = toAppError(error);
-  return code === "NETWORK" || code === "INTERNAL_ERROR";
+  const { code, status } = toAppError(error);
+  if (code === "NETWORK") return true;
+  return code === "INTERNAL_ERROR" && status !== undefined && status >= 500;
 }
 
 /** 오류 코드 → 화면 문구. lofi·README에 없는 문구는 초안입니다(frontend.md §6). */

@@ -78,7 +78,7 @@ curl https://<dev 도메인>/api/health
 
 ## 배포 순서와 주의
 
-- **API를 먼저, 웹을 나중에** 배포합니다. 웹은 새 응답 필드(`termsUpToDate`, `confirmedAt` 등)를 기대하므로, 이전 API와 새 웹이 만나면 일부 화면이 불러오기 오류가 날 수 있습니다(웹은 한 번의 배포 사이 동안 빠진 필드를 모르는 값으로 넘기도록 되어 있지만, 순서를 지키는 것이 기본입니다). PR 미리 보기는 dev API를 쓰므로 새 필드가 필요한 PR은 API가 dev에 먼저 올라간 뒤 확인합니다.
+- **API를 먼저, 웹을 나중에** 배포합니다. 웹은 새 응답 필드(`termsUpToDate`, `confirmedAt` 등)를 기대하므로, 이전 API와 새 웹이 만나면 응답 검증에서 실패해 화면이 불러오기 오류가 납니다(웹은 이전 API 응답을 받아 주지 않습니다). PR 미리 보기는 dev API를 쓰므로 새 필드가 필요한 PR은 API가 dev에 먼저 올라간 뒤 확인합니다.
 - **마이그레이션 0009(건물 확인·약관 동의)를 처음 배포한 뒤에는** dev에서 시연 데이터를 한 번 되돌립니다. 백필 때문에 이전 시연에서 관리자가 생긴 새봄하우스가 ‘확인됨’이 되어 초대 → 23 흐름이 건너뛰어지기 때문입니다: SSM 세션에서 `docker compose --env-file server.env --env-file .deploy.env run --rm --no-deps api-dev node seed.mjs --reset-demo`.
 - 브라우저 → CloudFront → EC2 모든 구간이 HTTPS입니다. CloudFront → EC2는 서버의 caddy가 받고, dev·prod 모두 2026-10-06에 옮겼습니다(D-31, [aws-setup.md 7-A](aws-setup.md#7-a-원본-https로-옮기기-이미-돌고-있는-환경)).
 - `infra/server/caddy/Caddyfile`과 caddy 서비스는 dev·prod가 같이 씁니다. `main` 병합(dev 배포)으로 바뀐 Caddyfile은 prod 요청에도 바로 적용되므로, 이 파일을 고치는 PR은 관리자가 리뷰합니다.
@@ -216,7 +216,7 @@ done
 |---|---|
 | 병합한 변경이 문제 | 그 PR을 `git revert`하는 PR을 만들어 병합합니다. 자동으로 다시 배포됩니다 |
 | 배포 직후 API가 안 뜸 | deploy.sh가 직전 이미지로 자동으로 되돌립니다 |
-| 급하게 직전 이미지로 | 관리자가 SSM으로 `sudo /opt/wolgyeham/deploy.sh <dev\|prod> --rollback` |
+| 급하게 직전 이미지로 | 관리자가 SSM으로 `sudo /opt/wolgyeham/deploy.sh <dev\|prod> --rollback`. 시연 분리(D-35, `ab2f35f`) 이전 API로 되돌릴 때는 웹도 그 판으로 함께 되돌립니다(새 웹은 `user.demo`·`building.demo`가 없는 응답을 받지 않음) |
 | 배포가 caddy 단계에서 멈춤 | 돌던 API·caddy는 그대로입니다. 출력의 `caddy validate` 오류를 보고 Caddyfile을 고치는 PR(또는 revert)을 병합합니다 |
 | 원본 HTTPS가 안 됨(인증서 만료·sslip.io 장애 등) | 관리자가 `bash infra/aws/switch-origin-tls.sh rollback`으로 CloudFront를 예전 HTTP 원본으로 돌립니다(API 포트 공개·보안 그룹 8081~8082 포함). 고친 뒤 `switch` → `cleanup`([aws-setup.md 7-A](aws-setup.md#7-a-원본-https로-옮기기-이미-돌고-있는-환경)) |
 | 데이터 복구 | S3의 백업으로 복구합니다. 방법은 [backup.sh](../infra/server/backup.sh) 맨 위 주석. 복구 전에 팀에 알립니다 |

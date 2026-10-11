@@ -124,7 +124,7 @@ for e in dev prod; do
 done
 ```
 
-카카오·웹 푸시 값은 발급한 뒤 같은 방식으로 넣습니다: `APP_ORIGIN`, `KAKAO_REST_API_KEY`, `KAKAO_CLIENT_SECRET`, `KAKAO_REDIRECT_URI`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (각각 `/wolgyeham/dev/`, `/wolgyeham/prod/` 아래).
+카카오·웹 푸시 값은 발급한 뒤 같은 방식으로 넣습니다: `APP_ORIGIN`, `KAKAO_REST_API_KEY`, `KAKAO_CLIENT_SECRET`, `KAKAO_REDIRECT_URI`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (각각 `/wolgyeham/dev/`, `/wolgyeham/prod/` 아래). `E2E_LOGIN`은 서버에 두지 않습니다(로컬·CI 전용, 기본 false라 dev에서 e2e 계정 로그인이 닫힘).
 
 ## 6. 앱 서버 (EC2)
 

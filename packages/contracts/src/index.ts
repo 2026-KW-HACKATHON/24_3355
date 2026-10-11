@@ -19,5 +19,3 @@ export const HealthResponse = z
     service: z.literal("wolgyeham-api"),
   })
   .readonly();
-
-export type Health = z.infer<typeof HealthResponse>;

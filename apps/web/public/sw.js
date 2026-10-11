@@ -14,12 +14,16 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-/** 같은 출처의 경로만 엽니다. 다른 사이트 주소(`//x`, `/\x`, 탭·줄바꿈이 섞인 주소 등)는 첫 화면으로 바꿉니다. */
+/**
+ * 같은 출처의 경로만 엽니다. 다른 사이트 주소(`//x`, `/\x`, 탭·줄바꿈이 섞인 주소 등)는 첫 화면으로 바꿉니다.
+ * `/a/..//x`처럼 정리하면 `//`로 시작하는 경로도 막습니다(그대로 열면 다른 사이트 주소로 읽힘).
+ */
 function safePath(value) {
-  if (typeof value !== "string") return "/";
+  if (typeof value !== "string" || /^[/\\]{2}/.test(value)) return "/";
   try {
     const url = new URL(value, self.location.origin);
-    return url.origin === self.location.origin ? url.pathname + url.search + url.hash : "/";
+    if (url.origin !== self.location.origin || url.pathname.startsWith("//")) return "/";
+    return url.pathname + url.search + url.hash;
   } catch {
     return "/";
   }

@@ -82,6 +82,8 @@ describe("service worker path check (safePath)", () => {
   it.each([
     "//evil.example/x",
     "/\\evil.example/x",
+    "\\\\evil.example/x",
+    "/b/..//evil.example/x",
     "/\t/evil.example",
     "\t//evil.example",
     "https://evil.example/b/1",

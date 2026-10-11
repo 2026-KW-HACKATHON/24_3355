@@ -81,7 +81,7 @@ export type DemoUser = z.infer<typeof DemoUser>;
  * `termsVersion`·`termsAgreedAt`: 마지막으로 동의한 약관 판과 시각(기록이 없으면 null). `termsUpToDate`: 지금 판
  * (`TERMS_VERSION`)에 동의했는지. false여도 세션·기능은 막지 않고, 웹이 다시 동의를 받습니다(D-28).
  * `demo`: 시연 로그인으로 고른 시연 계정(`DemoUser`)이면 그 이름, 카카오로 로그인한 실제 계정이면 null(D-35). 웹은
- * 이 값으로 시연 중 막대를 띄우고, 실제 건물 화면에서 시연을 끝냅니다. 이 필드가 없는 이전 API 응답은 null로 읽습니다.
+ * 이 값으로 시연 중 막대를 띄우고, 실제 건물 화면에서 시연을 끝냅니다.
  */
 export const Me = z.object({
   user: z.object({
@@ -89,7 +89,7 @@ export const Me = z.object({
     termsVersion: z.string().nullable(),
     termsAgreedAt: z.iso.datetime().nullable(),
     termsUpToDate: z.boolean(),
-    demo: DemoUser.nullable().default(null),
+    demo: DemoUser.nullable(),
   }),
   managedBuildings: z.array(z.object({ id: z.uuid(), name: z.string() })),
   occupancy: MeOccupancy.nullable(),

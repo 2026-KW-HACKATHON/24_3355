@@ -73,8 +73,7 @@ export const GuideRevision = z.object({
   category: GuideCategory,
   title: z.string(),
   body: z.string(),
-  /** 이전 API에는 없어서 빈 배열로 채웁니다. */
-  photos: z.array(GuidePhoto).default([]),
+  photos: z.array(GuidePhoto),
   savedAt: z.iso.datetime(),
 });
 export type GuideRevision = z.infer<typeof GuideRevision>;

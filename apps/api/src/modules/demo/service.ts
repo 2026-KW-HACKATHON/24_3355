@@ -44,7 +44,13 @@ export const DEMO_RESET_BUCKETS = {
 const OVERVIEW_CACHE_MS = 5000;
 
 let overviewCache:
-  | { db: Database; version: number; expiresAt: number; value: Promise<DemoOverview> }
+  | {
+      db: Database;
+      version: number;
+      e2e: boolean;
+      expiresAt: number;
+      value: Promise<DemoOverview>;
+    }
   | undefined;
 
 function sum(counts: Map<string, number>) {
@@ -55,16 +61,29 @@ function sum(counts: Map<string, number>) {
  * 시연 시작(29)의 건물과 역할 전환 계정. 계정마다 지금 상태(집주인의 확인할 것, 거주자의 연결·팁·메모 수)를
  * 함께 줍니다. 시드하지 않은 건물·계정은 빠집니다. 한 번에 열 개 넘는 쿼리를 쓰므로 5초 동안(같은 DB, 그사이
  * 시드·초기화가 없을 때) 계산한 결과를 함께 씁니다. 동시에 온 요청도 한 번만 계산하고, 실패하면 다음 요청이 다시
- * 계산합니다.
+ * 계산합니다. `e2e`가 false(`E2E_LOGIN` 꺼짐)면 e2e 전용 건물·계정(`purpose: "e2e"`)은 가입코드와 함께 빠집니다.
  */
-export function getOverview(db: Database): Promise<DemoOverview> {
+export function getOverview(db: Database, options: { e2e: boolean }): Promise<DemoOverview> {
   const now = Date.now();
   const version = currentDemoDataVersion();
+  const { e2e } = options;
   const cached = overviewCache;
-  if (cached && cached.db === db && cached.version === version && cached.expiresAt > now) {
+  if (
+    cached &&
+    cached.db === db &&
+    cached.version === version &&
+    cached.e2e === e2e &&
+    cached.expiresAt > now
+  ) {
     return cached.value;
   }
-  const entry = { db, version, expiresAt: now + OVERVIEW_CACHE_MS, value: loadOverview(db) };
+  const entry = {
+    db,
+    version,
+    e2e,
+    expiresAt: now + OVERVIEW_CACHE_MS,
+    value: loadOverview(db, e2e),
+  };
   overviewCache = entry;
   entry.value.catch(() => {
     if (overviewCache === entry) overviewCache = undefined;
@@ -72,13 +91,15 @@ export function getOverview(db: Database): Promise<DemoOverview> {
   return entry.value;
 }
 
-async function loadOverview(db: Database): Promise<DemoOverview> {
+async function loadOverview(db: Database, e2e: boolean): Promise<DemoOverview> {
+  const shownBuildings = DEMO_BUILDINGS.filter((building) => e2e || building.purpose !== "e2e");
+  const shownAccounts = DEMO_ACCOUNTS.filter((account) => e2e || account.purpose !== "e2e");
   const rows = await repo.findBuildingsWithJoinCode(
     db,
-    DEMO_BUILDINGS.map((building) => building.id),
+    shownBuildings.map((building) => building.id),
   );
   const byId = new Map(rows.map((row) => [row.building.id, row]));
-  const buildings = DEMO_BUILDINGS.flatMap(({ id, purpose }) => {
+  const buildings = shownBuildings.flatMap(({ id, purpose }) => {
     const row = byId.get(id);
     if (!row) return [];
     return [
@@ -97,12 +118,12 @@ async function loadOverview(db: Database): Promise<DemoOverview> {
     (
       await repo.findUsersByKakaoIds(
         db,
-        DEMO_ACCOUNTS.map((account) => account.as),
+        shownAccounts.map((account) => account.as),
       )
     ).map((user) => [user.kakaoUserId, user.id]),
   );
   const accounts: DemoAccount[] = [];
-  for (const account of DEMO_ACCOUNTS) {
+  for (const account of shownAccounts) {
     const userId = users.get(account.as);
     if (!userId) continue;
     if (account.role === "landlord") {

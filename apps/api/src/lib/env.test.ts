@@ -16,6 +16,7 @@ describe("parseEnv", () => {
       API_PORT: 3001,
       APP_ORIGIN: "https://example.invalid",
       DEMO_MODE: false,
+      E2E_LOGIN: false,
       // lofi 45 ‘1년에 한 번 아직 살고 있나요?를 물어요’
       RECONFIRM_INTERVAL_DAYS: 365,
     });

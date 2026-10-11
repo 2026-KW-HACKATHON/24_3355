@@ -15,6 +15,7 @@ import {
   useTestApp,
   withCookie,
 } from "../../test/helpers.ts";
+import { beginUpload, PHOTO_PENDING_UPLOADS_MAX } from "./service.ts";
 
 const t = useTestApp();
 
@@ -174,14 +175,17 @@ describe("POST /api/buildings/:buildingId/photos", () => {
     const gif = new Uint8Array(await sharp(png).gif().toBuffer());
     const brokenJpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0, 1, 2, 3]);
 
-    // When
-    const results = await Promise.all([
-      upload(building.id, svg, { cookie: managerCookie, type: "image/jpeg" }),
-      upload(building.id, png, { cookie: managerCookie, type: "image/jpeg" }),
-      upload(building.id, gif, { cookie: managerCookie, type: "image/gif" }),
-      upload(building.id, png, { cookie: managerCookie, type: "image/svg+xml" }),
-      upload(building.id, brokenJpeg, { cookie: managerCookie, type: "image/jpeg" }),
-    ]);
+    // When (동시 올리기 수 한도에 걸리지 않게 차례로)
+    const results = [];
+    for (const [bytes, type] of [
+      [svg, "image/jpeg"],
+      [png, "image/jpeg"],
+      [gif, "image/gif"],
+      [png, "image/svg+xml"],
+      [brokenJpeg, "image/jpeg"],
+    ] as const) {
+      results.push(await upload(building.id, bytes, { cookie: managerCookie, type }));
+    }
 
     // Then
     for (const response of results) {
@@ -277,6 +281,38 @@ describe("POST /api/buildings/:buildingId/photos", () => {
 
     // Then
     expect(response.status).toBe(413);
+  });
+
+  it("answers 429 before reading the body while too many uploads are pending, and frees the slot after", async () => {
+    // Given: 다른 올리기들이 본문을 받는 중이라 자리가 모두 찼음
+    const { building, managerId, managerCookie } = await createManagedBuilding(t.db);
+    const pending = [];
+    for (let i = 0; i < PHOTO_PENDING_UPLOADS_MAX; i += 1) {
+      pending.push(await beginUpload(t.db, t.photos, managerId, building.id));
+    }
+
+    // When
+    const full = await upload(building.id, await smallPng(), {
+      cookie: managerCookie,
+      type: "image/png",
+    });
+    for (const target of pending) target.release();
+    const freed = await upload(building.id, await smallPng(), {
+      cookie: managerCookie,
+      type: "image/png",
+    });
+    const again = await upload(building.id, await smallPng(), {
+      cookie: managerCookie,
+      type: "image/png",
+    });
+
+    // Then
+    expect(full.status).toBe(429);
+    expect(await full.json()).toEqual({ error: { code: "RATE_LIMITED" } });
+    expect(full.headers.get("Retry-After")).toMatch(/^\d+$/);
+    expect(freed.status).toBe(201);
+    // 앞 요청이 끝나면 자리를 돌려줍니다(실패한 요청 포함).
+    expect(again.status).toBe(201);
   });
 
   it("limits uploads per user to 60 an hour", async () => {

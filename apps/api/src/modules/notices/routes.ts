@@ -71,10 +71,10 @@ export const noticeRoutes = new Hono<AppEnv>()
     describeRoute({
       tags: ["notices"],
       summary:
-        "공지 올리기 (집주인). attemptedCount는 알림 대상 수이고 발송은 응답 뒤에 함 (도착·열람 아님)",
+        "공지 올리기 (집주인, 사람마다 1시간에 10번). attemptedCount는 알림 대상 수이고 발송은 응답 뒤에 함 (도착·열람 아님)",
       responses: {
         201: jsonResponse("올린 공지와 발송을 시도한 대상 수", CreateNoticeResult),
-        ...errorResponses(400, 401, 403, 404, 503),
+        ...errorResponses(400, 401, 403, 404, 429, 503),
       },
     }),
     validator("param", BuildingParams, onInvalid),

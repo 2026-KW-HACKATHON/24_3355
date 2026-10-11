@@ -1,23 +1,19 @@
-import {
-  type CorrectionMemo,
-  type CorrectionMemoStatus,
-  type CreateGuideBody,
-  type Guide,
-  type GuideRevision,
-  photoUrl,
-  type UpdateGuideBody,
+import type {
+  CorrectionMemo,
+  CorrectionMemoStatus,
+  CreateGuideBody,
+  Guide,
+  GuideRevision,
+  UpdateGuideBody,
 } from "@wolgyeham/contracts";
 import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
 import { correctionMemos, guideRevisions, guides } from "../../db/schema.ts";
 import type { Database } from "../../lib/db.ts";
+import { toPhotos } from "../photos/service.ts";
 
 type GuideRow = typeof guides.$inferSelect;
 type RevisionRow = typeof guideRevisions.$inferSelect;
 type MemoRow = typeof correctionMemos.$inferSelect;
-
-function toPhotos(keys: readonly string[]) {
-  return keys.map((key) => ({ key, url: photoUrl(key) }));
-}
 
 export function toGuide(row: GuideRow): Guide {
   return {

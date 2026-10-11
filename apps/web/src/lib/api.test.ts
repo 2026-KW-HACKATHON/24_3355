@@ -41,12 +41,13 @@ describe("API client", () => {
       name: "햇살빌라",
       displayAddress: "서울 노원구 월계동 OO길",
       status: "open",
+      demo: false,
     };
     respond(200, building);
     // When
     const result = await getJson(URL, PublicBuilding);
-    // Then: `demo`가 없는 이전 API 응답은 실제 건물(false)로 읽습니다.
-    expect(result).toEqual({ ...building, demo: false });
+    // Then
+    expect(result).toEqual(building);
   });
 
   it("branches on the error code, not the HTTP status", async () => {
@@ -74,8 +75,19 @@ describe("API client", () => {
     respond(200, { id: "not-a-uuid" });
     // When
     const error = await failure(getJson(URL, PublicBuilding));
+    // Then: 다시 받아도 같은 응답이므로 재시도하지 않습니다.
+    expect(error.code).toBe("INTERNAL_ERROR");
+    expect(isRetryable(error)).toBe(false);
+  });
+
+  it("retries a server error (5xx)", async () => {
+    // Given
+    respond(500, { error: { code: "INTERNAL_ERROR" } });
+    // When
+    const error = await failure(getJson(URL, PublicBuilding));
     // Then
     expect(error.code).toBe("INTERNAL_ERROR");
+    expect(error.status).toBe(500);
     expect(isRetryable(error)).toBe(true);
   });
 
@@ -86,6 +98,7 @@ describe("API client", () => {
     const error = await failure(getJson(URL, PublicBuilding));
     // Then
     expect(error.code).toBe("INTERNAL_ERROR");
+    expect(isRetryable(error)).toBe(true);
   });
 
   it("reports a failed connection as NETWORK so the screen can offer a retry", async () => {

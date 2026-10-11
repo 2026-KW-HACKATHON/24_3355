@@ -1,5 +1,6 @@
 import { type DevLoginBody, TERMS_VERSION } from "@wolgyeham/contracts";
 import { z } from "zod";
+import { DEMO_ACCOUNTS } from "../../db/demo.ts";
 import type { Database } from "../../lib/db.ts";
 import { demoUserOf } from "../../lib/demoScope.ts";
 import type { Env } from "../../lib/env.ts";
@@ -105,11 +106,24 @@ export function loginKakaoUser(db: Database, kakaoUserId: string) {
   return repo.upsertUserByKakaoId(db, kakaoUserId);
 }
 
-/** 시연 사용자는 db:seed가 만듭니다. kakao_user_id가 실제 회원번호(숫자)와 겹치지 않습니다. */
-export async function findDemoUser(db: Database, as: DevLoginBody["as"]) {
+/**
+ * 시연 사용자는 db:seed가 만듭니다. kakao_user_id가 실제 회원번호(숫자)와 겹치지 않습니다. e2e 전용 계정
+ * (`purpose: "e2e"`)은 `E2E_LOGIN`이 켜져 있을 때만 찾고, 아니면 시드하지 않은 계정처럼 404 `NOT_FOUND`입니다.
+ */
+export async function findDemoUser(
+  db: Database,
+  as: DevLoginBody["as"],
+  options: { e2eLogin: boolean },
+) {
+  if (!options.e2eLogin && isE2eAccount(as)) throw new AppError(404, "NOT_FOUND");
   const userId = await repo.findUserIdByKakaoId(db, as);
   if (!userId) throw new AppError(404, "NOT_FOUND");
   return userId;
+}
+
+/** e2e 전용 시연 계정인지(테스트빌라 집주인). */
+export function isE2eAccount(as: DevLoginBody["as"]) {
+  return DEMO_ACCOUNTS.some((account) => account.as === as && account.purpose === "e2e");
 }
 
 /**

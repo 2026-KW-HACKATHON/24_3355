@@ -7,6 +7,7 @@ import { csrf } from "hono/csrf";
 import { HTTPException } from "hono/http-exception";
 import { requestId } from "hono/request-id";
 import { routePath } from "hono/route";
+import { secureHeaders } from "hono/secure-headers";
 import { describeRoute, openAPIRouteHandler, resolver } from "hono-openapi";
 import { sessionMiddleware } from "./lib/auth.ts";
 import type { AppEnv } from "./lib/context.ts";
@@ -79,6 +80,25 @@ export function createApp(deps: {
       });
     }
   });
+  // API 응답의 보안 헤더. 형식 추측(nosniff)·프레임에 넣기·Referer를 막고, 나머지 기본 헤더(HSTS·COOP·CORP 등)는
+  // 앞단·웹이 정하므로 붙이지 않습니다. JSON API라 CSP는 두지 않습니다(문서 화면은 외부 CDN 스크립트를 씀).
+  app.use(
+    "/api/*",
+    secureHeaders({
+      xContentTypeOptions: true,
+      xFrameOptions: "DENY",
+      referrerPolicy: "no-referrer",
+      crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: false,
+      crossOriginOpenerPolicy: false,
+      originAgentCluster: false,
+      strictTransportSecurity: false,
+      xDnsPrefetchControl: false,
+      xDownloadOptions: false,
+      xPermittedCrossDomainPolicies: false,
+      xXssProtection: false,
+    }),
+  );
   // 다른 사이트의 폼 제출(쿠키가 따라오는 요청)을 막습니다. JSON 요청은 브라우저가 CORS로 막습니다.
   app.use("/api/*", csrf({ origin: deps.env.APP_ORIGIN }));
   const tooLarge = (c: Context) => c.json({ error: { code: "PAYLOAD_TOO_LARGE" } }, 413);

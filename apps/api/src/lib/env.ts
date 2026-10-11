@@ -21,6 +21,12 @@ export const EnvFields = z.object({
   KAKAO_CLIENT_SECRET: optional(z.string()),
   KAKAO_REDIRECT_URI: optional(z.url({ protocol: /^https?$/ })),
   DEMO_MODE: z.stringbool().default(false),
+  /**
+   * 시연 모드에서 e2e 전용 계정(`DEMO_ACCOUNTS`의 `purpose: "e2e"`, 테스트빌라 집주인)으로도 시연 로그인할 수 있는지.
+   * 이 계정은 둘러보기 전용이 아니라 테스트빌라를 바꿀 수 있어 로컬·e2e에서만 켭니다. 꺼져 있으면 그 계정의 시연
+   * 로그인은 404 `NOT_FOUND`이고 `/api/dev/demo`에 e2e 건물·계정이 나오지 않습니다.
+   */
+  E2E_LOGIN: z.stringbool().default(false),
   /** /api/docs·/api/swagger·/api/openapi.json. 비워 두면 production이 아닐 때만 켭니다. */
   API_DOCS: optional(z.stringbool()),
   /**

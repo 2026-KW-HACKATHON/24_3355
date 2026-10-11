@@ -1,6 +1,6 @@
 import { asc, eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import { contentReports, moderationActions, tips } from "../../db/schema.ts";
+import { contentReports, moderationActions, rateLimits, tips } from "../../db/schema.ts";
 import {
   createBuilding,
   createManagedBuilding,
@@ -170,6 +170,22 @@ describe("POST /buildings/:buildingId/tips", () => {
     });
     const [stored] = await t.db.select().from(tips).where(eq(tips.id, tip.id));
     expect(stored?.authorUserId).toBe(a.userId);
+  });
+
+  it("lets a resident leave 20 tips an hour, then answers 429 with Retry-After", async () => {
+    // Given: 이번 시간에 이미 20번 남김
+    const { building } = await createManagedBuilding(t.db, "open");
+    const a = await resident(building.id);
+    await t.db
+      .insert(rateLimits)
+      .values({ bucket: "tip_create", subjectKey: a.userId, hitCount: 20 });
+    // When
+    const response = await writeTip(building.id, { category: "winter", body: "겨울 팁" }, a.cookie);
+    // Then
+    expect(response.status).toBe(429);
+    expect(await response.json()).toEqual({ error: { code: "RATE_LIMITED" } });
+    expect(response.headers.get("Retry-After")).toMatch(/^\d+$/);
+    expect(await t.db.select().from(tips).where(eq(tips.authorUserId, a.userId))).toEqual([]);
   });
 
   it("keeps line breaks in a tip but refuses other control characters", async () => {

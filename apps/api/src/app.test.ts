@@ -137,6 +137,33 @@ describe("API foundation", () => {
     expect(docs.headers.get("Cache-Control")).toBeNull();
   });
 
+  it("adds conservative security headers to API responses, errors and docs pages without a CSP", async () => {
+    // Given
+    const app = createApp(deps);
+    // When
+    const responses = {
+      health: await app.request("/api/health"),
+      missing: await app.request("/api/not-implemented"),
+      scalar: await app.request("/api/docs"),
+      swagger: await app.request("/api/swagger"),
+      spec: await app.request("/api/openapi.json"),
+    };
+    // Then
+    for (const [name, response] of Object.entries(responses)) {
+      expect(response.headers.get("X-Content-Type-Options"), name).toBe("nosniff");
+      expect(response.headers.get("X-Frame-Options"), name).toBe("DENY");
+      expect(response.headers.get("Referrer-Policy"), name).toBe("no-referrer");
+      expect(response.headers.get("Content-Security-Policy"), name).toBeNull();
+      expect(response.headers.get("Strict-Transport-Security"), name).toBeNull();
+      expect(response.headers.get("Cross-Origin-Resource-Policy"), name).toBeNull();
+    }
+    // 문서 화면은 그대로 열립니다.
+    expect(responses.scalar.status).toBe(200);
+    expect(await responses.scalar.text()).toContain("/api/openapi.json");
+    expect(responses.swagger.status).toBe(200);
+    expect(await responses.swagger.text()).toContain("/api/openapi.json");
+  });
+
   it("rejects malformed JSON bodies as validation failures", async () => {
     // Given
     const app = createApp(deps);

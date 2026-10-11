@@ -1,4 +1,4 @@
-import { type Notice, photoUrl } from "@wolgyeham/contracts";
+import type { Notice } from "@wolgyeham/contracts";
 import {
   and,
   count,
@@ -16,6 +16,7 @@ import {
 import { noticeDeliveries, notices, occupancies, pushSubscriptions } from "../../db/schema.ts";
 import type { Database } from "../../lib/db.ts";
 import { activeNow } from "../../lib/reconfirm.ts";
+import { toPhotos } from "../photos/service.ts";
 
 export type NoticeRow = typeof notices.$inferSelect;
 
@@ -25,7 +26,7 @@ export function toNotice(row: NoticeRow): Notice {
     buildingId: row.buildingId,
     title: row.title,
     body: row.body,
-    photos: row.photos.map((key) => ({ key, url: photoUrl(key) })),
+    photos: toPhotos(row.photos),
     startsAt: row.startsAt.toISOString(),
     endsAt: row.endsAt.toISOString(),
     publishedAt: row.publishedAt.toISOString(),
@@ -52,8 +53,16 @@ export async function findCurrentNotice(db: Database, buildingId: string) {
   return row;
 }
 
+/** 공개 목록에 싣는 공지 수 상한(최근에 올린 순). */
+const RUNNING_NOTICES_LIMIT = 50;
+
 export function listRunningNotices(db: Database, buildingId: string) {
-  return db.select().from(notices).where(running(buildingId)).orderBy(desc(notices.publishedAt));
+  return db
+    .select()
+    .from(notices)
+    .where(running(buildingId))
+    .orderBy(desc(notices.publishedAt))
+    .limit(RUNNING_NOTICES_LIMIT);
 }
 
 export async function findNotice(db: Database, noticeId: string) {

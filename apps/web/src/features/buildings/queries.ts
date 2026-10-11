@@ -10,7 +10,6 @@ import {
   PublicBuilding,
 } from "@wolgyeham/contracts";
 import { getJson, postJson, seg } from "../../lib/api";
-import { fillConfirmedAt, fillManagedDetail, fillManagedList, tolerant } from "../../lib/apiCompat";
 import { authKeys } from "../auth/queries";
 
 export const buildingKeys = {
@@ -40,15 +39,10 @@ export function usePublicGuides(buildingId: string, enabled = true) {
   });
 }
 
-// `confirmedAt`(23)이 없는 이전 API의 관리 응답도 받습니다(lib/apiCompat, 배포 한 번 동안).
-const ManagedListCompat = tolerant(ManagedBuildingList, fillManagedList);
-const ManagedDetailCompat = tolerant(ManagedBuildingDetail, fillManagedDetail);
-const ManagedBuildingCompat = tolerant(ManagedBuilding, fillConfirmedAt);
-
 export function useManagedBuildings(enabled: boolean) {
   return useQuery({
     queryKey: buildingKeys.managedList(),
-    queryFn: () => getJson("/api/manage/buildings", ManagedListCompat),
+    queryFn: () => getJson("/api/manage/buildings", ManagedBuildingList),
     select: (data) => data.buildings,
     enabled,
   });
@@ -58,7 +52,7 @@ export function useManagedBuildings(enabled: boolean) {
 export function useManagedBuilding(buildingId: string, enabled = true) {
   return useQuery({
     queryKey: buildingKeys.managed(buildingId),
-    queryFn: () => getJson(`/api/manage/buildings/${seg(buildingId)}`, ManagedDetailCompat),
+    queryFn: () => getJson(`/api/manage/buildings/${seg(buildingId)}`, ManagedBuildingDetail),
     enabled,
   });
 }
@@ -91,7 +85,7 @@ export function useConfirmBuilding(buildingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: ConfirmManagedBuildingBody) =>
-      postJson(`/api/manage/buildings/${seg(buildingId)}/confirm`, body, ManagedBuildingCompat),
+      postJson(`/api/manage/buildings/${seg(buildingId)}/confirm`, body, ManagedBuilding),
     onSuccess: (building) => {
       queryClient.setQueryData<ManagedBuildingDetail>(buildingKeys.managed(buildingId), (old) =>
         old ? { ...old, building } : old,

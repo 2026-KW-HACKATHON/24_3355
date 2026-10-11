@@ -44,8 +44,7 @@ export function checkApi() {
 ```
 
 - 응답은 contracts의 zod 스키마로 검증합니다. `json<T>()` 타입 단언만으로 받지 않습니다.
-- 웹이 API보다 먼저 배포되는 한 번 동안은 이전 API 응답도 받습니다(`lib/apiCompat.ts`의 `tolerant`): `/api/me`·시연 로그인·약관 동의 응답에 약관 필드가 없으면 판·시각은 null, `termsUpToDate`는 true(다시 동의 시트를 띄우지 않음)로 채우고, 관리 건물(목록·상세·건물 확인 응답)에 `confirmedAt`이 없으면 확인한 건물(`CONFIRMED_AT_UNKNOWN`)로 채운 뒤 같은 contracts 스키마로 검사합니다. 새 API가 dev·prod에 모두 배포되면 지웁니다.
-- 재시도는 react-query 한 곳에서만 합니다. 쓰기 요청(POST·PATCH·DELETE)은 자동으로 다시 보내지 않습니다.
+- 재시도는 react-query 한 곳에서만 합니다. 쓰기 요청(POST·PATCH·DELETE)은 자동으로 다시 보내지 않습니다. 다시 시도하는 것은 연결 실패(`NETWORK`)와 서버의 5xx 내부 오류뿐이고, 응답이 계약과 다른 경우(스키마 검증 실패)는 다시 받아도 같으므로 재시도하지 않습니다(`lib/errors.ts` `isRetryable`).
 
 ## 3. 폴더 구조
 
@@ -58,7 +57,7 @@ apps/web/src/
 ├── features/<domain>/  buildings · guides · notices · photos · reports · tips · occupancy · push · invites · me · auth
 │                       API 훅(useGuide 등)과 여러 화면이 쓰는 도메인 컴포넌트
 ├── components/         SEED 위에 만든 앱 공통 UI (화면 상태, 하단 CTA, 탭바, 함이 그림, 6칸 코드, QR, 나가기 확인)
-├── lib/                api, apiCompat, errors(오류 코드 → 문구), format, returnTo, share, reportAccess, text, speech,
+├── lib/                api, errors(오류 코드 → 문구), format, returnTo, share, reportAccess, text, speech,
 │                       pushEnv, largeMode, teamContact
 ├── styles/             tokens.css(--wh-*), global.css
 └── assets/hami/        화면에서 실제로 쓰는 함이 사본만

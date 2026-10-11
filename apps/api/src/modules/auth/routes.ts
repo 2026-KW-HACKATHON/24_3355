@@ -190,7 +190,7 @@ export const devRoutes = new Hono<AppEnv>()
       },
     }),
     async (c) => {
-      await authService.findDemoUser(c.var.db, "demo-landlord");
+      await authService.findDemoUser(c.var.db, "demo-landlord", { e2eLogin: false });
       return c.body(null, 204);
     },
   )
@@ -204,7 +204,9 @@ export const devRoutes = new Hono<AppEnv>()
     validator("json", DevLoginBody, onInvalid),
     async (c) => {
       const { as, consent } = c.req.valid("json");
-      const userId = await authService.findDemoUser(c.var.db, as);
+      const userId = await authService.findDemoUser(c.var.db, as, {
+        e2eLogin: c.var.env.E2E_LOGIN,
+      });
       // JSON POST라 다른 사이트는 보낼 수 없습니다(JSON은 CORS 사전 요청에서, 폼 형식은 hono/csrf에서 막힘).
       await authService.recordLoginConsent(c.var.db, userId, consent);
       // 시연 세션은 3시간, 연장하지 않습니다(D-35).

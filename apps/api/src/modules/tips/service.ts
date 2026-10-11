@@ -9,8 +9,12 @@ import type {
 import { findLiveOccupancy, isManager, requireOccupancy } from "../../lib/auth.ts";
 import type { Database } from "../../lib/db.ts";
 import { AppError } from "../../lib/errors.ts";
+import { hitRateLimit } from "../../lib/rate-limit.ts";
 import * as buildingService from "../buildings/service.ts";
 import * as repo from "./repo.ts";
+
+/** 팁 남기기 반복 제한: 사용자마다 1시간에 20번. */
+export const TIP_CREATE_LIMIT = { limit: 20, windowSeconds: 60 * 60 };
 
 /** 팁 읽기·신고는 이 건물 active·reconfirm_needed 거주자와 집주인입니다(screens.md §1). */
 async function requireTipReader(db: Database, userId: string, buildingId: string) {
@@ -31,7 +35,8 @@ export async function listBuildingTips(
 
 /**
  * 생활 팁 남기기(LF-07). 이 건물 active 거주자만 씁니다. 집주인은 403 `FORBIDDEN`, 연결이 없거나 끝났으면
- * 403 `NOT_CONNECTED`, 재확인이 필요하면 403 `RECONFIRM_NEEDED`입니다.
+ * 403 `NOT_CONNECTED`, 재확인이 필요하면 403 `RECONFIRM_NEEDED`입니다. 사용자마다 1시간에 20번까지이고, 넘으면 429
+ * `RATE_LIMITED`(`Retry-After`)입니다.
  */
 export async function createTip(
   db: Database,
@@ -42,6 +47,7 @@ export async function createTip(
   const building = await buildingService.requireBuilding(db, buildingId);
   if (await isManager(db, userId, building.id)) throw new AppError(403, "FORBIDDEN");
   await requireOccupancy(db, userId, building.id, { allow: ["active"] });
+  await hitRateLimit(db, "tip_create", userId, TIP_CREATE_LIMIT);
   const row = await repo.insertTip(db, { ...input, buildingId: building.id, authorUserId: userId });
   if (!row) throw new Error("tip insert returned no row");
   return repo.toTip(row, userId);

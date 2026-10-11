@@ -126,19 +126,16 @@ export const sessionMiddleware = createMiddleware<AppEnv>(async (c, next) => {
     if (session && !demoExpired) {
       c.set("user", { id: session.userId, sessionId: session.id });
       if (!demo && now.getTime() - session.lastSeenAt.getTime() >= DAY_MS) {
+        const expiresAt = Math.min(
+          now.getTime() + SESSION_DAYS * DAY_MS,
+          session.createdAt.getTime() + SESSION_MAX_DAYS * DAY_MS,
+        );
         await c.var.db
           .update(sessions)
-          .set({
-            lastSeenAt: now,
-            expiresAt: new Date(
-              Math.min(
-                now.getTime() + SESSION_DAYS * DAY_MS,
-                session.createdAt.getTime() + SESSION_MAX_DAYS * DAY_MS,
-              ),
-            ),
-          })
+          .set({ lastSeenAt: now, expiresAt: new Date(expiresAt) })
           .where(eq(sessions.id, session.id));
-        setSessionCookie(c, token);
+        // 쿠키도 세션이 실제로 끝나는 때(90일 상한 포함)까지만 둡니다.
+        setSessionCookie(c, token, expiresAt - now.getTime());
       }
     } else {
       deleteCookie(c, SESSION_COOKIE, { path: "/", secure: isSecureOrigin(c.var.env) });

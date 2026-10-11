@@ -61,21 +61,36 @@ function busy() {
 }
 
 /**
- * 사진 올리기의 앞부분. 본문(multipart)을 읽기 전에 부릅니다: 건물·집주인 확인, 저장소, 반복 제한, 처리 줄.
- * 집주인이 아니면 큰 본문을 받기 전에 끝납니다(본문 한도도 이 뒤에 적용, routes.ts).
+ * 이 프로세스에서 동시에 받는 올리기 수(`beginUpload`부터 응답까지). 본문(최대 8MB)을 읽어 메모리에 두기 전에
+ * 세므로, 처리 줄(lib/photoImage.ts)에 들어가기 전 본문을 읽는 요청이 쌓여 메모리가 튀지 않습니다.
+ */
+export const PHOTO_PENDING_UPLOADS_MAX = 4;
+let pendingUploads = 0;
+
+/**
+ * 사진 올리기의 앞부분. 본문(multipart)을 읽기 전에 부릅니다: 건물·집주인 확인, 저장소, 반복 제한, 처리 줄,
+ * 동시 올리기 수(`PHOTO_PENDING_UPLOADS_MAX`). 집주인이 아니면 큰 본문을 받기 전에 끝납니다(본문 한도도 이 뒤에
+ * 적용, routes.ts). 돌려준 `release`는 요청이 끝날 때 꼭 한 번 부릅니다(routes.ts의 finally).
  */
 export async function beginUpload(
   db: Database,
   photos: PhotoStore | null,
   userId: string,
   buildingId: string,
-): Promise<{ store: PhotoStore; buildingId: string }> {
+): Promise<{ store: PhotoStore; buildingId: string; release: () => void }> {
   const building = await buildingService.requireBuilding(db, buildingId);
   await requireManager(db, userId, building.id);
   const store = requireStore(photos);
   await hitRateLimit(db, "photo_upload", userId, UPLOAD_LIMIT);
-  if (isPhotoQueueFull()) throw busy();
-  return { store, buildingId: building.id };
+  if (isPhotoQueueFull() || pendingUploads >= PHOTO_PENDING_UPLOADS_MAX) throw busy();
+  pendingUploads += 1;
+  let released = false;
+  const release = () => {
+    if (released) return;
+    released = true;
+    pendingUploads -= 1;
+  };
+  return { store, buildingId: building.id, release };
 }
 
 /**

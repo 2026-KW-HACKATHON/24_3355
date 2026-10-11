@@ -61,8 +61,14 @@ export const photoRoutes = new Hono<AppEnv>()
       const user = requireUser(c);
       const { buildingId } = c.req.valid("param");
       // bodyLimit가 c.req.raw를 바꿀 수 있어 Context로 찾습니다.
-      uploads.set(c, await photoService.beginUpload(c.var.db, c.var.photos, user.id, buildingId));
-      await next();
+      const target = await photoService.beginUpload(c.var.db, c.var.photos, user.id, buildingId);
+      uploads.set(c, target);
+      // 본문 읽기·처리·저장이 끝날 때까지(실패해도) 동시 올리기 수에 셉니다.
+      try {
+        await next();
+      } finally {
+        target.release();
+      }
     },
     bodyLimit({
       maxSize: PHOTO_UPLOAD_MAX_BYTES + MULTIPART_OVERHEAD_BYTES,

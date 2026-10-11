@@ -11,8 +11,7 @@ export const Notice = z.object({
   buildingId: z.uuid(),
   title: z.string(),
   body: z.string(),
-  /** 이전 API에는 없어서 빈 배열로 채웁니다. */
-  photos: z.array(Photo).default([]),
+  photos: z.array(Photo),
   startsAt: z.iso.datetime(),
   endsAt: z.iso.datetime(),
   publishedAt: z.iso.datetime(),

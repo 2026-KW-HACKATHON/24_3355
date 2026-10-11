@@ -7,7 +7,6 @@ import {
   Me,
 } from "@wolgyeham/contracts";
 import { getJson, http, postEmpty, postJson, sendJsonEmpty } from "../../lib/api";
-import { fillMeTerms, tolerant } from "../../lib/apiCompat";
 import { AppError, toAppError } from "../../lib/errors";
 import { safeReturnTo } from "../../lib/returnTo";
 import { clearUserDrafts } from "../guides/localDraft";
@@ -59,13 +58,10 @@ export const LOGIN_RESULT_COPY: Readonly<Record<LoginResult, string>> = {
   failed: "로그인하지 못했어요. 다시 시도해 주세요",
 };
 
-/** 약관 필드가 없는 이전 API의 내 정보도 받습니다(lib/apiCompat, 배포 한 번 동안). */
-const MeCompat = tolerant(Me, fillMeTerms);
-
 /** 로그인하지 않았으면 null. 401은 오류가 아니라 ‘로그인 전’ 상태입니다. */
 export async function fetchMe(): Promise<Me | null> {
   try {
-    return await getJson("/api/me", MeCompat);
+    return await getJson("/api/me", Me);
   } catch (error) {
     if (toAppError(error).code === "UNAUTHENTICATED") return null;
     throw error;
@@ -83,12 +79,12 @@ export async function fetchDemoLoginAvailable(): Promise<boolean> {
 }
 
 export function demoLogin(body: DevLoginBody) {
-  return postJson("/api/dev/login", body, MeCompat);
+  return postJson("/api/dev/login", body, Me);
 }
 
 /** 로그인한 채로 지금 판 약관에 동의합니다. 이전 판이면 409 `CONFLICT`입니다. */
 export function agreeToTerms(version: string) {
-  return postJson("/api/me/terms-consent", { version }, MeCompat);
+  return postJson("/api/me/terms-consent", { version }, Me);
 }
 
 /**

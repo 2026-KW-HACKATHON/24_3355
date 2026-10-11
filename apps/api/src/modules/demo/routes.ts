@@ -19,7 +19,7 @@ export const demoRoutes = new Hono<AppEnv>()
       summary: "시연 건물과 역할 전환 계정 (DEMO_MODE 전용, 29). 결과를 5초 동안 함께 씀",
       responses: { 200: jsonResponse("시연 건물·계정", DemoOverview) },
     }),
-    async (c) => c.json(await demoService.getOverview(c.var.db), 200),
+    async (c) => c.json(await demoService.getOverview(c.var.db, { e2e: c.var.env.E2E_LOGIN }), 200),
   )
   .post(
     "/dev/reset",

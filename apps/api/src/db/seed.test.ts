@@ -58,7 +58,9 @@ import {
  */
 const t = useTestApp();
 /** 초기화의 같은 사람 제한을 보려고 X-Forwarded-For의 마지막 값을 클라이언트 주소로 씁니다. */
-const demo = useTestApp({ DEMO_MODE: "true", TRUSTED_PROXY_HOPS: "1" });
+const demo = useTestApp({ DEMO_MODE: "true", E2E_LOGIN: "true", TRUSTED_PROXY_HOPS: "1" });
+/** 배포(dev)처럼 e2e 전용 계정의 시연 로그인을 끈 시연 모드. */
+const deployedDemo = useTestApp({ DEMO_MODE: "true" });
 
 describe("demo reset", () => {
   it("restores 새봄하우스 to preparing with no guides and leaves other buildings untouched", async () => {
@@ -660,6 +662,26 @@ describe("demo mode API (LF-20, 29)", () => {
       reportId: DEMO_GUEST_REPORT_ID,
       statusPath: `/r/${DEMO_GUEST_REPORT_ID}#t=${DEMO_GUEST_REPORT_TOKEN}`,
     });
+  });
+
+  it("leaves the e2e buildings, their join codes and the e2e account out unless E2E_LOGIN is on", async () => {
+    // Given
+    await resetDemo(demo.db, { guestReport: true });
+    // When
+    const response = await deployedDemo.app.request("/api/dev/demo");
+    // Then
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.buildings.map((building: { id: string }) => building.id)).toEqual([
+      DEMO_BUILDING_ID,
+      DEMO_PREPARING_BUILDING_ID,
+    ]);
+    expect(body.accounts.map((account: { as: string }) => account.as)).toEqual([
+      "demo-resident-a",
+      "demo-landlord",
+      "demo-resident-b",
+    ]);
+    expect(JSON.stringify(body)).not.toContain(DEMO_E2E_BUILDING_ID);
   });
 
   it("gives no guest report link when its token row is gone, until the next reset", async () => {

@@ -15,6 +15,9 @@ describe("moving inside the open app when a notification is tapped", () => {
     expect(readNavigateMessage({ type: "wh:navigate", path: "/\\evil.example" }, ORIGIN)).toBe(
       undefined,
     );
+    expect(readNavigateMessage({ type: "wh:navigate", path: "/b/..//evil.example" }, ORIGIN)).toBe(
+      undefined,
+    );
     expect(readNavigateMessage({ type: "other", path: "/b/1" }, ORIGIN)).toBe(undefined);
     expect(readNavigateMessage("wh:navigate", ORIGIN)).toBe(undefined);
   });

@@ -11,8 +11,6 @@ export type Database = PgDatabase<
   ExtractTablesWithRelations<typeof schema>
 >;
 
-export type DatabaseClient = ReturnType<typeof createDatabase>;
-
 /** 프로세스마다 풀 하나를 만듭니다. 종료할 때 `close()`를 부릅니다. */
 export function createDatabase(url: string, options: { max?: number } = {}) {
   const client = postgres(url, { max: options.max ?? 10, onnotice: () => {} });
