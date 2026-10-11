@@ -20,7 +20,7 @@ describe("current notice", () => {
     // Then
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
-      notice: { buildingId: DEMO_BUILDING_ID, title: "9월 28일(일) 오전 단수 안내" },
+      notice: { buildingId: DEMO_BUILDING_ID, title: "물탱크 청소로 오전 단수 안내" },
     });
   });
 

@@ -499,11 +499,11 @@ async function writeDemoRows(tx: Database, options: DemoSeedOptions, parts: { e2
   await upsertPublishedGuides(tx, DEMO_BUILDING_ID, landlord.id, DEMO_GUIDES);
   if (parts.e2e) await writeE2eRows(tx);
 
-  // 시드한 시점에 현재 공지로 보이도록 기간을 지금 기준으로 잡습니다.
+  // 시드한 시점에 현재 공지로 보이도록 기간을 지금 기준으로 잡습니다. 기간이 움직이므로 제목에는 날짜를 넣지 않습니다.
   const now = Date.now();
   const notice = {
     buildingId: DEMO_BUILDING_ID,
-    title: "9월 28일(일) 오전 단수 안내",
+    title: "물탱크 청소로 오전 단수 안내",
     body: [
       "건물 물탱크 청소로 위 시간 동안 물이 나오지 않아요. 전날 밤에 필요한 물을 미리 받아 두세요.",
       "작업이 일찍 끝나면 따로 알리지 않고 바로 물이 나와요.",
