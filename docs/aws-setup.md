@@ -4,7 +4,7 @@
 
 - 담당: 관리자(@kyowon1108). 이 절차의 명령은 계정·권한·비용을 바꾸므로 관리자가 직접 실행합니다. AI 도구에게 대신 실행시키지 않습니다.
 - 리전: 서울 `ap-northeast-2`. 모든 리소스에 `Project=wolgyeham` 태그를 붙입니다.
-- 정책 파일: [infra/aws/](../infra/aws/). `<ACCOUNT_ID>`, `<OPS_BUCKET>`, `<ALERT_EMAIL>` 같은 자리는 실행 전에 바꿉니다.
+- 정책 파일: [infra/aws/](../infra/aws/). `<ACCOUNT_ID>`, `<OPS_BUCKET>`, `<PHOTO_BUCKET>`, `<ALERT_EMAIL>` 같은 자리는 실행 전에 바꿉니다.
 
 ## 스크립트로 한 번에
 
@@ -29,7 +29,8 @@ aws sts get-caller-identity
 export AWS_REGION=ap-northeast-2
 export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 export OPS_BUCKET=wolgyeham-ops-$ACCOUNT_ID
-fill() { sed -e "s/<ACCOUNT_ID>/$ACCOUNT_ID/g" -e "s/<OPS_BUCKET>/$OPS_BUCKET/g" "$1"; }
+export PHOTO_BUCKET=wolgyeham-photos-$ACCOUNT_ID
+fill() { sed -e "s/<ACCOUNT_ID>/$ACCOUNT_ID/g" -e "s/<OPS_BUCKET>/$OPS_BUCKET/g" -e "s/<PHOTO_BUCKET>/$PHOTO_BUCKET/g" "$1"; }
 ```
 
 **계정 플랜 확인.** 콘솔의 Billing and Cost Management → Free Tier에서 확인합니다. 2025년 7월 이후 만든 계정은 크레딧 방식(무료 플랜, 6개월)이고, 그 전 계정은 12개월 프리 티어입니다. 무료 플랜 계정은 일부 서비스(예: Organizations)에 제한이 있을 수 있습니다. 3단계에서 막히면 3-B로 갑니다.
@@ -86,6 +87,9 @@ aws s3api put-bucket-tagging --bucket $OPS_BUCKET --tagging 'TagSet=[{Key=Projec
 aws s3api put-bucket-lifecycle-configuration --bucket $OPS_BUCKET --lifecycle-configuration \
   '{"Rules":[{"ID":"expire-backups","Filter":{"Prefix":"backups/"},"Status":"Enabled","Expiration":{"Days":14}}]}'
 
+# 안내·공지 사진 버킷 (공개 차단, API를 거쳐서만 나감, dev/·prod/ 접두사). 이미 돌고 있는 환경에서는 아래 4-A 스크립트로
+bash infra/aws/add-photo-bucket.sh
+
 # API 이미지 저장소 (최근 10개만 보관)
 aws ecr create-repository --repository-name wolgyeham-api \
   --image-scanning-configuration scanOnPush=true --tags Key=Project,Value=wolgyeham
@@ -98,6 +102,10 @@ for e in dev prod; do
   aws logs put-retention-policy --log-group-name /wolgyeham/$e --retention-in-days 14
 done
 ```
+
+### 4-A. 사진 버킷 추가 (이미 돌고 있는 환경)
+
+`aws login && bash infra/aws/add-photo-bucket.sh`는 `wolgyeham-photos-<계정 ID>` 버킷(공개 차단·SSE-S3·소유권 강제·미완료 업로드 1일 정리)을 만들고, EC2 역할 `wolgyeham-ec2`의 인라인 정책 `wolgyeham-app`을 [ec2-instance-policy.json](../infra/aws/ec2-instance-policy.json)으로 다시 씁니다. 더해지는 권한은 이 버킷의 목록 보기와 `dev/*`·`prod/*` 객체 읽기·쓰기·지우기뿐입니다. 다시 실행해도 됩니다. 비용은 사진 수백 장(장당 수백 KB) 기준 월 몇십 원 수준이고, 요청 수도 무료 구간 안입니다. 서버 설정(`PHOTO_STORE`·`PHOTO_BUCKET`·`PHOTO_PREFIX`)은 [deploy.md](deploy.md)를 따릅니다.
 
 ## 5. 비밀값 (SSM Parameter Store)
 
@@ -282,4 +290,4 @@ PR 미리 보기 주소는 매번 달라서 등록하지 않습니다. 발급한
 
 ## 12. 정리 (전시가 끝난 뒤)
 
-prod 백업을 받아 둔 뒤 역순으로 지웁니다: Amplify 앱 2개 → CloudFront 2개(비활성화 후 삭제) → EC2와 탄력적 IP → ECR 저장소 → S3 버킷 → SSM 파라미터 `/wolgyeham/*` → 로그 그룹 → IAM 역할·OIDC 공급자 → Identity Center 사용자. 예산은 마지막 청구서를 확인한 뒤 지웁니다. 실제 사용자 데이터가 남은 백업은 보관 기간이 지나면 지웁니다.
+prod 백업을 받아 둔 뒤 역순으로 지웁니다: Amplify 앱 2개 → CloudFront 2개(비활성화 후 삭제) → EC2와 탄력적 IP → ECR 저장소 → S3 버킷(서버 파일·사진) → SSM 파라미터 `/wolgyeham/*` → 로그 그룹 → IAM 역할·OIDC 공급자 → Identity Center 사용자. 예산은 마지막 청구서를 확인한 뒤 지웁니다. 실제 사용자 데이터가 남은 백업은 보관 기간이 지나면 지웁니다.

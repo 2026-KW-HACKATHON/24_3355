@@ -13,10 +13,11 @@ export AWS_REGION=ap-northeast-2 AWS_PAGER=""
 cd "$(git rev-parse --show-toplevel)"
 ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
 OPS_BUCKET="wolgyeham-ops-$ACCOUNT_ID"
+PHOTO_BUCKET="wolgyeham-photos-$ACCOUNT_ID"
 REPO="2026-KW-HACKATHON/24_3355"
 TAG='Key=Project,Value=wolgyeham'
 fill() {
-  sed -e "s/<ACCOUNT_ID>/$ACCOUNT_ID/g" -e "s/<OPS_BUCKET>/$OPS_BUCKET/g" -e "s/<ALERT_EMAIL>/$ALERT_EMAIL/g" "$1"
+  sed -e "s/<ACCOUNT_ID>/$ACCOUNT_ID/g" -e "s/<OPS_BUCKET>/$OPS_BUCKET/g" -e "s/<PHOTO_BUCKET>/$PHOTO_BUCKET/g" -e "s/<ALERT_EMAIL>/$ALERT_EMAIL/g" "$1"
 }
 step() { printf '\n== %s\n' "$1"; }
 
@@ -63,6 +64,8 @@ if ! aws iam get-role --role-name wolgyeham-ec2 >/dev/null 2>&1; then
 fi
 aws iam put-role-policy --role-name wolgyeham-ec2 --policy-name wolgyeham-app \
   --policy-document "$(fill infra/aws/ec2-instance-policy.json)"
+# 안내·공지 사진 버킷(공개 차단). 역할 정책을 같은 파일로 다시 쓰므로 역할을 만든 뒤에 부릅니다.
+bash infra/aws/add-photo-bucket.sh
 if ! aws iam get-instance-profile --instance-profile-name wolgyeham-ec2 >/dev/null 2>&1; then
   aws iam create-instance-profile --instance-profile-name wolgyeham-ec2 >/dev/null
   aws iam add-role-to-instance-profile --instance-profile-name wolgyeham-ec2 --role-name wolgyeham-ec2

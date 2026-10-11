@@ -49,6 +49,18 @@
       "Resource": "arn:aws:s3:::<OPS_BUCKET>/backups/*"
     },
     {
+      "Sid": "ListPhotoBucket",
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": "arn:aws:s3:::<PHOTO_BUCKET>"
+    },
+    {
+      "Sid": "ReadWritePhotos",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+      "Resource": ["arn:aws:s3:::<PHOTO_BUCKET>/dev/*", "arn:aws:s3:::<PHOTO_BUCKET>/prod/*"]
+    },
+    {
       "Sid": "WriteContainerLogs",
       "Effect": "Allow",
       "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
