@@ -55,10 +55,11 @@ apps/web/src/
 ├── app/                providers(query·snackbar), router, 오류 경계, `/b/:id` 나누기(BuildingRoute),
 │                       스플래시(Splash), 연결 뒤 알림 선택(ConnectedNotifyPrompt)
 ├── screens/<screen>/   lofi 화면 하나 = 폴더 하나. 그 화면의 시트·상태도 여기
-├── features/<domain>/  buildings · guides · notices · reports · tips · occupancy · push · auth
+├── features/<domain>/  buildings · guides · notices · photos · reports · tips · occupancy · push · invites · me · auth
 │                       API 훅(useGuide 등)과 여러 화면이 쓰는 도메인 컴포넌트
 ├── components/         SEED 위에 만든 앱 공통 UI (화면 상태, 하단 CTA, 탭바, 함이 그림, 6칸 코드, QR, 나가기 확인)
-├── lib/                api, errors(오류 코드 → 문구), format, returnTo, share, reportAccess, text, speech, pushEnv
+├── lib/                api, apiCompat, errors(오류 코드 → 문구), format, returnTo, share, reportAccess, text, speech,
+│                       pushEnv, largeMode, teamContact
 ├── styles/             tokens.css(--wh-*), global.css
 └── assets/hami/        화면에서 실제로 쓰는 함이 사본만
 ```
@@ -105,9 +106,9 @@ apps/web/src/
 | `/manage/:buildingId/inbox`, `…/reports/:reportId` | `landlord-inbox`, `report-inbox` | 받은 내용 탭(확인할 것·확인한 내용·확인 전 수정 메모), LF-16(07 확인했어요 → 35 처리 결과, 알림 32에서 진입). ‘공지로 알리기’는 빈 공지 쓰기(34) | 집주인 |
 | `/manage/:buildingId/settings` | `landlord-settings` | 설정 탭(lofi 없음): 건물 정보·크게 보기·약관·로그아웃 | 집주인 |
 | `/manage/:buildingId/memos/:memoId` | `memo-review` | LF-17(25). 반영 → `…/guides/:guideId/edit?apply=<memoId>`, 유지 → 사유 시트 | 집주인 |
-| `/manage/:buildingId/qr` | `qr-code` | LF-18(26) QR 인쇄·가입코드 복사·바꾸기 | 집주인 |
+| `/manage/:buildingId/qr` | `qr-code` | LF-18(26) QR 인쇄·가입코드 복사·바꾸기. ‘인쇄용 내려받기’는 현관 안내문과 같은 모양의 PNG(가입코드 없음) | 집주인 |
 | `/manage/:buildingId/card` | `move-in-card` | LF-18(39) 입주 카드 인쇄·카카오톡 보내기 | 집주인 |
-| `/manage/:buildingId/sign` | `entrance-sign` | 현관 안내문 A4 인쇄(26의 ‘현관 안내문 인쇄’). 건물 이름·QR(`?via=qr`)·주소, 가입코드가 있으면 함께(화면에서 뺄 수 있음) | 집주인 |
+| `/manage/:buildingId/sign` | `entrance-sign` | 현관 안내문 A4 인쇄(26의 ‘현관 안내문 인쇄’). 건물 이름·QR(`?via=qr`)·주소. 가입코드는 처음엔 빼 두고 켤 수 있음. ‘이미지로 내려받기’는 화면 그대로의 PNG | 집주인 |
 | `/demo` | `demo` | LF-20(29). `GET /api/dev/demo`가 404면(DEMO_MODE 아님) 없는 주소(22)와 같게 보임 | 시연자 |
 | `/terms`, `/privacy` | `legal` | 약관·개인정보 처리방침 초안(D-28, lofi 없음). 본문은 `content/terms/*.ts`(문단·목록·항목만, HTML 해석 없음), 맨 위 ‘초안 · 법률 검토 전’, 시행일은 contracts `TERMS_VERSION` | 누구나 |
 | 그 밖 | `not-found` | 건물 없음(22) | 누구나 |
@@ -121,11 +122,11 @@ apps/web/src/
 - lofi에 있지만 아직 만들지 않은 행동은 숨기지 않고 비활성으로 두며, `aria-describedby`로 “다음 업데이트에서 열려요”를 연결합니다.
 - `/demo`는 시연용 건물 데이터만 쓰고 실제 화면과 상태를 공유하지 않습니다. 실제 첫 화면에 `/demo` 링크를 두지 않습니다. 역할 카드는 `GET /api/dev/demo`의 계정(`purpose: "e2e"`는 숨김)과 비회원 제보(`guestReport`가 있을 때만 ‘옆 건물 주민’)이고, 카드의 숫자는 응답에서 셉니다. 고르면 시연 로그인(`consent` 포함)으로 바꾼 뒤 집주인은 관리 홈, 연결한 거주자는 `/b/:id`(거주자 홈), 연결 전 B는 시연 건물 공개 화면, 비회원은 로그아웃하고 `statusPath`(제보 상태)로 갑니다. 옆 건물 주민(비회원) 카드는 `statusPath`의 확인 토큰으로 그 제보를 읽어 “비회원 · 제보 1건 접수됨”(확인함·처리 완료)처럼 지금 상태를 적고, 읽기 전·실패면 “비회원 · 보낸 제보 1건”입니다. ‘시연 초기화’는 확인 대화상자 → `POST /api/dev/reset`(발표 시연 건물 두 곳, 햇살빌라·새봄하우스만 되돌림. e2e 건물 테스트빌라·준비빌라는 `db:seed -- --reset-demo`로만) → 응답에 담긴 되돌린 건물의 이 기기 흔적(`wh.visited.<id>`, 그 건물 제보 확인 링크·쓰던 안내)과 가입코드·초대·메모·팁 초안, `wh.reconfirmAsked`, `dev`·`me` 밖의 캐시를 지우고 시연 목록과 내 정보를 다시 받습니다. 429는 `Retry-After`로 기다릴 시간을 적습니다.
 - 29 위에는 ‘둘러보는 순서’(A → 옆 건물 주민 → 집주인 → B, `DEMO_TOUR`)를 두고, 입주자 A의 연결이 없거나 시연 건물에 공개 안내가 없으면(`demoNeedsReset`) 초기화 상자 위에 “시연 상태가 바뀌었어요 · 운영자가 ‘시연 초기화’를 눌러 주세요”(`role="status"`)를 띄웁니다.
-- 시연 중 막대(`components/DemoBar`, `RootLayout`이 화면 위에 붙임): `/api/me`의 `user.demo`가 시연 계정이면 어느 탭에서든(29를 쓴 탭이 아니어도, e2e처럼 API로 로그인해도) “시연 중 · 역할”과 ‘역할 바꾸기’(→ `/demo`)를 보여줍니다. 역할 이름은 `features/auth/demoRole.ts`의 `DEMO_USER_LABELS`(입주자 A·집주인·다음 입주자 B·테스트빌라 집주인, 29 카드와 같은 이름)입니다. ‘시연 끝내기’는 로그아웃하고 지금 화면의 공개 화면(`/b/:id…`·`/manage/:id…` → `/b/:id`, 그 밖은 `/`, `demoEndPath`)으로 갑니다. 두 행동 모두 글자는 36px 막대 안에 두고 누르는 자리는 44px입니다. 고정하지 않은 36px 막대라 상단 막대를 가리지 않고, `/demo`·`/terms`·`/privacy`와 인쇄에서는 숨깁니다.
+- 시연 중 막대(`components/DemoBar`, `RootLayout`이 화면 위에 붙임): `/api/me`의 `user.demo`가 시연 계정이면 어느 탭에서든(29를 쓴 탭이 아니어도, e2e처럼 API로 로그인해도) “시연 중 · 역할”과 ‘역할 바꾸기’(→ `/demo`)를 보여줍니다. 역할 이름은 `features/auth/demoRole.ts`의 `DEMO_USER_LABELS`(입주자 A·집주인·다음 입주자 B·테스트빌라 집주인, 29 카드와 같은 이름)입니다. ‘시연 끝내기’는 일반 로그아웃이 아니라 `POST /api/dev/end-demo`(`features/auth/endDemo.ts`, 실제 계정 세션이면 서버가 409로 그대로 둠)로 시연을 끝내고 지금 화면의 공개 화면(`/b/:id…`·`/manage/:id…` → `/b/:id`, 그 밖은 `/`, `demoEndPath`)으로 갑니다. 두 행동 모두 글자는 36px 막대 안에 두고 누르는 자리는 44px입니다. 고정하지 않은 36px 막대라 상단 막대를 가리지 않고, `/demo`·`/terms`·`/privacy`와 인쇄에서는 숨깁니다.
 - **둘러보기 전용 시연(D-35):** 서버가 발표 시연의 쓰기를 403(`fields.account = "demo-readonly"`)으로 막으면 `errorMessage`·팁·제보 실패 문구가 모두 “시연에서는 둘러보기만 할 수 있어요”를 보여줍니다(`lib/errors.ts`의 `isDemoReadOnly`·`DEMO_READONLY_MESSAGE`). 29의 둘러보는 순서는 A: 안내와 남긴 메모 상태 보기, 옆 건물 주민: 보낸 제보 상태 보기, 집주인: 받은 메모·제보 보기, B: 가입코드 입력 화면까지 보기이고, 안내는 “시연은 둘러보기만 할 수 있어요. 실제로 해 보려면 부스 입구의 QR을 찍어 주세요.”, 초기화 상자는 ‘운영자용’입니다. 연결 2/2에는 시연용 로그인이 없습니다. 쓰기 버튼은 미리 막지 않고 누르면 위 문구를 보입니다.
 - **시연 계정과 알림(D-35):** 시연 계정은 알림을 켤 수 없습니다. 알림 시트(17, 내 정보의 ‘공지 알림’)는 “시연 계정에서는 알림을 켤 수 없어요”와 ‘닫기’만 보이고, 연결 직후의 알림 선택(`ConnectedNotifyPrompt`)은 뜨지 않으며, 조용한 다시 저장도 하지 않습니다(서버도 403). 시연 계정으로 초대를 열면 미리보기의 `demo`를 받을 때까지 수락 버튼 대신 확인 중을 보입니다. `/demo`는 내 정보를 받는 중이거나 받지 못했으면(‘다시 확인’) 역할 카드를 누를 수 없습니다. 연결 2/2의 카카오 돌아올 주소(`connectLoginReturn`)는 지금 주소의 다른 쿼리(`via=qr` 등)를 그대로 둡니다. 계정 전환(`resetForIdentity`)은 다른 진행 중인 쓰기가 끝날 때까지(최대 5초, `settleOtherMutations`) 기다린 뒤 캐시를 되돌려, 이전 계정의 쓰기가 새 계정 캐시에 남지 않게 합니다.
 - **카카오 계정으로 /demo(D-35):** 카카오로 로그인한 실제 계정(`user.demo === null`)이 역할 카드를 누르면 바꾸기 전에 대화상자 “카카오 계정으로 로그인돼 있어요 / 시연을 보면 지금 계정에서 로그아웃돼요. 연결과 알림 설정은 그대로 남아요.”([그만두기] [시연 보기])를 띄웁니다(`needsSwitchConfirm`). ‘시연 보기’는 알림 구독을 건드리지 않는 로그아웃(`keepPush`: 서버에 구독 주소를 보내지 않고 이 휴대폰 구독도 끊지 않음) 뒤 시연 로그인입니다. 로그인 전·시연 중이면 묻지 않습니다. 내 정보를 받는 동안은 카드를 누를 수 없습니다. 로그아웃은 이 휴대폰의 구독이 다른 계정 것으로 저장돼 있으면(`wh.pushSaved`의 계정이 다름) 그 구독을 건드리지 않습니다(`logoutTouchesPush`). 시연 중에 직접 ‘알림 받기’를 누르면 같은 주소가 시연 계정으로 옮겨 가는 것은 막지 않습니다(서버가 주소로 덮어씀).
-- **실제 건물에서 시연 끝내기(D-35):** 시연 계정(`user.demo`)으로 실제 건물(`demo: false`) 화면을 열면 `features/auth/endDemo.ts`의 `useEndDemoOn`이 먼저 내 정보를 새로 받고(`staleTime: 0`, 다른 탭에서 카카오로 로그인했을 수 있음) 정말 시연 계정일 때만 `POST /api/dev/end-demo`(서버도 시연 세션만 끝냄, 실제 세션이면 409 → 내 정보만 다시 받고 아무것도 하지 않음)를 부르고, 끝냈을 때만 이 기기의 초안·초대 토큰·가입코드를 지운 뒤 캐시 전체를 되돌리고(`resetForIdentity`) 내 정보를 다시 받아 “시연을 마치고 실제 건물로 들어왔어요” 토스트를 한 번 띄웁니다(토스트는 앱 틀의 `DemoEndedToast`). 그다음은 처음 온 사람과 같습니다(공개 화면, 연결은 가입코드 → 카카오 로그인, 초대는 카카오 로그인). 부르는 화면: `/b/:id`(공개·거주자 홈), `/b/:id/first`, 안내·공지 상세, 알리기(`/b/:id/report`), 팁(`/b/:id/tips`·쓰기·고치기), 제보 상태(`/r/:id`), `/b/:id/connect`, `/invite`(초대 미리보기의 `demo`, 시연 건물 초대는 그대로 수락), `ManagerGate`(`/manage/:id…`). 내 정보를 받는 중이거나 실패했으면 기다리고, 시연 건물·카카오 계정·로그인 전이면 아무것도 하지 않습니다. 끝내는 동안 연결 화면·관리 화면·`/b/:id`는 로딩으로 두어 ‘옮길까요’가 번쩍이지 않게 하고, 같은 계정은 이번 실행에서 두 번까지만 시도하고, 실패하면 다시 시도하지 않아(되풀이 방지) 서버 403의 빨간 문구(`DEMO_ACCOUNT_BLOCKED`)가 남습니다. 초대 화면은 로그아웃이 지운 초대 토큰을 화면이 들고 있던 값으로 다시 남깁니다. 실제 건물의 연결 2/2에는 시연용 로그인을 보이지 않습니다. 판정은 `shouldEndDemo`(순수 함수) 한 곳입니다.
+- **실제 건물에서 시연 끝내기(D-35):** 시연 계정(`user.demo`)으로 실제 건물(`demo: false`) 화면을 열면 `features/auth/endDemo.ts`의 `useEndDemoOn`이 먼저 내 정보를 새로 받고(`staleTime: 0`, 다른 탭에서 카카오로 로그인했을 수 있음) 정말 시연 계정일 때만 `POST /api/dev/end-demo`(서버도 시연 세션만 끝냄, 실제 세션이면 409 → 내 정보만 다시 받고 아무것도 하지 않음)를 부르고, 끝냈을 때만 이 기기의 초안·초대 토큰·가입코드를 지운 뒤 캐시 전체를 되돌리고(`resetForIdentity`) 내 정보를 다시 받아 “시연을 마치고 실제 건물로 들어왔어요” 토스트를 한 번 띄웁니다(토스트는 앱 틀의 `DemoEndedToast`). 그다음은 처음 온 사람과 같습니다(공개 화면, 연결은 가입코드 → 카카오 로그인, 초대는 카카오 로그인). 부르는 화면: `/b/:id`(공개·거주자 홈), `/b/:id/first`, 안내·공지 상세, 알리기(`/b/:id/report`), 팁(`/b/:id/tips`·쓰기·고치기), 제보 상태(`/r/:id`), `/b/:id/connect`, `/invite`(초대 미리보기의 `demo`, 시연 건물 초대는 그대로 수락), `ManagerGate`(`/manage/:id…`). 내 정보를 받는 중이거나 실패했으면 기다리고, 시연 건물·카카오 계정·로그인 전이면 아무것도 하지 않습니다. 끝내는 동안 연결 화면·관리 화면·`/b/:id`는 로딩으로 두어 ‘옮길까요’가 번쩍이지 않게 하고, 같은 계정은 이번 실행에서 두 번까지만 시도하고, 실패하면 다시 시도하지 않아(되풀이 방지) 서버 403의 빨간 문구(`DEMO_ACCOUNT_BLOCKED`)가 남습니다. 초대 화면은 로그아웃이 지운 초대 토큰을 화면이 들고 있던 값으로 다시 남깁니다. 판정은 `shouldEndDemo`(순수 함수) 한 곳입니다.
 
 ## 5. 데이터와 화면 상태
 

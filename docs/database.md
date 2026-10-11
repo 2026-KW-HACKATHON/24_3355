@@ -21,6 +21,7 @@
 | 보안 보강(`0007_security_hardening`) | 있음: `moderation_actions`(운영 기록), `rate_limits`(고정 창 횟수 제한), `push_subscriptions.failure_count`, `tips.deleted_at`(소프트 삭제), `content_reports.tip_body`(신고할 때 내용), 정리용 인덱스(`join_code_attempts.updated_at`, `report_access_tokens.expires_at`, `report_submissions.created_at`) |
 | 푸시 구독 주소 정리(`0008_push_endpoint_cleanup`, 직접 쓴 SQL) | 있음: contracts `isAllowedPushEndpoint`와 같은 규칙에 맞지 않는 `push_subscriptions` 행을 지움 |
 | 건물 확인·약관 동의(`0009_building_confirm_terms_consent`) | 있음: `buildings.confirmed_at`(LF-12·23 건물 확인), `users.terms_version`·`terms_agreed_at`(D-28, CHECK 둘 다 null이거나 둘 다 있음·판 64자 이하). 이미 관리자가 있던 건물은 첫 관리자가 생긴 시각으로 채움(생성 SQL 뒤에 직접 붙인 UPDATE) |
+| 안내·공지 사진(`0010_photos`) | 있음: `guides`·`guide_revisions`·`notices`의 `photos jsonb`(기본 `[]`)와 CHECK `<테이블>_photos_check`(배열, 4개 이하). D-34 |
 | 사용자 외래 키 인덱스(`0005_user_fk_indexes`) | 있음: `guides`·`guide_revisions`·`notices`의 작성자, `join_codes.created_by_user_id`, `manager_invites.accepted_by_user_id`, `content_reports.reporter_user_id` |
 | 스크립트 `db:generate`, `db:migrate`, `db:seed`, `db:invite`, `db:moderate` | 있음. `apps/api/package.json`, 루트는 `db:migrate`·`db:seed` |
 | 테스트 DB `wolgyeham_test` | 있음. 로컬은 아래 명령으로 한 번 만듦, CI는 Postgres 서비스 |
@@ -167,10 +168,10 @@ erDiagram
 | `tips` | `building_id`(cascade), `author_user_id`(set null), `category`, `body` ≤200, `hidden_at`, `hidden_reason` ≤200(운영자 가림), `deleted_at`(작성자 삭제, 소프트 삭제) | CHECK 값 목록·글자 수, CHECK `hidden_reason is null or hidden_at is not null`, `tips_building_id_idx`, `tips_author_user_id_idx` |
 | `content_reports` | `tip_id`(cascade), `reporter_user_id`(set null), `reason` ≤200(선택), `tip_body`(신고할 때의 팁 내용, 0007 전 행은 null), `status` open·reviewed, `reviewed_at` | `content_reports_tip_id_reporter_user_id_key`(한 사람이 한 팁에 한 번), CHECK `(status = 'open') = (reviewed_at is null)`, `content_reports_status_idx`, `content_reports_reporter_user_id_idx`. 운영자가 가리거나 복원하면 그 팁의 open 신고가 reviewed |
 | `moderation_actions` | `tip_id`(cascade), `action` hide·restore, `reason` ≤200, `operator`(1~100자, `db:moderate --by`) | CHECK 값·글자 수, `moderation_actions_tip_id_idx`. 가림·복원마다 같은 트랜잭션에서 한 행, 지우지 않음 |
-| `rate_limits` | `bucket`, `subject_key`, `hit_count`, `window_started_at` | `rate_limits_bucket_subject_key_key`, `rate_limits_updated_at_idx`. 고정 창 횟수 제한(`lib/rate-limit.ts`: `push_subscribe` 사용자마다 10분에 10번, 시연 초기화 `demo-reset-interval` 30초에 1번·`demo-reset-hourly` 한 시간에 20번, 둘 다 키 `all` 하나). 하루 넘게 쓰이지 않은 행은 부를 때마다 100행씩 지움 |
+| `rate_limits` | `bucket`, `subject_key`, `hit_count`, `window_started_at` | `rate_limits_bucket_subject_key_key`, `rate_limits_updated_at_idx`. 고정 창 횟수 제한(`lib/rate-limit.ts`: `push_subscribe` 사용자마다 10분에 10번, `photo_upload` 사용자마다 한 시간에 60장, 시연 초기화는 같은 사람(IP 키) `demo-reset-client-interval` 30초에 1번·`demo-reset-client-hourly` 한 시간에 10번과 모든 사람 합쳐(키 `all`) `demo-reset-interval` 30초에 1번·`demo-reset-hourly` 한 시간에 20번). 하루 넘게 쓰이지 않은 행은 부를 때마다 100행씩 지움 |
 
-- 안내 `category`는 contracts `GUIDE_CATEGORIES`(`recycling`·`parcel`·`facility`·`common`·`contact` = 분리수거·택배·보일러·설비·공용공간·연락, 로파이 33)와 CHECK로 정했습니다. 안내 제목·본문은 80·2000자 이하입니다. 팁 `category`는 contracts `TIP_CATEGORIES`(`recycling`·`parcel`·`winter`·`common`·`other`, 로파이 19), 제보 `kind`·`location`·`preset`은 `REPORT_KINDS`·`REPORT_LOCATIONS`·`REPORT_PRESETS`(로파이 05·01·20)이고 CHECK와 같은 목록입니다. 값을 바꾸면 contracts enum과 CHECK 마이그레이션을 같은 PR에 넣습니다.
-- 사진 파일은 사진 저장소(S3, 로컬은 폴더, D-34)에 두고 DB에는 키 목록(`photos jsonb`, `buildings/<건물>/<id>.webp`, 최대 4개)만 둡니다. `guides`·`guide_revisions`·`notices`가 같은 모양이고 CHECK `<테이블>_photos_check`가 배열·4개 이하를 지킵니다. 키 형식과 파일 존재는 서비스가 확인합니다. 건물·안내 행을 지워도 파일은 따로 지워지지 않습니다.
+- 안내 `category`는 contracts `GUIDE_CATEGORIES`(`recycling`·`parcel`·`facility`·`common`·`contact` = 분리수거, 택배, 보일러·설비, 공용공간, 연락. 로파이 33)와 CHECK로 정했습니다. 안내 제목·본문은 80·2000자 이하입니다. 팁 `category`는 contracts `TIP_CATEGORIES`(`recycling`·`parcel`·`winter`·`common`·`other`, 로파이 19), 제보 `kind`·`location`·`preset`은 `REPORT_KINDS`·`REPORT_LOCATIONS`·`REPORT_PRESETS`(로파이 05·01·20)이고 CHECK와 같은 목록입니다. 값을 바꾸면 contracts enum과 CHECK 마이그레이션을 같은 PR에 넣습니다.
+- 사진 파일은 사진 저장소(S3, 로컬은 폴더, D-34)에 두고 DB에는 키 목록(`photos jsonb`, `buildings/<건물>/<id>.webp`, 최대 4개)만 둡니다. `guides`·`guide_revisions`·`notices`가 같은 모양이고 CHECK `<테이블>_photos_check`가 배열·4개 이하를 지킵니다. 키 형식과 파일 존재는 서비스가 확인합니다. 건물·안내 행을 지워도 파일은 따로 지워지지 않습니다(예외: 시연 초기화는 되돌린 시연 건물의 사진 접두사를 통째로 지움, §8).
 - 공개된 안내를 고치는 동안의 내용은 별도 테이블 `guide_revisions`에 둡니다. 저장해도 `guides` 행(공개 내용·`updated_at`)은 바뀌지 않고, 수정 공개 트랜잭션에서만 수정본을 `guides`로 옮기고 지웁니다. 공개가 실패하면 공개된 내용·수정본·메모 상태는 그대로입니다([backend.md §7](backend.md#7-도메인-규칙)).
 - 공개 건물 URL은 `buildings.id`(uuid v4)를 씁니다. 더 짧은 공개 키가 필요하면 정할 것입니다.
 - `reporter_kind`는 제보 시점의 스냅숏입니다(`resident` 이 건물 거주자, `member` 로그인했지만 거주자가 아님, `guest` 로그인하지 않음). 집주인 화면의 ‘거주자’·‘회원’·‘비회원’ 표시에만 씁니다. 값 목록을 바꾼 CHECK는 `0006_report_kinds_optional_note`입니다.
@@ -224,7 +225,7 @@ erDiagram
 ## 8. 시드·시연 데이터
 
 - `db:seed`는 로파이의 가상 건물 ‘햇살빌라’ 데이터를 만듭니다: 공개된 기본 안내, 공지, 시연 역할(입주자 A, 다음 입주자 B, 집주인, 옆 건물 주민)의 사용자와 관계. 실제 사람·실제 주소·실제 가입코드는 넣지 않습니다.
-  - 지금 있는 것(구현 순서 A): 햇살빌라(open, id `5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f01`)와 공개 안내 4개(분리수거·택배·보일러·설비·공용공간), 시드 시점 기준 진행 중인 공지 1개, 시연 집주인(`kakao_user_id` `demo-landlord`)과 관리 관계. 집주인 시작 시연용 새봄하우스(preparing, 관리자 없음, id `…4f02`)는 처음 한 번만 만들고 다시 시드해도 건드리지 않습니다.
+  - 지금 있는 것(구현 순서 A): 햇살빌라(open, id `5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f01`)와 공개 안내 4개(분리수거, 택배, 보일러·설비, 공용공간), 시드 시점 기준 진행 중인 공지 1개, 시연 집주인(`kakao_user_id` `demo-landlord`)과 관리 관계. 집주인 시작 시연용 새봄하우스(preparing, 관리자 없음, id `…4f02`)는 처음 한 번만 만들고 다시 시드해도 건드리지 않습니다.
   - 구현 순서 B: 햇살빌라의 시연 가입코드 `WK72P4`(로파이 LF-18·02에 그린 가상 코드), 입주자 A(`demo-resident-a`, 햇살빌라에 active로 연결)와 다음 입주자 B(`demo-resident-b`, 연결 없음 → 시연 가입코드로 연결). 다시 시드하면 시연 중 바꾼 햇살빌라 코드는 끝내고 `WK72P4`로 되돌리며, 입주자 A가 다른 건물로 옮겼으면 그 연결을 끝내고 햇살빌라 연결을 되살립니다. 시연 중 연결한 다른 사람(B 포함)의 햇살빌라 연결은 다시 시드해도 남고, `--reset-demo`로만 지워집니다.
   - 구현 순서 C·D: 햇살빌라 안내에 확인 전 수정 메모 2개(분리수거: 입주자 A가 씀, 택배: 작성자 연결 없음). 다시 시드하면 이 두 메모를 `pending`으로 되돌리고 시드 안내 4개의 수정본을 지웁니다. 시연 중 새로 남긴 메모는 남고 `--reset-demo`로만 지워집니다. 입주자 A는 시드한 시점에 확인을 마친 active(다음 요청은 `RECONFIRM_INTERVAL_DAYS` 뒤)이고, `--reconfirm-requested`를 붙이면 ‘재확인 요청됨’(하루 전 요청, 13일 뒤 reconfirm_needed)으로 만듭니다(시트 40 시연). 예: `pnpm --filter @wolgyeham/api db:seed -- --reconfirm-requested`, `… -- --reset-demo --reconfirm-requested`.
   - 구현 순서 F: 햇살빌라의 생활 팁 4개(로파이 04: 분리수거 팁은 입주자 A가 써서 A의 ‘내 팁’, 나머지 셋은 작성자 연결 없음, 작성 월 2026-09·2026-05·2025-12·2025-10). 다시 시드하면 이 네 팁을 시드 내용으로 되돌리고(가림 해제) 그 팁의 신고를 지웁니다. 시연 중 새로 남긴 팁·제보는 남고 `--reset-demo`로만 지워집니다.
@@ -232,18 +233,20 @@ erDiagram
   - e2e의 새 집주인 흐름(초대 → 로그인 → 첫 공개) 전용 건물 ‘준비빌라’(preparing, id `5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f04`). 관리자·안내·가입코드가 없고, 새봄하우스처럼 처음 한 번만 만들어 다시 시드해도 건드리지 않습니다(관리자를 붙이지 않음). `--reset-demo`가 이 상태로 되돌립니다(e2e가 만든 관리자·초대·안내·가입코드를 지우고 preparing으로).
   - 건물 확인(LF-12·23): 햇살빌라·테스트빌라는 확인을 마친 상태(`confirmed_at` = 안내 수정 시각과 같은 고정 시각)로 시드하고 다시 시드해도 되돌립니다. 새봄하우스·준비빌라는 확인 전(null)으로 만들어 초대 → 로그인 → 건물 확인(23) → 안내 쓰기를 시연하고, 다시 시드해도 시연 중 확인한 것을 지우지 않으며 `--reset-demo`만 확인 전으로 되돌립니다.
   - 시연 계정의 약관 동의(`terms_*`)는 시드·초기화가 건드리지 않습니다(시연 로그인에 `consent`를 붙이면 남음).
+  - 발표 시연 계정(집주인·입주자 A·다음 입주자 B)과 발표 시연 건물(햇살빌라·새봄하우스)은 둘러보기 전용이라 API가 쓰기를 막습니다(D-35). 시드·초기화·e2e 전용 계정과 건물은 그대로 씁니다.
+  - e2e 전용 ‘실제빌라’(시연 건물이 아닌 실제 건물 역할, 관리자 없이 open·가입코드만)와 e2e 거주자 계정(`e2e-`로 시작하는 `kakao_user_id`)은 시드가 아니라 `e2e/support/dev-db.ts`가 로컬 DB에만 만들고, 테스트끼리 다시 쓰려고 지우지 않습니다.
   - 옆 건물 주민(29)은 비회원이라 계정이 없습니다. 시연 모드(`DEMO_MODE=true`)로 시드·초기화할 때만 햇살빌라에 비회원 제보 1건(확인 전)과 그 확인 링크 토큰(고정 원문, DB에는 해시만, 30일)을 만듭니다. 토큰 원문이 저장소에 공개돼 있어 `DEMO_MODE`가 꺼진 시드는 만들지 않고(이미 있으면 건드리지 않음), `--reset-demo`는 건물째 지우므로 이때 사라집니다.
   - 여러 번 실행해도 같은 상태가 됩니다. 햇살빌라의 시드 행(건물·안내 4개·공지)은 시드 내용으로 되돌리고, 그 밖의 행은 지우지 않습니다.
 - 시연 사용자의 `kakao_user_id`는 실제 카카오 회원번호(숫자)와 겹치지 않는 값(예: `demo-landlord`)을 씁니다.
 - 시드·초기화 함수는 `apps/api/src/db/demo.ts`에 있고, `seed.ts`는 인자를 읽는 CLI입니다. 서버 번들이 시연 모드 API(`POST /api/dev/reset`)로 `demo.ts`를 가져가도 CLI 코드(`import.meta.main`)가 섞이지 않게 나눴습니다.
 - 시드는 로컬·dev·시연 환경에서만 실행합니다. `NODE_ENV=production`이면 `DEMO_MODE=true`가 아닐 때 실행을 거부합니다. prod에서는 실행하지 않습니다.
-- 시연 초기화(LF-20)는 시연용 건물 데이터만 되돌립니다. `pnpm --filter @wolgyeham/api db:seed -- --reset-demo`(이미지에서는 `node seed.mjs --reset-demo`)는 고정 id의 시연 건물 네 곳(햇살빌라·새봄하우스·e2e 테스트빌라·e2e 준비빌라)만 한 트랜잭션에서 지우고(cascade: 안내·수정본·수정 메모·공지·관리자·초대·가입코드·시도 기록·연결·발송 기록·제보·조회 토큰·접수 기록·팁·신고) 처음 시드한 상태로 다시 만든 뒤, 건물마다 지운 행 수(제보·팁 포함)를 출력합니다. 시드와 초기화는 advisory lock으로 한 번에 하나씩 돕니다. 새봄하우스는 다시 preparing·안내 없음·관리자 없음이 됩니다. 테스트빌라는 시드 안내 2개만 남고 e2e 집주인이 다시 관리자가 됩니다. 다른 건물과 사용자(시연 집주인 포함)는 지우지 않습니다. production 거부 규칙은 시드와 같습니다. 시연 모드(`DEMO_MODE=true`)에서는 같은 함수를 `POST /api/dev/reset`(29 ‘처음 상태로 되돌리기’)이 범위 `demo`로 불러 발표 시연 건물 두 곳(햇살빌라·새봄하우스)만 되돌립니다(e2e 건물·e2e 집주인은 그대로). 같은 사람(IP) 30초에 한 번·한 시간에 10번, 모든 사람을 합쳐 30초에 한 번·한 시간에 20번으로 제한합니다([backend.md §6](backend.md#6-권한)).
+- 시연 초기화(LF-20)는 시연용 건물 데이터만 되돌립니다. `pnpm --filter @wolgyeham/api db:seed -- --reset-demo`(이미지에서는 `node seed.mjs --reset-demo`)는 고정 id의 시연 건물 네 곳(햇살빌라·새봄하우스·e2e 테스트빌라·e2e 준비빌라)만 한 트랜잭션에서 지우고(cascade: 안내·수정본·수정 메모·공지·관리자·초대·가입코드·시도 기록·연결·발송 기록·제보·조회 토큰·접수 기록·팁·신고) 처음 시드한 상태로 다시 만든 뒤, 건물마다 지운 행 수(제보·팁 포함)를 출력합니다. 되돌린 건물의 사진 파일(`buildings/<id>/` 접두사)도 지웁니다(D-34). 시드와 초기화는 advisory lock으로 한 번에 하나씩 돕니다. 새봄하우스는 다시 preparing·안내 없음·관리자 없음이 됩니다. 테스트빌라는 시드 안내 2개만 남고 e2e 집주인이 다시 관리자가 됩니다. 다른 건물과 사용자(시연 집주인 포함)는 지우지 않습니다. production 거부 규칙은 시드와 같습니다. 시연 모드(`DEMO_MODE=true`)에서는 같은 함수를 `POST /api/dev/reset`(29 ‘처음 상태로 되돌리기’)이 범위 `demo`로 불러 발표 시연 건물 두 곳(햇살빌라·새봄하우스)만 되돌립니다(e2e 건물·e2e 집주인은 그대로). 같은 사람(IP) 30초에 한 번·한 시간에 10번, 모든 사람을 합쳐 30초에 한 번·한 시간에 20번으로 제한합니다([backend.md §6](backend.md#6-권한)).
 
 ## 9. 백업과 보관
 
 - dev·prod는 매일 `pg_dump`로 S3에 백업하고 14일 보관합니다. 방법과 위치는 [deploy.md](deploy.md)와 [architecture.md](architecture.md)를 따릅니다.
 - 본선 전에 백업을 복구해 보는 연습을 한 번 합니다(절차는 deploy.md).
-- 제보 보관 기간은 정할 것입니다([README.md §12 POL-010](../README.md#12-정책)). 조회 토큰은 30일 뒤 쓸 수 없고(410), 만료된 지 30일이 더 지나면 제보를 받을 때마다 조금씩 지웁니다(그 뒤 404). 기간이 지난 제보를 지우는 작업은 아직 구현 전입니다. 반복 접수 제한 기록(`report_submissions`)은 하루 뒤, `rate_limits`·`join_code_attempts`는 하루 넘게 쓰이지 않으면 지웁니다. DB에서 지운 데이터도 백업 파일에는 최대 14일 남습니다.
+- 제보 보관 기간은 정할 것입니다([lofi/screens.md 확정 전 검토 항목](../lofi/screens.md#확정-전-검토-항목)). 조회 토큰은 30일 뒤 쓸 수 없고(410), 만료된 지 30일이 더 지나면 제보를 받을 때마다 조금씩 지웁니다(그 뒤 404). 기간이 지난 제보를 지우는 작업은 아직 구현 전입니다. 반복 접수 제한 기록(`report_submissions`)은 하루 뒤, `rate_limits`·`join_code_attempts`는 하루 넘게 쓰이지 않으면 지웁니다. DB에서 지운 데이터도 백업 파일에는 최대 14일 남습니다.
 
 ## 10. 개인정보
 

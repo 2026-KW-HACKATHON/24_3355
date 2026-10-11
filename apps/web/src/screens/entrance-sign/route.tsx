@@ -1,4 +1,4 @@
-// 현관 안내문(A4 인쇄). QR과 가입코드(26)에서 들어옵니다. 배치는 팀 현관 포스터(남색 주소판 · 큰 문구 · 가운데 QR ·
+// LF-18 현관 안내문(A4 인쇄·이미지 내려받기). QR과 가입코드(26)에서 들어옵니다. 배치는 팀 현관 포스터(남색 주소판 · 큰 문구 · 가운데 QR ·
 // 함이)를 따르고, 건물 이름·주소·안내 종류·QR은 이 건물 데이터로 채웁니다.
 import { ActionButton } from "@seed-design/react";
 import type { ManagedBuildingDetail } from "@wolgyeham/contracts";

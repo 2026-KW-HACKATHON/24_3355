@@ -76,37 +76,25 @@
 
 ## 역할별 데모
 
-[시연 시작 화면](https://main.d3oykk6yk6i4p7.amplifyapp.com/demo)에서 같은 햇살빌라 데이터를 네 역할로 이어서 볼 수 있습니다.
+[시연 시작 화면](https://main.d3oykk6yk6i4p7.amplifyapp.com/demo)에서 같은 햇살빌라 데이터를 네 역할로 둘러볼 수 있습니다. 시연은 둘러보기 전용이고, 안내를 남기거나 연결하는 일은 실제 건물의 현관 QR에서 카카오 계정으로 해 봅니다.
 
-| 역할 | 확인할 수 있는 흐름 |
+| 역할 | 둘러볼 수 있는 흐름 |
 |---|---|
-| 입주자 A | 공지·건물 안내·생활 팁·거주 연결 종료 |
-| 옆 건물 주민 | 가입하지 않은 외부인의 제보와 처리 상태 |
-| 집주인 | 기본 안내·공지·수정 메모·받은 내용 관리 |
-| 다음 입주자 B | 가입코드 연결과 이전 사람에게서 이어진 안내 |
+| 입주자 A | 공지·건물 안내·생활 팁, 남긴 수정 메모의 상태 |
+| 옆 건물 주민 | 가입하지 않은 외부인이 보낸 제보와 처리 상태 |
+| 집주인 | 관리 홈, 받은 수정 메모·제보 |
+| 다음 입주자 B | 가입코드 입력 화면과 이전 사람에게서 이어진 안내 |
 
 ## 구현된 기능
 
-- 건물 공개 페이지와 현관 QR, 인쇄용 입주 카드
-- 집주인 초대, 건물 확인, 안내 작성·미리 보기·공개
+- 건물 공개 페이지와 현관 QR, 인쇄용 입주 카드·현관 안내문(A4 인쇄, 이미지 내려받기)
+- 집주인 초대, 건물 확인, 안내 작성·미리 보기·공개, 안내·공지 사진(최대 4장, 위치 정보 제거)
 - 6자리 가입코드, 카카오 로그인, 약관 동의, 거주 연결
 - 공지 작성·기간 관리·웹 푸시 알림·열람 기록
 - 수정 메모 검토, 안내 수정본 공개, 거주 재확인·이사
 - 비회원 제보 재조회, 집주인 확인·처리 결과
 - 거주자 생활 팁 작성·수정·삭제·신고
-- 크게 보기, 읽어주기, 오류·빈 상태, 역할 전환 시연
-
-## 기술 구성
-
-| 영역 | 사용 기술 |
-|---|---|
-| Web | React 19, TypeScript, Vite, React Router, TanStack Query, SEED Design |
-| API | Hono, Zod, Drizzle ORM, PostgreSQL |
-| Auth·Notification | Kakao OAuth, 세션 쿠키, Web Push·VAPID |
-| Infrastructure | AWS Amplify, CloudFront, EC2, ECR, SSM, S3, Caddy |
-| Quality | Vitest, Playwright, Biome, GitHub Actions |
-
-프론트엔드와 백엔드는 [packages/contracts](packages/contracts)를 통해 요청·응답 스키마를 공유합니다. 브라우저에서 CloudFront를 거쳐 서버까지 HTTPS로 연결하고, dev와 prod 데이터베이스를 분리합니다.
+- 크게 보기, 읽어주기, 오류·빈 상태, 둘러보기 전용 역할 전환 시연
 
 ## 로컬 실행
 
@@ -135,7 +123,7 @@ pnpm dev
 - dev API 상태: https://main.d3oykk6yk6i4p7.amplifyapp.com/api/health
 - prod API 상태: https://release.dfldu21sxhojf.amplifyapp.com/api/health
 
-`main`은 dev, `release`는 prod로 배포됩니다. API 배포는 검사·이미지 빌드·DB 마이그레이션·상태 확인을 거치며 실패하면 직전 이미지로 되돌립니다.
+`main`은 dev(시연 모드 켜짐), `release`는 prod(시연 모드 꺼짐)로 배포됩니다. API 배포는 검사·이미지 빌드·DB 마이그레이션·상태 확인을 거치며 실패하면 직전 이미지로 되돌립니다.
 
 ## 파일럿 계획
 
@@ -144,6 +132,18 @@ pnpm dev
 <p align="center">
   <img src="docs/assets/pdf-pages/page-14.png" alt="월계1동 겨울 입주 시기의 월계함 파일럿 계획" width="1000" />
 </p>
+
+## 기술 스택과 구성
+
+| 영역 | 사용 기술 |
+|---|---|
+| Web | React 19, TypeScript, Vite 8, React Router 8, TanStack Query 5, SEED Design, Pretendard(직접 호스팅) |
+| API | Node 24, Hono 4, Zod 4, Drizzle ORM, PostgreSQL 17, sharp(사진 WebP 변환) |
+| Auth·Notification | Kakao OAuth, 세션 쿠키, Web Push·VAPID |
+| Infrastructure | AWS Amplify, CloudFront, EC2(docker compose, Caddy), ECR, SSM Parameter Store, S3(백업·사진), CloudWatch Logs |
+| Quality | Vitest, Playwright, Biome, GitHub Actions |
+
+프론트엔드와 백엔드는 [packages/contracts](packages/contracts)를 통해 요청·응답 스키마를 공유합니다. 브라우저에서 CloudFront를 거쳐 서버까지 HTTPS로 연결하고, dev와 prod 데이터베이스를 분리합니다. 구조는 [시스템 구조](docs/architecture.md), 구조를 정한 이유는 [결정 기록](docs/decisions.md)에 있습니다.
 
 ## 문서
 

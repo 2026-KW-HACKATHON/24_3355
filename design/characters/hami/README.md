@@ -19,6 +19,10 @@ design/characters/hami/
 
 lofi/assets/hami/
 └── guide.png … wave.png                검토한 현재 사용본 사본
+
+apps/web/src/assets/hami/
+└── guide.png … wave.png, house-640.png, envelope-640.png
+                                        앱용 압축 사본(같은 파일명, 표시 크기의 약 2배, D-25)
 ```
 
 ## 3. 제작 원칙

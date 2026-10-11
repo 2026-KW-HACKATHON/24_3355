@@ -93,6 +93,7 @@ aws s3api put-bucket-lifecycle-configuration --bucket $OPS_BUCKET --lifecycle-co
 bash infra/aws/add-photo-bucket.sh
 
 # API 이미지 저장소 (최근 10개만 보관, prod- 태그가 붙은 prod 이미지는 최근 3개를 따로 남김)
+# setup-infra.sh도 같은 정리 규칙을 넣습니다. 아래는 손으로 만들 때의 명령입니다
 aws ecr create-repository --repository-name wolgyeham-api \
   --image-scanning-configuration scanOnPush=true --tags Key=Project,Value=wolgyeham
 aws ecr put-lifecycle-policy --repository-name wolgyeham-api --lifecycle-policy-text \
@@ -288,7 +289,7 @@ PR 미리 보기 주소는 매번 달라서 등록하지 않습니다. 발급한
 - [ ] dev 웹에서 카카오 로그인 후 새로고침해도 로그인이 유지된다 (프록시로 쿠키가 오가는지 확인)
 - [ ] `aws logs tail /wolgyeham/dev`에 요청 로그가 보인다
 - [ ] 다음 날 S3 `backups/`에 dump 파일이 생겼다
-- [ ] 팀원이 `aws sso login --profile wolgyeham` 후 로그를 볼 수 있다
+- [ ] 팀원이 로그인(3-B는 `aws login`, Identity Center는 `aws sso login --profile wolgyeham`) 후 로그를 볼 수 있다
 
 ## 12. 정리 (전시가 끝난 뒤)
 

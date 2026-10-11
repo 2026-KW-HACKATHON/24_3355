@@ -25,6 +25,7 @@ flowchart LR
     EC2 -->|"pull"| ECR
     EC2 -->|"비밀값"| SSM["SSM Parameter Store"]
     EC2 -->|"매일 백업"| S3["S3 wolgyeham-ops"]
+    EC2 -->|"안내·공지 사진(dev/·prod/)"| S3P["S3 wolgyeham-photos"]
     EC2 -->|"컨테이너 로그"| CW["CloudWatch Logs"]
 ```
 
@@ -44,7 +45,8 @@ dev 웹은 Amplify의 GitHub 연결이 빌드합니다. prod 웹은 GitHub Actio
 
 - dev는 팀이 매일 확인하는 곳이고 데이터가 초기화될 수 있습니다.
 - prod는 파일럿 건물의 실제 사용자가 씁니다. 실제 사용자 데이터가 들어가므로 초기화하지 않고, 시연용 시드를 넣지 않습니다.
-- 시연 모드(LF-20)와 가상 건물 '햇살빌라' 시드는 local과 dev에서만 씁니다. 본선 시연과 전시는 `main`을 동결한 dev에서 합니다.
+- 시연 모드(LF-20)와 가상 건물 '햇살빌라' 시드는 local과 dev에서만 씁니다(`DEMO_MODE=true`). 본선 시연과 전시는 `main`을 동결한 dev에서 합니다.
+- dev DB에는 시연 건물과 전시용 실제 건물이 함께 있습니다. 포스터 QR의 `/demo`는 둘러보기 전용이고(발표 시연 계정·건물의 쓰기는 서버가 403), 시연 세션으로 실제 건물을 열면 시연을 끝내고 처음 온 사람처럼 이어 갑니다([decisions.md](decisions.md) D-35).
 
 ## 구성 요소
 
@@ -54,12 +56,13 @@ dev 웹은 Amplify의 GitHub 연결이 빌드합니다. prod 웹은 GitHub Actio
 | API 입구 | CloudFront 배포 2개 | API에 HTTPS 주소 제공, 캐시 안 함 | 상시 무료 한도(월 1TB) 안 |
 | 원본 HTTPS | EC2 안의 caddy + sslip.io 이름 + Let's Encrypt(대체 ZeroSSL) | CloudFront → EC2 구간 암호화, 원본 확인 헤더 검사(D-31) | 무료. 메모리 64MB 제한 |
 | API·DB | EC2 t3.micro 1대 + EBS 20GB + 탄력적 IP | docker compose로 api-dev, api-prod, Postgres, caddy | 프리 티어 대상 크기. 계정 플랜에 따라 무료 또는 크레딧 차감 |
-| 이미지 | ECR `wolgyeham-api` | API 이미지 보관 (최근 10개) | 수백 MB 이하 |
+| 이미지 | ECR `wolgyeham-api` | API 이미지 보관 (최근 10개, `prod-` 태그가 붙은 prod 이미지는 최근 3개를 따로 남김) | 수백 MB 이하 |
 | 비밀값 | SSM Parameter Store (표준) | 카카오 키, 세션 비밀, DB 비밀번호 | 표준 파라미터 무료 |
 | 백업·서버 파일 | S3 `wolgyeham-ops-<계정ID>` | 매일 pg_dump(14일 보관), 서버 스크립트 | 수 MB |
+| 사진 | S3 `wolgyeham-photos-<계정ID>` (공개 차단) | 안내·공지 사진 WebP. dev는 `dev/`, prod는 `prod/` 접두사. API만 EC2 역할로 읽고 씀(D-34) | 사진 수백 장 기준 월 몇십 원 |
 | 로그 | CloudWatch Logs `/wolgyeham/dev`, `/wolgyeham/prod` | 컨테이너 로그, 14일 보관 | 무료 한도 안 |
-| 권한 | IAM Identity Center, GitHub OIDC 역할 | 사람은 SSO, 배포는 키 없이 | 무료 |
-| 비용 감시 | AWS Budgets | 월 5달러 예산. 실제 1달러 또는 예상 5달러를 넘으면 메일 | 무료 |
+| 권한 | IAM 사용자(콘솔 비밀번호 + MFA, 액세스 키 없음), GitHub OIDC 역할 | 사람은 `aws login`, 배포는 키 없이. Identity Center는 조직을 만들면 옮김([aws-setup.md](aws-setup.md) 3-B) | 무료 |
+| 비용 감시 | AWS Budgets | 월 20달러 예산. 실제 4달러(20%) 또는 예상 20달러를 넘으면 메일 | 무료 |
 
 2025년 7월 이후 만든 AWS 계정은 12개월 무료 대신 크레딧 방식(6개월)입니다. 어느 쪽인지는 [aws-setup.md](aws-setup.md) 0단계에서 확인합니다.
 
@@ -71,7 +74,7 @@ dev 웹은 Amplify의 GitHub 연결이 빌드합니다. prod 웹은 GitHub Actio
 4. 로그인은 API가 카카오와 직접 주고받고, 세션 쿠키 `wh_session`을 웹과 같은 출처로 내려줍니다.
 5. 응답 로그는 CloudWatch Logs로 갑니다.
 
-API 응답은 캐시하지 않습니다. CloudFront는 캐시를 끈 정책을 쓰고, API는 응답에 `Cache-Control: no-store`를 붙입니다.
+API 응답은 캐시하지 않습니다. CloudFront는 캐시를 끈 정책을 쓰고, API는 응답에 `Cache-Control: no-store`를 붙입니다. 사진 파일(`/api/photos/buildings/*`)만 `no-cache`와 ETag로 브라우저가 다시 확인하며 씁니다([backend.md §7](backend.md#7-도메인-규칙)).
 
 ## 한계와 위험
 

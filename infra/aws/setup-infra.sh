@@ -21,7 +21,7 @@ fill() {
 }
 step() { printf '\n== %s\n' "$1"; }
 
-step "예산 알림 (월 5달러, 실제 1달러·예상 5달러 초과 시 메일)"
+step "예산 알림 (월 20달러, 실제 4달러·예상 20달러 초과 시 메일)"
 if ! aws budgets describe-budget --account-id "$ACCOUNT_ID" --budget-name wolgyeham-monthly >/dev/null 2>&1; then
   aws budgets create-budget --account-id "$ACCOUNT_ID" --budget file://infra/aws/budget.json \
     --notifications-with-subscribers "$(fill infra/aws/budget-notifications.json)"
@@ -37,6 +37,9 @@ aws s3api put-bucket-lifecycle-configuration --bucket "$OPS_BUCKET" --lifecycle-
   '{"Rules":[{"ID":"expire-backups","Filter":{"Prefix":"backups/"},"Status":"Enabled","Expiration":{"Days":14}}]}'
 aws ecr describe-repositories --repository-names wolgyeham-api >/dev/null 2>&1 ||
   aws ecr create-repository --repository-name wolgyeham-api --image-scanning-configuration scanOnPush=true --tags "$TAG" >/dev/null
+# 최근 10개만 남기되 prod- 태그(배포 워크플로가 prod 이미지에 붙임)는 최근 3개를 따로 남깁니다. 다시 실행해도 같은 규칙.
+aws ecr put-lifecycle-policy --repository-name wolgyeham-api --lifecycle-policy-text \
+  '{"rules":[{"rulePriority":1,"description":"keep last 3 prod","selection":{"tagStatus":"tagged","tagPrefixList":["prod-"],"countType":"imageCountMoreThan","countNumber":3},"action":{"type":"expire"}},{"rulePriority":2,"description":"keep last 10","selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":10},"action":{"type":"expire"}}]}' >/dev/null
 for e in dev prod; do
   aws logs create-log-group --log-group-name "/wolgyeham/$e" --tags Project=wolgyeham 2>/dev/null || true
   aws logs put-retention-policy --log-group-name "/wolgyeham/$e" --retention-in-days 14

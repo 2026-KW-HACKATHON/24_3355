@@ -28,20 +28,20 @@ dev는 GitHub에 연결된 Amplify 앱입니다. prod는 같은 저장소의 `re
 
 `release`는 관리자만 올립니다.
 
+```bash
+git fetch origin
+git push origin origin/main:release   # main의 현재 상태를 prod로
+```
+
 dev·prod는 서버 설정과 태그 파일을 공유하므로 배포 워크플로 전체를 한 번에 하나씩 실행합니다. 뒤에 온 배포는 앞선 배포가 끝날 때까지 기다립니다. release에서 dev를 수동 배포해도 prod 웹은 바뀌지 않습니다.
 
 prod 웹 배포에 필요한 저장소 변수는 `PROD_WEB_APP_ID=dfldu21sxhojf`, `PROD_WEB_BASE_URL=https://release.dfldu21sxhojf.amplifyapp.com`입니다. 배포 역할에는 `infra/aws/prod-web-deploy-policy.json`의 두 자리표시자를 실제 값으로 바꾼 정책을 추가합니다. 권한은 prod 앱의 release 브랜치 업로드·배포·상태 조회로 제한합니다.
 
-자동 배포가 막혔을 때 웹만 올리는 명령은 다음과 같습니다. 서명된 업로드 URL은 스크립트가 출력하지 않습니다.
+자동 배포가 막혔을 때 prod 웹만 올리는 명령은 다음과 같습니다. 서명된 업로드 URL은 스크립트가 출력하지 않습니다.
 
 ```bash
 VITE_PUBLIC_ORIGIN=https://release.dfldu21sxhojf.amplifyapp.com pnpm --filter @wolgyeham/web build
 bash infra/amplify/deploy-web.sh dfldu21sxhojf release apps/web/dist
-```
-
-```bash
-git fetch origin
-git push origin origin/main:release   # main의 현재 상태를 prod로
 ```
 
 ## API 배포 순서
@@ -57,7 +57,7 @@ git push origin origin/main:release   # main의 현재 상태를 prod로
 
 ## 관리자가 직접 배포하기 (자동 배포를 쓸 수 없을 때)
 
-GitHub Actions가 역할을 받지 못하는 등 자동 배포가 막혔을 때 관리자가 로컬에서 같은 순서를 밟습니다. 개발자 권한으로는 할 수 없습니다(ECR push·SSM Run Command 필요). 웹(Amplify)은 git 연결이라 이 방법으로 올릴 수 없습니다.
+GitHub Actions가 역할을 받지 못하는 등 자동 배포가 막혔을 때 관리자가 로컬에서 같은 순서를 밟습니다. 개발자 권한으로는 할 수 없습니다(ECR push·SSM Run Command 필요). 이 순서는 API만 올립니다. dev 웹은 Amplify git 연결로만 바뀌고, prod 웹은 위 `deploy-web.sh`로 올립니다.
 
 ```bash
 aws login                                   # 관리자 세션
@@ -80,7 +80,7 @@ curl https://<dev 도메인>/api/health
 
 - **API를 먼저, 웹을 나중에** 배포합니다. 웹은 새 응답 필드(`termsUpToDate`, `confirmedAt` 등)를 기대하므로, 이전 API와 새 웹이 만나면 일부 화면이 불러오기 오류가 날 수 있습니다(웹은 한 번의 배포 사이 동안 빠진 필드를 모르는 값으로 넘기도록 되어 있지만, 순서를 지키는 것이 기본입니다). PR 미리 보기는 dev API를 쓰므로 새 필드가 필요한 PR은 API가 dev에 먼저 올라간 뒤 확인합니다.
 - **마이그레이션 0009(건물 확인·약관 동의)를 처음 배포한 뒤에는** dev에서 시연 데이터를 한 번 되돌립니다. 백필 때문에 이전 시연에서 관리자가 생긴 새봄하우스가 ‘확인됨’이 되어 초대 → 23 흐름이 건너뛰어지기 때문입니다: SSM 세션에서 `docker compose --env-file server.env --env-file .deploy.env run --rm --no-deps api-dev node seed.mjs --reset-demo`.
-- CloudFront → EC2 구간은 서버의 caddy가 HTTPS로 받습니다(D-31). 이미 돌던 환경은 관리자가 [aws-setup.md 7-A](aws-setup.md#7-a-원본-https로-옮기기-이미-돌고-있는-환경)를 끝내기 전까지 HTTP입니다. 브라우저 → CloudFront는 HTTPS입니다.
+- 브라우저 → CloudFront → EC2 모든 구간이 HTTPS입니다. CloudFront → EC2는 서버의 caddy가 받고, dev·prod 모두 2026-10-06에 옮겼습니다(D-31, [aws-setup.md 7-A](aws-setup.md#7-a-원본-https로-옮기기-이미-돌고-있는-환경)).
 - `infra/server/caddy/Caddyfile`과 caddy 서비스는 dev·prod가 같이 씁니다. `main` 병합(dev 배포)으로 바뀐 Caddyfile은 prod 요청에도 바로 적용되므로, 이 파일을 고치는 PR은 관리자가 리뷰합니다.
 
 ## 원본 HTTPS(caddy)
@@ -114,7 +114,7 @@ caddy만 다시 띄우려면 `docker compose --env-file server.env --env-file .d
 개발자 권한으로 CloudWatch Logs를 볼 수 있습니다.
 
 ```bash
-aws logs tail /wolgyeham/dev --follow --profile wolgyeham
+aws logs tail /wolgyeham/dev --follow   # aws login으로 받은 IAM 사용자 자격 증명(aws-setup.md 3-B)
 ```
 
 콘솔의 Logs Insights에서는 이렇게 찾습니다.
@@ -133,7 +133,7 @@ fields @timestamp, level, event, requestId
 SSH를 쓰지 않고 SSM Session Manager로 들어갑니다(22번 포트를 열지 않음). 로컬에 Session Manager 플러그인이 필요합니다.
 
 ```bash
-aws ssm start-session --target <인스턴스 ID> --profile wolgyeham
+aws ssm start-session --target <인스턴스 ID>
 sudo -i
 cd /opt/wolgyeham
 docker compose --env-file server.env --env-file .deploy.env ps
@@ -206,9 +206,9 @@ done
 - 마이그레이션 파일은 [database.md](database.md)의 규칙대로 PR에 함께 올립니다.
 - 배포 때 새 API가 뜨기 전에 이미지 안의 `migrate.mjs`가 `drizzle/`의 SQL을 적용합니다.
 - dev는 `DEMO_MODE=true`라서 마이그레이션 뒤 `seed.mjs`로 시연 데이터(가상 건물 햇살빌라·새봄하우스)를 넣습니다. prod에는 넣지 않습니다.
-- 집주인 초대는 관리자가 SSM 세션에서 발급합니다. 토큰이 한 번만 출력되므로 Run Command가 아니라 세션 안에서, **떠 있는 컨테이너에 `exec`로** 실행합니다: `docker compose --env-file server.env --env-file .deploy.env exec -T api-prod node invite.mjs <건물 ID> [유효 일수]`. `run`으로 새 컨테이너를 띄우면 출력이 컨테이너 로그(awslogs → CloudWatch `/wolgyeham/<env>`)에 남아 로그를 읽을 수 있는 사람 누구나 링크를 쓸 수 있습니다. `exec` 출력은 로그 드라이버로 가지 않습니다.
+- 집주인 초대는 관리자가 SSM 세션에서 발급합니다. 토큰이 한 번만 출력되므로 Run Command가 아니라 세션 안에서, **떠 있는 컨테이너에 `exec`로** 실행합니다: `docker compose --env-file server.env --env-file .deploy.env exec -T api-prod node invite.mjs <건물 ID> [유효 일수 1~30, 기본 7]`(dev 건물은 `api-dev`). `run`으로 새 컨테이너를 띄우면 출력이 컨테이너 로그(awslogs → CloudWatch `/wolgyeham/<env>`)에 남아 로그를 읽을 수 있는 사람 누구나 링크를 쓸 수 있습니다. `exec` 출력은 로그 드라이버로 가지 않습니다.
 - 컬럼 삭제·이름 변경처럼 되돌리기 어려운 변경은 두 번에 나눠 배포하고, PR에 적습니다.
-- 신고된 생활 팁 검토(LF-19, 운영자)는 웹 화면 없이 SSM 세션에서 합니다: `docker compose --env-file server.env --env-file .deploy.env exec -T api-prod node moderate.mjs list`, 가리기 `… moderate.mjs hide <팁 ID> [사유]`, 복원 `… moderate.mjs restore <팁 ID>`. 가리거나 복원하면 그 팁의 신고가 검토 완료로 바뀝니다.
+- 신고된 생활 팁 검토(LF-19, 운영자)는 웹 화면 없이 SSM 세션에서 합니다: `docker compose --env-file server.env --env-file .deploy.env exec -T api-prod node moderate.mjs list`, 가리기 `… moderate.mjs hide <팁 ID> --by <운영자> [사유]`, 복원 `… moderate.mjs restore <팁 ID> --by <운영자>`(`--by`가 없으면 실행하지 않음). 가리거나 복원하면 그 팁의 신고가 검토 완료로 바뀝니다.
 
 ## 되돌리기
 
@@ -227,6 +227,7 @@ done
 - [ ] 시연 2시간 전부터 `main` 동결 ([CONTRIBUTING.md](../CONTRIBUTING.md)). 시연은 dev에서, 파일럿 사용자는 prod에서
 - [ ] prod `/api/health` 정상, 카카오 로그인·공지 알림을 실제 휴대폰으로 확인
 - [ ] dev의 시연용 건물 데이터를 처음 상태로 되돌리는 방법 확인 (시연 모드)
+- [ ] 포스터 QR `/demo`는 둘러보기만 되고, 시연 중인 휴대폰으로 실제 건물(현관 QR)을 열면 시연이 끝나는지 확인 (D-35)
 - [ ] 예산 알림 메일이 오지 않았다
 
 ## 바꿀 때

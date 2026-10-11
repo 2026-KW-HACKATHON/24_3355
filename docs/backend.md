@@ -26,6 +26,7 @@
 | 약관 동의 기록(D-28: 동의한 판·시각, `/me`의 `termsUpToDate`) | 있음. §5, §7 약관 동의 |
 | 시연 시작(LF-20·29: 시연 건물·계정 목록, 시연 건물만 초기화) | 있음. `DEMO_MODE` 전용, §6 |
 | 안내·공지 사진(올리기·다시 만들기·접근 규칙, D-34) | 있음. `modules/photos`, §7 사진 |
+| 둘러보기 전용 시연·시연 끝내기·시연 계정 표시(D-35) | 있음. `lib/demoScope.ts`, `POST /dev/end-demo`, §6 |
 
 구현 순서 A(초대 → 안내 작성·공개 → 비회원이 공개 화면에서 읽기), B(가입코드 → 로그인 → 연결 → 공지·알림), C(수정 메모 → 집주인 판단 → 안내 갱신), D(재확인·이사), E(제보), F(생활 팁·신고)의 경로입니다. 요청·응답 스키마는 `packages/contracts`와 `/api/swagger`가 기준입니다.
 
@@ -92,6 +93,7 @@ apps/api/src/
 │  ├─ env.ts            zod로 파싱한 환경 변수
 │  ├─ db.ts             Drizzle 클라이언트 (database.md)
 │  ├─ auth.ts           세션 읽기, requireUser·requireManager·requireOccupancy
+│  ├─ demoScope.ts      시연 계정·시연 건물 판정, 둘러보기 전용 미들웨어(demoReadOnly), assertDemoScope (D-35)
 │  ├─ reconfirm.ts      재확인 상태 계산(occupancyState)과 지금 active인 연결의 SQL 조건
 │  ├─ client.ts         반복 제한용 클라이언트 IP, 주소 묶음(IPv6 /64), HMAC IP 키
 │  ├─ push.ts           웹 푸시 발송 창구 PushSender와 web-push 발송기 (createApp이 주입)
@@ -132,7 +134,7 @@ apps/api/src/
 
 | 모듈 | 다루는 것 | 경로 초안 (`/api` 생략, 계약에서 확정) |
 |---|---|---|
-| `auth` | 카카오 로그인, 세션, 약관 동의 기록, 시연 로그인·whoami | `GET /auth/kakao/start`, `GET /auth/kakao/callback`, `POST /auth/logout`, `GET·POST /dev/login`, `GET /dev/whoami` |
+| `auth` | 카카오 로그인, 세션, 약관 동의 기록, 시연 로그인·시연 끝내기·whoami | `GET /auth/kakao/start`, `GET /auth/kakao/callback`, `POST /auth/logout`, `GET·POST /dev/login`, `POST /dev/end-demo`, `GET /dev/whoami` |
 | `me` | 내 정보, 보낸 내용, 내 팁, 약관 다시 동의(reports·tips·auth 서비스를 부름) | `GET /me`, `GET /me/reports`, `GET /me/tips`, `POST /me/terms-consent` |
 | `demo` | 시연 시작(29). `DEMO_MODE`일 때만 붙음. 여러 모듈 서비스와 `db/demo.ts`를 부름 | `GET /dev/demo`, `POST /dev/reset` |
 | `buildings` | 건물, 건물 이름·확인, 집주인 초대·관리자, 가입코드와 실패 횟수 | `GET /buildings/:buildingId`, `POST /manager-invites/preview`, `POST /manager-invites/accept`, `GET·POST /buildings/:buildingId/join-code`, `POST /buildings/:buildingId/join-code/check` (이름 고치기·확인의 규칙은 여기, 경로는 `manage`) |
@@ -217,7 +219,7 @@ export const guideRoutes = new Hono<AppEnv>().post(
 
 | HTTP | 대표 `code` | 쓰는 때 |
 |---|---|---|
-| 400 | `VALIDATION_FAILED`, `PHOTO_INVALID` | 입력 검증 실패. `fields`에 필드 경로별 사유(이 건물에 없는 사진 키는 `photos.<순서>`). `PHOTO_INVALID`는 사진이 JPEG·PNG·WebP가 아니거나 풀 수 없거나 4천만 픽셀을 넘음 |
+| 400 | `VALIDATION_FAILED`, `PHOTO_INVALID` | 입력 검증 실패. `fields`에 필드 경로별 사유(이 건물에 없는 사진 키는 `photos.<순서>`). `PHOTO_INVALID`는 사진이 JPEG·PNG·WebP가 아니거나 풀 수 없거나 8비트가 아니거나 4096×4096(약 1,680만) 픽셀을 넘음 |
 | 401 | `UNAUTHENTICATED` | 세션 없음·만료 |
 | 403 | `FORBIDDEN`, `NOT_BUILDING_MANAGER`, `NOT_CONNECTED`, `RECONFIRM_NEEDED` | 로그인은 했지만 이 건물과의 관계가 없거나 멈춤. 다른 출처에서 온 폼 요청(CSRF 차단)도 `FORBIDDEN` |
 | 404 | `NOT_FOUND` | 없음. 볼 권한이 없는 대상의 존재를 숨길 때도 씀 (다른 사람의 초안, 틀린 제보 토큰) |
@@ -289,7 +291,7 @@ app.onError((error, c) => {
 - 시연 모드(LF-20)는 dev·데모 데이터에서만 엽니다. 역할 전환은 시드된 시연 사용자로 바꾸는 것일 뿐 실제 권한을 만들지 않습니다.
 - **시연 로그인 (dev·시연 전용):** 환경 변수 `DEMO_MODE=true`일 때만 `app.ts`가 `GET /api/dev/login`(쓸 수 있으면 204, 부작용 없음)과 `POST /api/dev/login`(`{ "as": "demo-landlord" | "demo-resident-a" | "demo-resident-b" | "demo-e2e-landlord" }` → 시드된 시연 사용자 세션)을 붙입니다. 꺼져 있으면 경로 자체가 없어 404입니다. 시연 집주인은 시연 건물(햇살빌라)만 관리하고, 입주자 A는 햇살빌라에 연결돼 있고(시드 옵션으로 ‘재확인 요청됨’, database.md §8), 다음 입주자 B는 연결 전입니다(시연 가입코드로 연결). e2e 집주인은 e2e 전용 건물(테스트빌라)만 관리합니다(database.md §8). 같은 조건에서 `GET /api/dev/whoami`가 요청한 사람 자신의 X-Forwarded-For 목록·소켓 주소·서버가 고른 클라이언트 주소·방식(`origin-verify`·`proxy-hops`·`socket`)·`X-Origin-Verify` 일치 여부를 돌려줍니다(헤더 값 자체는 돌려주지 않고, 로그에는 경로만 남음). 배포 뒤 실제 프록시 체인을 재는 데 씁니다. prod는 `DEMO_MODE=false`로 둡니다.
 - **둘러보기 전용 시연(D-35):** `app.ts`가 세션 다음에 `lib/demoScope.ts`의 `demoReadOnly`를 붙입니다. 발표 시연 계정(`demo-landlord`·`demo-resident-a`·`demo-resident-b`)의 쓰기와 발표 시연 건물(햇살빌라·새봄하우스, `/api/buildings/:id…`·`/api/manage/buildings/:id…`)에 대한 누구의 쓰기든 403 `FORBIDDEN`(`fields.account = "demo-readonly"`)입니다. 예외: GET·HEAD·OPTIONS, `POST /dev/login`·`/dev/end-demo`·`/dev/reset`·`/auth/logout`·`/me/terms-consent`·`/manager-invites/preview`·`/buildings/:id/reports/lookup`·`/buildings/:id/join-code/check`. e2e 전용 계정·건물은 막지 않습니다. 시험: `lib/demoScope.test.ts`(쓰기 경로 묶음마다).
-- **시연 계정·시연 건물 표시(D-35):** `/me`(시연 로그인·약관 동의 응답 포함)의 `user.demo`는 시연 계정(`users.kakao_user_id`가 contracts `DEMO_USERS` 중 하나)이면 그 이름, 카카오 계정이면 null입니다. 공개 건물(`GET /buildings/:buildingId`)과 이를 넓힌 관리 건물 응답(`ManagedBuilding`·목록·상세·건물 확인), 초대 미리보기의 `demo`는 id가 `db/demo.ts`의 `DEMO_BUILDINGS`(햇살빌라·새봄하우스·테스트빌라·준비빌라)에 있으면 true입니다. 둘 다 `DEMO_MODE`와 상관없이 정하고(`lib/demoScope.ts`의 `demoUserOf`·`isDemoBuilding`), contracts에 기본값(null·false)이 있어 이 필드가 없는 이전 API 응답도 웹이 읽습니다. 웹은 시연 계정으로 실제 건물을 열면 로그아웃합니다(frontend.md). 서버의 마지막 방어는 그대로 `assertDemoScope`(시연 계정의 실제 건물 초대 수락·연결은 403 `FORBIDDEN`, `fields.account = "demo"`)입니다. 시연 세션은 3시간이고 연장하지 않습니다(§5 세션 표). 시연 계정이 실제 건물에 제보하면 막지 않고 비회원 제보로 받습니다(`lib/demoScope.ts`의 `actsAsGuestHere`: `reporterUserId` 없음, 확인 토큰을 주고 IP 키로 셈). 시연 계정에 실제 건물 제보가 붙으면 그 역할을 고르는 누구에게나 `/me/reports`로 보이고 시연 초기화로도 지워지지 않기 때문입니다. 시연 계정은 알림 구독을 저장할 수 없습니다(`POST /push-subscriptions` 403 `FORBIDDEN`, `fields.account = "demo"`): 같은 휴대폰의 실제 계정 구독(같은 endpoint)을 덮어써 가져가지 않게. 로그아웃의 `pushEndpoint`는 지금 세션 사용자의 구독만 지우므로, 카카오 계정이 알림을 켜 둔 휴대폰에서 시연 계정이 로그아웃해도 그 카카오 계정의 구독은 남습니다(`auth.test.ts`).
+- **시연 계정·시연 건물 표시(D-35):** `/me`(시연 로그인·약관 동의 응답 포함)의 `user.demo`는 시연 계정(`users.kakao_user_id`가 contracts `DEMO_USERS` 중 하나)이면 그 이름, 카카오 계정이면 null입니다. 공개 건물(`GET /buildings/:buildingId`)과 이를 넓힌 관리 건물 응답(`ManagedBuilding`·목록·상세·건물 확인), 초대 미리보기의 `demo`는 id가 `db/demo.ts`의 `DEMO_BUILDINGS`(햇살빌라·새봄하우스·테스트빌라·준비빌라)에 있으면 true입니다. 둘 다 `DEMO_MODE`와 상관없이 정하고(`lib/demoScope.ts`의 `demoUserOf`·`isDemoBuilding`), contracts에 기본값(null·false)이 있어 이 필드가 없는 이전 API 응답도 웹이 읽습니다. 웹은 시연 계정으로 실제 건물을 열면 로그아웃합니다(frontend.md). 서버의 마지막 방어는 그대로 `assertDemoScope`(시연 계정의 실제 건물 초대 수락·연결은 403 `FORBIDDEN`, `fields.account = "demo"`)입니다. 시연 세션은 3시간이고 연장하지 않습니다(§5 세션 표). 시연 계정이 실제 건물에 제보하면 막지 않고 비회원 제보로 받습니다(`lib/demoScope.ts`의 `actsAsGuestHere`: `reporterUserId` 없음, 확인 토큰을 주고 IP 키로 셈). 발표 시연 계정은 위 `demoReadOnly`에 먼저 막히므로 지금 이 규칙이 적용되는 것은 e2e 집주인뿐입니다. 시연 계정에 실제 건물 제보가 붙으면 그 역할을 고르는 누구에게나 `/me/reports`로 보이고 시연 초기화로도 지워지지 않기 때문입니다. 시연 계정은 알림 구독을 저장할 수 없습니다(`POST /push-subscriptions` 403 `FORBIDDEN`, `fields.account = "demo"`): 같은 휴대폰의 실제 계정 구독(같은 endpoint)을 덮어써 가져가지 않게. 로그아웃의 `pushEndpoint`는 지금 세션 사용자의 구독만 지우므로, 카카오 계정이 알림을 켜 둔 휴대폰에서 시연 계정이 로그아웃해도 그 카카오 계정의 구독은 남습니다(`auth.test.ts`).
 - **시연 시작(LF-20·29, D-29):** `DEMO_MODE=true`일 때만 `app.ts`가 `modules/demo`의 두 경로를 붙입니다(꺼져 있으면 404, `/api/openapi.json`에도 없음). 로그인 없이 부를 수 있으므로 읽는 것은 시연 건물(`db/demo.ts`의 `DEMO_BUILDINGS`)과 시연 계정 자신의 관계(관리하는 건물과 그 건물의 확인할 것, 연결, 쓴 팁·메모 수)뿐이고, 바꾸는 것은 발표 시연 건물 두 곳과 시연 계정의 시드 상태뿐입니다.
   - `GET /api/dev/demo`: 시연 건물(`id`·`name`·`status`·`confirmedAt`·`purpose`(`demo`=29에 보임, `e2e`=테스트 전용)·`joinCode`(지금 가입코드, 시연 건물이라 보여 줌))과 계정(`DemoAccount`, `role`로 나뉨). 집주인은 관리하는 건물과 `pendingMemoCount`·`newReportCount`(29의 ‘확인할 것’), 거주자는 살아 있는 연결(`MeOccupancy`, 없으면 null)과 보이는 내 팁 수·내 메모 수. 부작용 없음. 시드하지 않은 건물·계정은 빠짐. 한 번에 열 개 넘는 쿼리를 쓰므로 계산한 결과를 프로세스 안에서 5초 동안 함께 씁니다(동시에 온 요청도 한 번만 계산). 이 프로세스에서 시드·초기화하면(`db/demo.ts`가 판 번호를 올림) 바로 다시 계산하고, 계산이 실패하면 담아 두지 않습니다. 다른 화면에서 바꾼 숫자는 최대 5초 늦게 보일 수 있습니다.
   - `POST /api/dev/reset`: 발표 시연 건물 두 곳(`purpose: "demo"`, 햇살빌라·새봄하우스)만 `resetDemo(scope: "demo")`로 되돌립니다(본문 `reconfirmRequested: true`면 `--reconfirm-requested`와 같음, 29의 비회원 시연 제보도 되돌림). e2e 건물(테스트빌라·준비빌라)과 e2e 집주인은 건드리지 않고, 이 둘은 CLI `db:seed -- --reset-demo`(네 곳 모두)로만 되돌립니다. 응답은 되돌린 건물(두 곳)마다 지운 행 수(`removed`). CSRF는 전역 `hono/csrf`(다른 출처의 폼 형식·본문 없는 요청 403)가 막습니다. 반복은 `rate_limits`로 **먼저 같은 사람**(IP 키, `lib/client.ts` `ipKey`: 로그인해도 IP로 셈) 30초에 1번(`demo-reset-client-interval`)·한 시간에 10번(`demo-reset-client-hourly`), **그다음 모든 사람을 합쳐** 30초에 1번(`demo-reset-interval`)·한 시간에 20번(`demo-reset-hourly`)까지입니다(contracts `DEMO_RESET_CLIENT_INTERVAL_SECONDS`·`DEMO_RESET_CLIENT_HOURLY_LIMIT`·`DEMO_RESET_INTERVAL_SECONDS`·`DEMO_RESET_HOURLY_LIMIT`). 넘으면 429 `RATE_LIMITED`와 `Retry-After`, 초기화하지 않습니다. 같은 사람 제한에 걸린 요청은 모든 사람 횟수를 쓰지 않으므로 한 사람이 전체 한도를 혼자 다 쓰지 못합니다(두 곳 이상의 주소가 모이면 여전히 다 쓸 수 있어 dev·시연 환경에서만 엽니다). 횟수는 초기화 트랜잭션 밖에서 세고, 입력 검증(400)·CSRF(403)에 걸린 요청은 세지 않습니다. 로그는 `demo_reset`(건물 수만).
