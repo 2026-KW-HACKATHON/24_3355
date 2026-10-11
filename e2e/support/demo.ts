@@ -93,15 +93,24 @@ export async function loginAs(page: Page, as: Account) {
 }
 
 /**
- * 쓰기 테스트용 집주인으로 로그인합니다. 시드에 아직 계정이 없으면(400·404) 이 테스트를 건너뜁니다.
- * 건너뛴 테스트는 보고에 그대로 드러나므로, 시드가 준비되면 다시 돌립니다.
+ * 테스트의 준비 조건(시드·로컬 DB 상태)이 맞지 않을 때. 로컬에서는 이 테스트를 건너뛰고(보고에 그대로 드러남),
+ * CI(`CI` 환경 변수)에서는 실패시킵니다. CI는 매번 새 DB에 `pnpm db:seed`를 하므로 조건이 맞아야 합니다.
+ */
+export function requirePrecondition(ok: boolean, message: string) {
+  if (ok) return;
+  if (process.env["CI"]) throw new Error(`CI의 새 DB에서는 이 준비 조건이 맞아야 해요: ${message}`);
+  test.skip(true, message);
+}
+
+/**
+ * 쓰기 테스트용 집주인으로 로그인합니다. 시드에 아직 계정이 없으면(400·404) 로컬에서는 건너뛰고 CI에서는 실패합니다.
  */
 export async function loginAsE2eLandlord(page: Page) {
   const response = await page.request.post("/api/dev/login", {
     data: { as: E2E_LANDLORD, consent: TERMS_CONSENT },
   });
-  test.skip(
-    response.status() === 400 || response.status() === 404,
+  requirePrecondition(
+    response.status() !== 400 && response.status() !== 404,
     `시드에 쓰기 테스트용 집주인(${E2E_LANDLORD})·${E2E_BUILDING.name}이 아직 없어요. 백엔드 시드 반영 뒤 \`pnpm db:seed\`를 하고 다시 돌립니다.`,
   );
   expect(response.status(), `시연 로그인(${E2E_LANDLORD})`).toBe(200);

@@ -2,7 +2,13 @@
 // 비회원 공개 화면(11)에 사진이 보인다. 로컬 API의 사진 저장소(PHOTO_STORE=local)를 씁니다.
 // 공개한 안내를 지우는 API가 없어 쓰기 테스트 전용 건물(테스트빌라)에서만 합니다.
 
-import { E2E_BUILDING, loginAsE2eLandlord, stamp, TERMS_CONSENT } from "./support/demo";
+import {
+  E2E_BUILDING,
+  loginAsE2eLandlord,
+  requirePrecondition,
+  stamp,
+  TERMS_CONSENT,
+} from "./support/demo";
 import { expect, guideLink, hideDevOverlays, test } from "./support/test";
 
 /** 64×48 JPEG. */
@@ -13,7 +19,10 @@ const JPEG = Buffer.from(
 
 test("안내에 사진을 붙여 공개하면 비회원 공개 화면에 사진이 보인다", async ({ page, browser }) => {
   const config = await page.request.get("/api/photos/config");
-  test.skip(!(await config.json()).uploadsEnabled, "이 API에는 사진 저장소가 없어요");
+  requirePrecondition(
+    (await config.json()).uploadsEnabled === true,
+    "이 API에는 사진 저장소가 없어요(apps/api/.env PHOTO_STORE=local)",
+  );
   const title = `e2e 사진 안내 ${stamp()}`;
   await loginAsE2eLandlord(page);
 

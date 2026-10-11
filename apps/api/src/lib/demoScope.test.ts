@@ -115,35 +115,36 @@ describe("demo accounts stay in demo buildings", () => {
 
 describe("the presentation demo is read-only (D-35)", () => {
   const ID = "5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f99";
-  /** 쓰기 경로 묶음마다 하나씩. 막히는지만 보므로 본문·id는 아무 값이어도 됩니다. */
-  const WRITES: readonly [string, string][] = [
-    ["POST", `/api/buildings/${ID}/guides`],
-    ["PATCH", `/api/guides/${ID}`],
-    ["POST", `/api/guides/${ID}/publish`],
-    ["DELETE", `/api/guides/${ID}/revision`],
-    ["POST", `/api/guides/${ID}/correction-memos`],
-    ["POST", `/api/correction-memos/${ID}/keep`],
-    ["POST", `/api/buildings/${ID}/notices`],
-    ["POST", `/api/notices/${ID}/opened`],
-    ["POST", `/api/buildings/${ID}/photos`],
-    ["POST", `/api/buildings/${ID}/occupancies`],
-    ["POST", `/api/occupancies/${ID}/move-out`],
-    ["POST", `/api/occupancies/${ID}/reconfirm`],
-    ["POST", `/api/buildings/${ID}/join-code`],
-    ["POST", `/api/buildings/${ID}/reports`],
-    ["POST", `/api/reports/${ID}/acknowledge`],
-    ["POST", `/api/reports/${ID}/resolve`],
-    ["POST", `/api/buildings/${ID}/tips`],
-    ["PATCH", `/api/tips/${ID}`],
-    ["DELETE", `/api/tips/${ID}`],
-    ["POST", `/api/tips/${ID}/content-reports`],
-    ["POST", "/api/push-subscriptions"],
-    ["DELETE", "/api/push-subscriptions"],
-    ["PATCH", `/api/manage/buildings/${ID}`],
-    ["POST", `/api/manage/buildings/${ID}/confirm`],
-    ["POST", "/api/manager-invites/accept"],
+  const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+  /**
+   * 둘러보기에 필요해서 시연 계정도 쓸 수 있는 쓰기 경로(demoScope.ts `READONLY_EXEMPT`와 같은 목록). 여기에 없는
+   * 쓰기 경로는 새로 생겨도 아래 테스트가 시연 계정으로 불러 403 demo-readonly인지 봅니다.
+   */
+  const EXEMPT: readonly string[] = [
+    "POST /api/dev/login",
+    "POST /api/dev/end-demo",
+    "POST /api/dev/reset",
+    "POST /api/auth/logout",
+    "POST /api/me/terms-consent",
+    "POST /api/manager-invites/preview",
+    "POST /api/buildings/:buildingId/reports/lookup",
+    "POST /api/buildings/:buildingId/join-code/check",
   ];
   const demo = useTestApp({ DEMO_MODE: "true" });
+
+  /** 시연 모드 앱에 등록된 쓰기 경로(미들웨어의 ALL 제외). 경로 변수는 아무 uuid로 채웁니다. */
+  function registeredWrites() {
+    const routes = new Set<string>();
+    for (const route of demo.app.routes) {
+      if (route.method === "ALL" || SAFE_METHODS.has(route.method)) continue;
+      routes.add(`${route.method} ${route.path}`);
+    }
+    return [...routes];
+  }
+
+  function fillParams(path: string) {
+    return path.replace(/:[A-Za-z]+(\{[^}]*\})?/g, ID);
+  }
 
   async function codeOf(response: Response) {
     const body = (await response.json().catch(() => ({}))) as {
@@ -152,21 +153,31 @@ describe("the presentation demo is read-only (D-35)", () => {
     return `${response.status} ${body.error?.code ?? ""} ${body.error?.fields?.["account"] ?? ""}`.trim();
   }
 
-  it("refuses every write family for the presentation demo accounts, but not reads", async () => {
+  it("lists only exemptions that are registered write routes", () => {
+    // Then: 없어진 경로가 예외 목록에 남아 있지 않습니다.
+    const writes = new Set(registeredWrites());
+    expect(EXEMPT.filter((route) => !writes.has(route))).toEqual([]);
+  });
+
+  it("refuses every registered write route for the presentation demo accounts, but not reads", async () => {
+    const writes = registeredWrites().filter((route) => !EXEMPT.includes(route));
+    // 경로를 잘못 읽어 빈 목록으로 통과하지 않게 합니다.
+    expect(writes.length).toBeGreaterThan(20);
     for (const as of ["demo-landlord", "demo-resident-a", "demo-resident-b"]) {
       // Given
       const cookie = await sessionCookie(t.db, await demoUser(as));
-      for (const [method, path] of WRITES) {
+      for (const route of writes) {
+        const [method = "", path = ""] = route.split(" ");
         // When
-        const response = await t.app.request(path, jsonRequest(method, {}, cookie));
+        const response = await demo.app.request(fillParams(path), jsonRequest(method, {}, cookie));
         // Then
-        expect(`${as} ${method} ${path} ${await codeOf(response)}`).toBe(
-          `${as} ${method} ${path} 403 FORBIDDEN demo-readonly`,
+        expect(`${as} ${route} ${await codeOf(response)}`).toBe(
+          `${as} ${route} 403 FORBIDDEN demo-readonly`,
         );
       }
-      const me = await t.app.request("/api/me", jsonRequest("GET", undefined, cookie));
+      const me = await demo.app.request("/api/me", jsonRequest("GET", undefined, cookie));
       expect(me.status).toBe(200);
-      const building = await t.app.request(`/api/buildings/${DEMO_BUILDING_ID}`);
+      const building = await demo.app.request(`/api/buildings/${DEMO_BUILDING_ID}`);
       expect(building.status).not.toBe(403);
     }
   });

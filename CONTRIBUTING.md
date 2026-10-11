@@ -58,7 +58,10 @@ cp apps/web/.env.example apps/web/.env
 pnpm db:up     # PostgreSQL (Docker)
 pnpm dev       # 웹과 API 동시 실행
 pnpm check     # lint → typecheck → test → build (CI와 같음)
+pnpm e2e       # 화면 흐름(Playwright). pnpm dev가 떠 있어야 함
 ```
+
+`pnpm e2e`는 `apps/api/.env`의 `DEMO_MODE=true`·`E2E_LOGIN=true`(.env.example 기본값)와 `pnpm db:seed`가 필요합니다. PR의 CI는 `pnpm check`(ci.yml)와, 코드가 바뀌면 새 DB에서 도는 `pnpm e2e`(e2e.yml)입니다. 자세한 내용은 [docs/README.md](docs/README.md#테스트)에 있습니다.
 
 로파이 PNG는 `python3 lofi/scripts/export.py`로 다시 만듭니다(Python Playwright와 로컬 Chrome 필요). 각 영역의 개발 방법은 [docs/](docs/README.md)에 있습니다.
 

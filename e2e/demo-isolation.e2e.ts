@@ -17,6 +17,7 @@ import {
   pushSubscriptionCount,
   REAL_BUILDING,
   realAccountSession,
+  requirePrecondition,
   SUNNY,
 } from "./support/demo";
 import { expect, test } from "./support/test";
@@ -30,8 +31,8 @@ function demoBar(page: Page) {
 // 개발 DB에 직접 준비하므로(support/dev-db.ts) 로컬 서버에서만 돕니다.
 test.beforeEach(({ baseURL }) => {
   const host = baseURL ? new URL(baseURL).hostname : "";
-  test.skip(
-    !["localhost", "127.0.0.1", "[::1]", "::1"].includes(host),
+  requirePrecondition(
+    ["localhost", "127.0.0.1", "[::1]", "::1"].includes(host),
     "로컬 개발 서버에서만 돌립니다(개발 DB에 직접 준비)",
   );
 });

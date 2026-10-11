@@ -1,10 +1,24 @@
 name: Quality checks
+# 문서·디자인·로파이만 바뀌면 돌지 않습니다(코드·설정이 바뀌면 그대로 돕니다).
 on:
   pull_request:
+    paths-ignore:
+      - "**.md"
+      - docs/**
+      - lofi/**
+      - design/**
   push:
     branches: [main]
+    paths-ignore:
+      - "**.md"
+      - docs/**
+      - lofi/**
+      - design/**
 permissions:
   contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   check:
     runs-on: ubuntu-latest

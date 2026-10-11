@@ -162,12 +162,20 @@ test.describe("공지 올리기와 읽기(LF-15, lofi 34 → 37 → 15)", () => 
   }) => {
     // lofi 37 ‘계속 바뀌는 규칙이라면 기본 안내도 고치기’. 규칙은 공지만으로 끝내지 않고 기본 안내를 고칩니다
     // (screens.md 화면 규칙). 예전에는 ‘다음 업데이트에서 열려요’만 있었습니다(QA 2차에서 확인 뒤 고쳐짐).
-    const response = await landlord.get(`/api/buildings/${E2E_BUILDING.id}/notices`);
-    const { notices } = (await response.json()) as { notices: { id: string }[] };
-    const notice = notices[0];
-    test.skip(!notice, "테스트빌라에 진행 중 공지가 없어요(앞 테스트가 올림)");
+    // 앞 테스트에 기대지 않도록 이 테스트가 볼 공지를 직접 올립니다.
+    const now = Date.now();
+    const created = await landlord.post(`/api/buildings/${E2E_BUILDING.id}/notices`, {
+      data: {
+        title: `e2e 규칙 공지 ${stamp()}`,
+        body: "음식물 수거 요일이 바뀌었어요.",
+        startsAt: new Date(now).toISOString(),
+        endsAt: new Date(now + 24 * 60 * 60 * 1000).toISOString(),
+      },
+    });
+    expect(created.status(), await created.text()).toBe(201);
+    const { notice } = (await created.json()) as { notice: { id: string } };
     await loginAsE2eLandlord(page);
-    await page.goto(`${manageHome}/notices/${notice?.id}`);
+    await page.goto(`${manageHome}/notices/${notice.id}`);
     await expect(page.getByText("계속 바뀌는 규칙이라면", { exact: false })).toBeVisible();
     await expect(page.getByText("다음 업데이트에서 열려요", { exact: false })).toHaveCount(0);
     await page.getByRole("link", { name: "기본 안내도 고치기" }).click();

@@ -27,6 +27,8 @@
 - `pnpm check`: lint, 타입 검사, 단위·DB 테스트(vitest), 빌드. PR 전에 통과시킵니다. DB 테스트는 `pnpm db:up`이 필요합니다([backend.md](backend.md)).
 - `pnpm e2e`: Playwright로 실제 화면 흐름을 390×844에서 돌립니다. `pnpm db:up && pnpm dev`가 떠 있어야 하고, 설치된 Chrome을 씁니다. 쓰기 테스트는 e2e 전용 건물(테스트빌라·준비빌라, 실제 건물 역할의 실제빌라)과 e2e 계정만 씁니다. 발표 시연 계정·건물은 둘러보기 전용이라(D-35) 막히는지만 봅니다. 실제빌라와 e2e 거주자 세션은 `e2e/support/dev-db.ts`가 `apps/api/.env`의 로컬 DB에만 만들고, 로컬 DB가 아니면 멈춥니다. 시연 건물에 쌓인 데이터는 `pnpm db:seed -- --reset-demo`로 되돌립니다. `pnpm check`에는 들어 있지 않습니다.
 - e2e는 로컬 DB와 시연 계정을 함께 쓰므로 한 번에 하나만 돌립니다. 비회원 제보 반복 제한(IP당 시간당 10건)에 걸리거나 A·B 연결 상태가 엇갈리면 `pnpm db:seed -- --reset-demo` 뒤 다시 돌립니다. 새 집주인 흐름(준비빌라)은 리셋 뒤 첫 실행에서만 돌고, `E2E_RESET_DEMO=1 pnpm e2e`는 실행이 끝난 뒤 시연 데이터를 되돌립니다.
+- e2e는 `apps/api/.env`의 `DEMO_MODE=true`와 `E2E_LOGIN=true`가 있어야 합니다. `E2E_LOGIN`이 꺼져 있으면 쓰기 테스트용 집주인(`demo-e2e-landlord`)의 시연 로그인이 404이고 `/api/dev/demo`에 e2e 건물·계정이 나오지 않습니다(시드는 그대로 넣음). 로컬에서 준비 조건(시드 상태, 사진 저장소)이 맞지 않는 테스트는 이유를 적고 건너뛰고, CI(`CI` 환경 변수)에서는 실패합니다.
+- CI: `.github/workflows/ci.yml`이 PR과 main에서 `pnpm check`를 돌립니다(문서·`design/`·`lofi/`만 바뀌면 건너뜀). `.github/workflows/e2e.yml`은 코드(`apps/`·`packages/`·`e2e/`)가 바뀌면 새 Postgres에 `pnpm db:migrate`·`pnpm db:seed`를 하고 `pnpm dev`를 띄워 `pnpm e2e`를 돌립니다. 이때 `DEMO_MODE=true`·`E2E_LOGIN=true`, 실행마다 새로 만든 VAPID 키, `PHOTO_STORE=local`을 씁니다. 실패하면 Playwright 결과(trace·스크린샷)와 서버 로그를 아티팩트로 올립니다.
 
 ## 문서를 고칠 때
 

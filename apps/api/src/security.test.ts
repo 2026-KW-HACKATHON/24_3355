@@ -6,8 +6,12 @@ import { createToken, DEMO_SESSION_MS, hashToken, SESSION_COOKIE } from "./lib/a
 import {
   createGuide,
   createManagedBuilding,
+  createMemo,
+  createOccupancy,
+  createReport,
   createUser,
   jsonRequest,
+  sessionCookie,
   TEST_ORIGIN,
   testEnv,
   useTestApp,
@@ -104,6 +108,113 @@ describe("request limits and cross-site requests", () => {
     const [stored] = await t.db.select().from(guides).where(eq(guides.id, id));
     expect(stored).toMatchObject({ buildingId: building.id, status: "draft", publishedAt: null });
   });
+});
+
+describe("manager-only routes", () => {
+  type Fixture = {
+    buildingId: string;
+    draftId: string;
+    publishedId: string;
+    memoId: string;
+    reportId: string;
+  };
+  /**
+   * 집주인만 부르는 경로. 본문은 검증을 통과하는 값이라(검증이 권한 확인보다 먼저) 권한 확인까지 닿습니다.
+   * 다른 건물 집주인과 같은 건물 거주자는 403 `NOT_BUILDING_MANAGER`, 로그인 전은 401 `UNAUTHENTICATED`입니다.
+   */
+  const later = new Date(Date.now() + DAY_MS).toISOString();
+  const ROUTES: readonly [string, (f: Fixture) => string, unknown][] = [
+    ["GET", (f) => `/api/manage/buildings/${f.buildingId}`, undefined],
+    ["PATCH", (f) => `/api/manage/buildings/${f.buildingId}`, { name: "바뀐빌라" }],
+    ["POST", (f) => `/api/manage/buildings/${f.buildingId}/confirm`, {}],
+    [
+      "POST",
+      (f) => `/api/buildings/${f.buildingId}/guides`,
+      { category: "parcel", title: "택배", body: "본문" },
+    ],
+    ["PATCH", (f) => `/api/guides/${f.draftId}`, { title: "바뀐 제목" }],
+    ["POST", (f) => `/api/guides/${f.draftId}/publish`, { applyMemoIds: [] }],
+    ["GET", (f) => `/api/guides/${f.publishedId}/revision`, undefined],
+    ["DELETE", (f) => `/api/guides/${f.publishedId}/revision`, undefined],
+    ["GET", (f) => `/api/buildings/${f.buildingId}/correction-memos`, undefined],
+    ["GET", (f) => `/api/correction-memos/${f.memoId}`, undefined],
+    ["POST", (f) => `/api/correction-memos/${f.memoId}/keep`, { reason: "지금 안내가 맞아요" }],
+    ["GET", (f) => `/api/buildings/${f.buildingId}/notices/audience`, undefined],
+    [
+      "POST",
+      (f) => `/api/buildings/${f.buildingId}/notices`,
+      {
+        title: "계단 청소",
+        body: "오전에 해요",
+        startsAt: new Date().toISOString(),
+        endsAt: later,
+      },
+    ],
+    ["GET", (f) => `/api/buildings/${f.buildingId}/join-code`, undefined],
+    ["POST", (f) => `/api/buildings/${f.buildingId}/join-code`, {}],
+    ["GET", (f) => `/api/buildings/${f.buildingId}/reports`, undefined],
+    ["POST", (f) => `/api/reports/${f.reportId}/acknowledge`, {}],
+    ["POST", (f) => `/api/reports/${f.reportId}/resolve`, { result: "completed" }],
+    ["POST", (f) => `/api/buildings/${f.buildingId}/photos`, undefined],
+  ];
+
+  const PLACEHOLDER: Fixture = {
+    buildingId: ":buildingId",
+    draftId: ":guideId",
+    publishedId: ":guideId",
+    memoId: ":memoId",
+    reportId: ":reportId",
+  };
+  const CASES = ROUTES.map(
+    ([method, path, body]) => [`${method} ${path(PLACEHOLDER)}`, method, path, body] as const,
+  );
+
+  async function fixture(): Promise<Fixture & { residentCookie: string; otherCookie: string }> {
+    const { building } = await createManagedBuilding(t.db, "open");
+    const other = await createManagedBuilding(t.db, "open");
+    const residentId = await createUser(t.db);
+    await createOccupancy(t.db, building.id, residentId);
+    const draft = await createGuide(t.db, building.id);
+    const published = await createGuide(t.db, building.id, { status: "published", position: 2 });
+    const memo = await createMemo(t.db, published.id, residentId);
+    const report = await createReport(t.db, building.id);
+    return {
+      buildingId: building.id,
+      draftId: draft.id,
+      publishedId: published.id,
+      memoId: memo.id,
+      reportId: report.id,
+      residentCookie: await sessionCookie(t.db, residentId),
+      otherCookie: other.managerCookie,
+    };
+  }
+
+  async function outcome(method: string, path: string, body: unknown, cookie?: string) {
+    const init =
+      body === undefined
+        ? { method, headers: { Origin: TEST_ORIGIN, ...(cookie ? { Cookie: cookie } : {}) } }
+        : jsonRequest(method, body, cookie);
+    const response = await t.app.request(path, init);
+    const json = (await response.json().catch(() => ({}))) as { error?: { code?: string } };
+    return `${method} ${path} ${response.status} ${json.error?.code ?? ""}`;
+  }
+
+  it.each(CASES)(
+    "%s refuses everyone but the building's landlord",
+    async (_route, method, path, body) => {
+      // Given
+      const f = await fixture();
+      const url = path(f);
+      // When
+      const guest = await outcome(method, url, body);
+      const otherLandlord = await outcome(method, url, body, f.otherCookie);
+      const resident = await outcome(method, url, body, f.residentCookie);
+      // Then
+      expect(guest).toBe(`${method} ${url} 401 UNAUTHENTICATED`);
+      expect(otherLandlord).toBe(`${method} ${url} 403 NOT_BUILDING_MANAGER`);
+      expect(resident).toBe(`${method} ${url} 403 NOT_BUILDING_MANAGER`);
+    },
+  );
 });
 
 describe("sessions", () => {

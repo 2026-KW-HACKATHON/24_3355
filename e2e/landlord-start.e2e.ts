@@ -3,7 +3,8 @@
 // 23은 다른 에이전트가 만드는 중이라 주소·제목·‘맞아요…’ 버튼만 보고 넘어갑니다(23 자체 스펙은 따로).
 //
 // 준비빌라(preparing, 관리자 없음)는 한 번 공개하면 open이 되어 `--reset-demo`로만 되돌아갑니다. 그래서 이
-// 테스트는 준비빌라가 시드 상태일 때만 돌고, 아니면 이유를 적고 건너뜁니다(보고에 그대로 드러남).
+// 테스트는 준비빌라가 시드 상태일 때만 돌고, 아니면 로컬에서는 이유를 적고 건너뜁니다(보고에 그대로 드러남).
+// CI는 매번 새 DB에 시드하므로 시드 상태가 아니면 실패합니다.
 // 초대 화면은 시연 로그인을 숨기므로(카카오 계정 필요) 카카오 로그인에서 돌아온 것처럼 API로 로그인한 뒤
 // 같은 초대 화면을 다시 엽니다. 수락하는 계정은 쓰기 테스트용 집주인이라 햇살빌라 시연 계정은 그대로입니다.
 import { apiAs, meOf } from "./support/api";
@@ -14,6 +15,7 @@ import {
   loginAsE2eLandlord,
   PREP_BUILDING,
   publishedGuides,
+  requirePrecondition,
   stamp,
 } from "./support/demo";
 import { expect, guideLink, hideDevOverlays, test } from "./support/test";
@@ -31,8 +33,8 @@ test.describe("새 집주인 시작(LF-12·13·14, lofi 41 → 23 → 33 → 43 
     );
     await landlord.dispose();
     const status = await buildingStatus(page, PREP_BUILDING.id);
-    test.skip(
-      status !== "preparing" || managed,
+    requirePrecondition(
+      status === "preparing" && !managed,
       `${PREP_BUILDING.name}이 시드 상태(preparing, 관리자 없음)가 아니에요(status=${status}, 관리 중=${managed}). \`pnpm --filter @wolgyeham/api db:seed -- --reset-demo\` 뒤 다시 돌립니다.`,
     );
 

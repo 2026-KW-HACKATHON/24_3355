@@ -13,3 +13,9 @@ coverage/
 *.log
 artifacts/local/
 .data/
+# 로컬 도구 상태(Claude Code launch.json·settings.local.json, Playwright MCP 로그·캡처)
+.claude/
+.playwright-mcp/
+# Playwright 기본 결과 폴더(설정은 node_modules/.cache/playwright에 둠)
+test-results/
+playwright-report/
