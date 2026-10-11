@@ -4,6 +4,7 @@ import { EnvFields } from "../lib/env.ts";
 import { issueInvite } from "../modules/buildings/service.ts";
 
 // 사용: pnpm --filter @wolgyeham/api db:invite <buildingId> [유효 일수, 기본 7]
+// 서버에서는 떠 있는 컨테이너에 exec로 실행합니다(docs/deploy.md). run으로 띄우면 출력한 링크가 컨테이너 로그에 남습니다.
 // 토큰 원문은 이 출력에서 한 번만 보입니다. DB에는 SHA-256 해시만 저장합니다.
 const env = EnvFields.pick({ DATABASE_URL: true, APP_ORIGIN: true }).parse(process.env);
 const args = z

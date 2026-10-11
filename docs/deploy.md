@@ -187,9 +187,9 @@ unset KEYS
 
 ```bash
 for e in dev prod; do
-  aws ssm put-parameter --name /wolgyeham/$e/PHOTO_STORE --type SecureString --overwrite --value s3
-  aws ssm put-parameter --name /wolgyeham/$e/PHOTO_BUCKET --type SecureString --overwrite --value "wolgyeham-photos-<계정 ID>"
-  aws ssm put-parameter --name /wolgyeham/$e/PHOTO_PREFIX --type SecureString --overwrite --value "$e/"
+  aws ssm put-parameter --name /wolgyeham/$e/PHOTO_STORE --type String --overwrite --value s3
+  aws ssm put-parameter --name /wolgyeham/$e/PHOTO_BUCKET --type String --overwrite --value "wolgyeham-photos-<계정 ID>"
+  aws ssm put-parameter --name /wolgyeham/$e/PHOTO_PREFIX --type String --overwrite --value "$e/"
 done
 ```
 
@@ -206,9 +206,9 @@ done
 - 마이그레이션 파일은 [database.md](database.md)의 규칙대로 PR에 함께 올립니다.
 - 배포 때 새 API가 뜨기 전에 이미지 안의 `migrate.mjs`가 `drizzle/`의 SQL을 적용합니다.
 - dev는 `DEMO_MODE=true`라서 마이그레이션 뒤 `seed.mjs`로 시연 데이터(가상 건물 햇살빌라·새봄하우스)를 넣습니다. prod에는 넣지 않습니다.
-- 집주인 초대는 관리자가 SSM 세션에서 발급합니다. 토큰이 한 번만 출력되므로 Run Command가 아니라 세션 안에서 실행합니다: `docker compose --env-file server.env --env-file .deploy.env run --rm api-prod node invite.mjs <건물 ID>`
+- 집주인 초대는 관리자가 SSM 세션에서 발급합니다. 토큰이 한 번만 출력되므로 Run Command가 아니라 세션 안에서, **떠 있는 컨테이너에 `exec`로** 실행합니다: `docker compose --env-file server.env --env-file .deploy.env exec -T api-prod node invite.mjs <건물 ID> [유효 일수]`. `run`으로 새 컨테이너를 띄우면 출력이 컨테이너 로그(awslogs → CloudWatch `/wolgyeham/<env>`)에 남아 로그를 읽을 수 있는 사람 누구나 링크를 쓸 수 있습니다. `exec` 출력은 로그 드라이버로 가지 않습니다.
 - 컬럼 삭제·이름 변경처럼 되돌리기 어려운 변경은 두 번에 나눠 배포하고, PR에 적습니다.
-- 신고된 생활 팁 검토(LF-19, 운영자)는 웹 화면 없이 SSM 세션에서 합니다: `docker compose --env-file server.env --env-file .deploy.env run --rm api-prod node moderate.mjs list`, 가리기 `… moderate.mjs hide <팁 ID> [사유]`, 복원 `… moderate.mjs restore <팁 ID>`. 가리거나 복원하면 그 팁의 신고가 검토 완료로 바뀝니다.
+- 신고된 생활 팁 검토(LF-19, 운영자)는 웹 화면 없이 SSM 세션에서 합니다: `docker compose --env-file server.env --env-file .deploy.env exec -T api-prod node moderate.mjs list`, 가리기 `… moderate.mjs hide <팁 ID> [사유]`, 복원 `… moderate.mjs restore <팁 ID>`. 가리거나 복원하면 그 팁의 신고가 검토 완료로 바뀝니다.
 
 ## 되돌리기
 

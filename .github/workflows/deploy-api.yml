@@ -95,6 +95,11 @@ jobs:
         run: |
           docker build -f apps/api/Dockerfile -t "$IMAGE:$GITHUB_SHA" .
           docker push "$IMAGE:$GITHUB_SHA"
+          # prod 이미지는 prod- 태그를 하나 더 붙여 ECR 정리 규칙(dev 배포가 쌓여도 최근 prod 3개는 남김)에서 지킵니다.
+          if [ "$TARGET" = "prod" ]; then
+            docker tag "$IMAGE:$GITHUB_SHA" "$IMAGE:prod-$GITHUB_SHA"
+            docker push "$IMAGE:prod-$GITHUB_SHA"
+          fi
 
       - name: 서버 파일 올리기
         run: aws s3 sync infra/server "s3://${{ vars.OPS_BUCKET }}/server" --delete --only-show-errors

@@ -30,6 +30,8 @@ RUN mkdir /deps && node -e "const p=require('./apps/api/package.json'); \
     && node -e "require('sharp')"
 
 FROM node:24-alpine
+# 베이스 이미지 뒤에 나온 alpine 보안 패치(예: zlib)를 빌드할 때 받습니다(ECR 스캔).
+RUN apk upgrade --no-cache
 WORKDIR /app
 ENV NODE_ENV=production \
     API_HOST=0.0.0.0 \

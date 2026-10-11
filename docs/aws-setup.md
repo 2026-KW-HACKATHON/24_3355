@@ -45,7 +45,7 @@ fill() { sed -e "s/<ACCOUNT_ID>/$ACCOUNT_ID/g" -e "s/<OPS_BUCKET>/$OPS_BUCKET/g"
 
 ## 2. 비용 알림
 
-`infra/aws/budget-notifications.json`의 `<ALERT_EMAIL>`을 바꾼 뒤 실행합니다. 월 5달러 예산에서 실제 비용이 1달러(20%)를 넘거나 예상 비용이 5달러를 넘으면 메일이 옵니다.
+`infra/aws/budget-notifications.json`의 `<ALERT_EMAIL>`을 바꾼 뒤 실행합니다. 월 20달러 예산에서 실제 비용이 4달러(20%)를 넘거나 예상 비용이 20달러를 넘으면 메일이 옵니다.
 
 ```bash
 aws budgets create-budget --account-id $ACCOUNT_ID \
@@ -76,6 +76,8 @@ aws budgets create-budget --account-id $ACCOUNT_ID \
 
 IAM 사용자 3명을 만들되 **콘솔 비밀번호 + MFA만** 주고 액세스 키는 만들지 않습니다. CLI는 각자 `aws login`으로 콘솔 로그인 정보를 씁니다. 권한은 그룹 `wolgyeham-devs`에 같은 개발자 정책을 붙여 줍니다.
 
+점검 기록(2026-10-11): 이 프로젝트 전에 만든 IAM 사용자 `kwon`(관리자 권한, MFA 없음)의 액세스 키를 비활성화했습니다(삭제 전, 2025-12 이후 사용 없음). 주인 확인 뒤 사용자를 지우거나 권한을 뗍니다. 이 시점에 IAM 사용자 MFA는 아무도 켜지 않은 상태라, 각자 첫 로그인 때 등록합니다. 루트는 처음 설정 뒤 쓰지 않습니다.
+
 ## 4. 공용 리소스
 
 ```bash
@@ -90,11 +92,11 @@ aws s3api put-bucket-lifecycle-configuration --bucket $OPS_BUCKET --lifecycle-co
 # 안내·공지 사진 버킷 (공개 차단, API를 거쳐서만 나감, dev/·prod/ 접두사). 이미 돌고 있는 환경에서는 아래 4-A 스크립트로
 bash infra/aws/add-photo-bucket.sh
 
-# API 이미지 저장소 (최근 10개만 보관)
+# API 이미지 저장소 (최근 10개만 보관, prod- 태그가 붙은 prod 이미지는 최근 3개를 따로 남김)
 aws ecr create-repository --repository-name wolgyeham-api \
   --image-scanning-configuration scanOnPush=true --tags Key=Project,Value=wolgyeham
 aws ecr put-lifecycle-policy --repository-name wolgyeham-api --lifecycle-policy-text \
-  '{"rules":[{"rulePriority":1,"description":"keep last 10","selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":10},"action":{"type":"expire"}}]}'
+  '{"rules":[{"rulePriority":1,"description":"keep last 3 prod","selection":{"tagStatus":"tagged","tagPrefixList":["prod-"],"countType":"imageCountMoreThan","countNumber":3},"action":{"type":"expire"}},{"rulePriority":2,"description":"keep last 10","selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":10},"action":{"type":"expire"}}]}'
 
 # 로그 그룹 (14일 보관)
 for e in dev prod; do
