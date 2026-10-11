@@ -8,10 +8,12 @@ import { Hami } from "../../components/Hami";
 import { Icon } from "../../components/Icon";
 import { QrCode } from "../../components/QrCode";
 import { BackButton, Dock, Screen, TopBar } from "../../components/Screen";
+import { useToast } from "../../components/useToast";
 import { ManagerGate } from "../../features/auth/ManagerGate";
 import { useJoinCode } from "../../features/buildings/queries";
-import { CATEGORY_ORDER, joinCategoryLabels } from "../../features/guides/categories";
 import { publicBuildingQrUrl, publicOrigin } from "../../lib/share";
+import { SIGN_SCAN, SIGN_TITLE, signTopics, splitAddress } from "./signContent";
+import { downloadEntranceSignPng } from "./signImage";
 import "./entrance-sign.css";
 
 export function Component() {
@@ -23,25 +25,36 @@ export function Component() {
   );
 }
 
-/** “서울 노원구 광운로 20” → 위 작은 줄 “서울 노원구”, 큰 줄 “광운로 20”. 구 이름을 못 찾으면 주소 전체를 큰 줄에 둡니다. */
-export function splitAddress(fullAddress: string): { district: string; road: string } {
-  const words = fullAddress.trim().split(/\s+/);
-  const gu = words.findIndex((word) => /(구|군|시)$/.test(word) && word !== words[0]);
-  if (gu === -1 || gu === words.length - 1) return { district: "", road: fullAddress.trim() };
-  return { district: words.slice(0, gu + 1).join(" "), road: words.slice(gu + 1).join(" ") };
-}
-
 function EntranceSign({ detail }: { detail: ManagedBuildingDetail }) {
   const { building, guides } = detail;
   const base = `/manage/${building.id}`;
   const qrUrl = publicBuildingQrUrl(building.id, publicOrigin());
   const { district, road } = splitAddress(building.fullAddress);
-  const used = new Set(guides.filter((g) => g.status === "published").map((g) => g.category));
-  const topics = joinCategoryLabels(CATEGORY_ORDER.filter((category) => used.has(category)));
+  const topics = signTopics(guides);
   const joinCode = useJoinCode(building.id);
   const code = joinCode.data?.code;
   // 가입코드는 현관에 함께 붙이지 않는 것이 기본 규칙(26)이라 처음엔 빼 두고, 전시처럼 열어 둔 곳에서만 켭니다.
   const [withCode, setWithCode] = useState(false);
+  const toast = useToast();
+  const [downloadError, setDownloadError] = useState<string>();
+
+  // 인쇄 대신 파일로 받아 직접 고치거나 인쇄소에 맡길 때 씁니다. 화면에 보이는 그대로(가입코드 포함 여부까지) 그립니다.
+  async function download() {
+    setDownloadError(undefined);
+    const ok = await downloadEntranceSignPng(
+      {
+        qrValue: qrUrl,
+        buildingName: building.name,
+        district,
+        road,
+        topics,
+        joinCode: code && withCode ? code : undefined,
+      },
+      `${building.name}-현관-안내문.png`,
+    );
+    if (ok) toast("현관 안내문 이미지를 내려받았어요");
+    else setDownloadError("이미지를 만들지 못했어요. ‘인쇄하기’로 PDF를 저장해 주세요");
+  }
 
   return (
     <Screen
@@ -66,15 +79,15 @@ function EntranceSign({ detail }: { detail: ManagedBuildingDetail }) {
           </div>
           <p className="es-building">{building.name} 생활안내</p>
           <h2 className="es-title">
-            이 건물의 안내,
+            {SIGN_TITLE[0]}
             <br />
-            여기서 확인하세요.
+            {SIGN_TITLE[1]}
           </h2>
           <div className="es-qr">
             <QrCode value={qrUrl} label={`${building.name} 건물 안내 QR`} />
           </div>
           <Hami pose="qr-sign" size={330} className="es-hami" eager />
-          <p className="es-scan">카메라로 QR을 비추면 가입 없이 안내가 열려요</p>
+          <p className="es-scan">{SIGN_SCAN}</p>
           {topics ? <p className="es-topics">{topics}</p> : null}
           <div className="es-bottom">
             <p className="es-brand">월계함</p>
@@ -89,6 +102,20 @@ function EntranceSign({ detail }: { detail: ManagedBuildingDetail }) {
       </div>
 
       <div className="wh-pad es-controls es-screen-only">
+        <ActionButton
+          className="wh-btn wh-btn--secondary"
+          size="large"
+          variant="neutralWeak"
+          onClick={() => void download()}
+        >
+          <Icon name="download" />
+          이미지로 내려받기
+        </ActionButton>
+        {downloadError ? (
+          <p className="wh-field-error" role="alert">
+            {downloadError}
+          </p>
+        ) : null}
         {code ? (
           <label className="es-toggle">
             <input

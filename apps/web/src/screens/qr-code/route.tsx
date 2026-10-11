@@ -6,14 +6,16 @@ import { Link, useParams } from "react-router";
 import { CodeCells } from "../../components/CodeCells";
 import { Hami } from "../../components/Hami";
 import { Icon } from "../../components/Icon";
-import { downloadQrPng, QrCode } from "../../components/QrCode";
+import { QrCode } from "../../components/QrCode";
 import { BackButton, Screen, TopBar } from "../../components/Screen";
 import { LoadError } from "../../components/ScreenState";
 import { useToast } from "../../components/useToast";
 import { ManagerGate } from "../../features/auth/ManagerGate";
 import { useJoinCode, useRotateJoinCode } from "../../features/buildings/queries";
 import { errorMessage } from "../../lib/errors";
-import { copyText, publicBuildingQrUrl, publicBuildingUrl } from "../../lib/share";
+import { copyText, publicBuildingQrUrl } from "../../lib/share";
+import { signTopics, splitAddress } from "../entrance-sign/signContent";
+import { downloadEntranceSignPng } from "../entrance-sign/signImage";
 import "./qr-code.css";
 
 export function Component() {
@@ -26,22 +28,27 @@ export function Component() {
 function QrAndCode({ detail }: { detail: ManagedBuildingDetail }) {
   const { building } = detail;
   const base = `/manage/${building.id}`;
-  const publicUrl = publicBuildingUrl(building.id);
   // QR에는 `?via=qr`을 담고, 사람이 읽는 캡션은 주소만 적습니다.
   const qrUrl = publicBuildingQrUrl(building.id);
   const toast = useToast();
   const [downloadError, setDownloadError] = useState<string>();
 
+  // 내려받는 이미지는 ‘현관 안내문’(A4)과 같은 모양입니다. 가입코드는 현관에 함께 붙이지 않으므로 싣지 않습니다.
   async function download() {
     setDownloadError(undefined);
-    const ok = await downloadQrPng({
-      value: qrUrl,
-      title: building.name,
-      caption: publicUrl.replace(/^https?:\/\//, ""),
-      fileName: `${building.name}-현관-QR.png`,
-    });
-    if (ok) toast("현관 QR 이미지를 내려받았어요");
-    else setDownloadError("이미지를 만들지 못했어요. 화면의 QR을 캡처해 인쇄해도 돼요");
+    const { district, road } = splitAddress(building.fullAddress);
+    const ok = await downloadEntranceSignPng(
+      {
+        qrValue: qrUrl,
+        buildingName: building.name,
+        district,
+        road,
+        topics: signTopics(detail.guides),
+      },
+      `${building.name}-현관-안내문.png`,
+    );
+    if (ok) toast("현관 안내문 이미지를 내려받았어요");
+    else setDownloadError("이미지를 만들지 못했어요. ‘현관 안내문 인쇄’로 인쇄해 주세요");
   }
 
   return (

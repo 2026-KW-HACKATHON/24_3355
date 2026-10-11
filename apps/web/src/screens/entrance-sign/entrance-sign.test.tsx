@@ -8,7 +8,8 @@ import { authKeys } from "../../features/auth/queries";
 import { buildingKeys } from "../../features/buildings/queries";
 import { testUser } from "../../test/me";
 import { memoryStorage } from "../../test/memoryStorage";
-import { Component as EntranceSignScreen, splitAddress } from "./route";
+import { Component as EntranceSignScreen } from "./route";
+import { splitAddress } from "./signContent";
 
 vi.mock("../../lib/api", () => ({
   getJson: vi.fn(),
@@ -26,6 +27,7 @@ vi.mock("@seed-design/react", () => ({
   ),
   Skeleton: () => <span />,
   Snackbar: { AvoidOverlap: ({ children }: { children?: ReactNode }) => children },
+  useSnackbarAdapter: () => ({ create: () => undefined }),
 }));
 
 const BUILDING_ID = "089d7cfa-ddb9-4eea-b69f-d4319f203a45";
@@ -130,6 +132,7 @@ describe("entrance sign (현관 안내문)", () => {
     expect(html).toContain("월계함");
     expect(html).not.toContain("wolgye.kr");
     expect(html).toContain("인쇄하기");
+    expect(html).toContain("이미지로 내려받기");
     expect(html).toContain('aria-label="뒤로"');
   });
 
