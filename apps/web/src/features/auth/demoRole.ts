@@ -56,3 +56,17 @@ export function demoBarLabel({
   const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
   return HIDDEN_PATHS.has(path) ? undefined : mark.label;
 }
+
+/**
+ * 서버가 시연 계정의 실제 건물 초대 수락·연결을 거절한 경우(403 `FORBIDDEN`, `fields.account = "demo"`).
+ * 시연(29)을 한 탭에서 실제 건물로 넘어오면 생깁니다.
+ */
+export const DEMO_ACCOUNT_BLOCKED =
+  "시연 계정으로 로그인돼 있어요. 내 정보에서 로그아웃한 뒤 카카오로 다시 로그인해 주세요";
+
+export function isDemoAccountBlocked(error: {
+  code: string;
+  fields: Readonly<Record<string, string>>;
+}) {
+  return error.code === "FORBIDDEN" && error.fields["account"] === "demo";
+}

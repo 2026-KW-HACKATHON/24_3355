@@ -6,6 +6,7 @@ import type {
 } from "@wolgyeham/contracts";
 import { findLiveOccupancy } from "../../lib/auth.ts";
 import { type Database, isUniqueViolation } from "../../lib/db.ts";
+import { assertDemoScope } from "../../lib/demoScope.ts";
 import { AppError } from "../../lib/errors.ts";
 import { occupancyState } from "../../lib/reconfirm.ts";
 import * as buildingService from "../buildings/service.ts";
@@ -34,6 +35,7 @@ export async function connect(
 ): Promise<ConnectResult & { created: boolean }> {
   const unchanged = { alreadyConnected: true, endedOccupancyId: null, created: false };
   const building = await buildingService.requireBuilding(db, buildingId);
+  await assertDemoScope(db, userId, building.id);
   // 로그인한 연결은 사용자 키로만 셉니다(건물 전체 상한은 로그인하지 않은 확인에만).
   await buildingService.verifyJoinCode(db, building.id, input.code, clientKeys, {
     countBuilding: false,

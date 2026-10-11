@@ -13,6 +13,7 @@ import {
 } from "@wolgyeham/contracts";
 import { createToken, hashToken, isManager, requireManager } from "../../lib/auth.ts";
 import { type Database, isUniqueViolation } from "../../lib/db.ts";
+import { assertDemoScope } from "../../lib/demoScope.ts";
 import { AppError } from "../../lib/errors.ts";
 import { log } from "../../lib/log.ts";
 import * as repo from "./repo.ts";
@@ -111,6 +112,7 @@ export function acceptInvite(
       return { buildingId: invite.buildingId, alreadyManager: true };
     }
     assertUsable(invite);
+    await assertDemoScope(tx, userId, invite.buildingId);
     if (!(await repo.markInviteAccepted(tx, invite.id, userId))) {
       throw new AppError(409, "CONFLICT");
     }

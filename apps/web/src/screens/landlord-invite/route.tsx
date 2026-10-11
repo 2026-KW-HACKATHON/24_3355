@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate } from "react-router";
 import { Icon } from "../../components/Icon";
 import { Brand, Dock, Screen, TopBar } from "../../components/Screen";
 import { EmptyState, LoadError } from "../../components/ScreenState";
+import { DEMO_ACCOUNT_BLOCKED, isDemoAccountBlocked } from "../../features/auth/demoRole";
 import { LoginActions } from "../../features/auth/LoginActions";
 import { useMe } from "../../features/auth/queries";
 import { CATEGORY } from "../../features/guides/categories";
@@ -213,9 +214,11 @@ function AcceptDock({ token }: { token: string }) {
   const message =
     error?.code === "NOT_FOUND" || error?.code === "CONFLICT"
       ? "이미 수락했거나 찾을 수 없는 초대예요"
-      : error
-        ? errorMessage(error)
-        : undefined;
+      : error && isDemoAccountBlocked(error)
+        ? DEMO_ACCOUNT_BLOCKED
+        : error
+          ? errorMessage(error)
+          : undefined;
 
   return (
     <Dock hint={HINT} error={message}>

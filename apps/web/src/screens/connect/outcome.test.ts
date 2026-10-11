@@ -57,3 +57,17 @@ describe("when connecting fails", () => {
     expect(connectFailureCopy(new AppError("VALIDATION_FAILED"), true).refetchMe).toBe(false);
   });
 });
+
+describe("demo account on a real building", () => {
+  it("tells the person to log out of the demo account instead of a generic refusal", () => {
+    // Given
+    const error = new AppError("FORBIDDEN", { fields: { account: "demo" } });
+    // When
+    const failure = connectFailureCopy(error, false);
+    // Then
+    expect(failure.message).toBe(
+      "시연 계정으로 로그인돼 있어요. 내 정보에서 로그아웃한 뒤 카카오로 다시 로그인해 주세요",
+    );
+    expect(failure.uncertain).toBe(false);
+  });
+});

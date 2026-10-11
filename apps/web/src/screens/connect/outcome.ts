@@ -1,4 +1,5 @@
 import type { ConnectResult } from "@wolgyeham/contracts";
+import { DEMO_ACCOUNT_BLOCKED, isDemoAccountBlocked } from "../../features/auth/demoRole";
 import { type AppError, errorMessage } from "../../lib/errors";
 
 // 연결 요청(LF-04)의 결과를 화면 문구로 바꿉니다. 결과를 모를 때(시간 초과·연결 끊김)는
@@ -25,6 +26,9 @@ export type ConnectFailure = {
 
 /** `replacing`: 다른 건물 연결을 옮기는 요청이었는지. */
 export function connectFailureCopy(error: AppError, replacing: boolean): ConnectFailure {
+  if (isDemoAccountBlocked(error)) {
+    return { message: DEMO_ACCOUNT_BLOCKED, refetchMe: false, uncertain: false };
+  }
   switch (error.code) {
     case "ALREADY_CONNECTED":
       return {
