@@ -89,3 +89,14 @@
 .nd-tts-off {
   margin: 0 var(--wh-gutter) var(--wh-space-2);
 }
+.nd-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  max-height: 60vh;
+  margin-top: var(--wh-space-4);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-muted);
+  object-fit: contain;
+}

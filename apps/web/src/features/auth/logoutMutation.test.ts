@@ -71,7 +71,7 @@ function withSubscription() {
 beforeEach(() => {
   vi.stubGlobal("localStorage", memoryStorage());
   vi.stubGlobal("sessionStorage", memoryStorage());
-  saveLocalDraft(draftKey, { category: "parcel", title: "택배", body: "1층 보관함" });
+  saveLocalDraft(draftKey, { category: "parcel", title: "택배", body: "1층 보관함", photos: [] });
 });
 
 afterEach(() => {

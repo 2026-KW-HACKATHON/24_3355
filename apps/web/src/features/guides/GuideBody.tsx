@@ -2,6 +2,7 @@ import type { Guide } from "@wolgyeham/contracts";
 import type { ElementType } from "react";
 import { Icon } from "../../components/Icon";
 import { formatMonth } from "../../lib/format";
+import { PhotoList } from "../photos/PhotoList";
 import { CATEGORY } from "./categories";
 import "./guide-body.css";
 
@@ -51,18 +52,12 @@ export function GuideBody({
       >
         {guide.title}
       </Title>
-      {photos.map((photo, index) => (
-        <img
-          key={photo.url}
-          className="guide-body__photo"
-          src={photo.url}
-          alt={photo.alt ?? `${category.label} 안내 사진 ${index + 1}`}
-          width={350}
-          height={220}
-          loading="lazy"
-          decoding="async"
-        />
-      ))}
+      <PhotoList
+        photos={photos}
+        label={guide.title}
+        className="guide-body__photo"
+        zoomable={variant !== "card"}
+      />
       <p className={clamp ? "guide-body__text guide-body__text--clamp" : "guide-body__text"}>
         {guide.body}
       </p>

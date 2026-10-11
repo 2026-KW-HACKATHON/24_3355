@@ -1,4 +1,4 @@
-import type { Notice } from "@wolgyeham/contracts";
+import { type Notice, photoUrl } from "@wolgyeham/contracts";
 import {
   and,
   count,
@@ -25,6 +25,7 @@ export function toNotice(row: NoticeRow): Notice {
     buildingId: row.buildingId,
     title: row.title,
     body: row.body,
+    photos: row.photos.map((key) => ({ key, url: photoUrl(key) })),
     startsAt: row.startsAt.toISOString(),
     endsAt: row.endsAt.toISOString(),
     publishedAt: row.publishedAt.toISOString(),
@@ -66,6 +67,7 @@ export async function insertNotice(
     buildingId: string;
     title: string;
     body: string;
+    photos: string[];
     startsAt: Date;
     endsAt: Date;
     authorUserId: string;

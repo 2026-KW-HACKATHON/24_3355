@@ -19,6 +19,7 @@ import {
 import { hashToken } from "../../lib/auth.ts";
 import type { Database } from "../../lib/db.ts";
 import { log } from "../../lib/log.ts";
+import { deleteBuildingPhotos, type PhotoStore } from "../../lib/photoStore.ts";
 import { hitRateLimit } from "../../lib/rate-limit.ts";
 import * as buildingService from "../buildings/service.ts";
 import * as guideService from "../guides/service.ts";
@@ -155,7 +156,7 @@ async function findGuestReport(db: Database) {
 export async function reset(
   db: Database,
   input: DemoResetBody,
-  options: { reconfirmIntervalDays: number; clientKey: string },
+  options: { reconfirmIntervalDays: number; clientKey: string; photos: PhotoStore | null },
 ): Promise<DemoResetResult> {
   await hitRateLimit(db, DEMO_RESET_BUCKETS.clientInterval, options.clientKey, {
     limit: 1,
@@ -181,6 +182,11 @@ export async function reset(
     guestReport: true,
   });
   log("info", "demo_reset", { buildings: summary.length });
+  // 지운 행이 가리키던 사진 파일도 지웁니다(실패해도 초기화는 성공, 로그만).
+  await deleteBuildingPhotos(
+    options.photos,
+    summary.map((building) => building.id),
+  );
   return {
     buildings: summary.map(({ id, name, ...removed }) => ({ id, name, removed })),
   };

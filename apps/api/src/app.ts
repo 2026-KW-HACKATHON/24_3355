@@ -1,7 +1,7 @@
 import { swaggerUI } from "@hono/swagger-ui";
 import { Scalar } from "@scalar/hono-api-reference";
 import { HealthResponse } from "@wolgyeham/contracts";
-import { Hono } from "hono";
+import { type Context, Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { csrf } from "hono/csrf";
 import { HTTPException } from "hono/http-exception";
@@ -14,6 +14,7 @@ import type { Database } from "./lib/db.ts";
 import { apiDocsEnabled, type Env } from "./lib/env.ts";
 import { AppError } from "./lib/errors.ts";
 import { log } from "./lib/log.ts";
+import { createPhotoStore, type PhotoStore } from "./lib/photoStore.ts";
 import { createWebPushSender, type PushSender } from "./lib/push.ts";
 import { createTaskRunner, type TaskRunner } from "./lib/tasks.ts";
 import { authRoutes, devRoutes } from "./modules/auth/routes.ts";
@@ -24,23 +25,35 @@ import { manageRoutes } from "./modules/manage/routes.ts";
 import { meRoutes } from "./modules/me/routes.ts";
 import { noticeRoutes } from "./modules/notices/routes.ts";
 import { occupancyRoutes } from "./modules/occupancies/routes.ts";
+import { PHOTO_UPLOAD_PATH, photoRoutes } from "./modules/photos/routes.ts";
 import { reportRoutes } from "./modules/reports/routes.ts";
 import { tipRoutes } from "./modules/tips/routes.ts";
 
 /** 요청 본문 한도. 안내 본문(2000자)과 여유분을 넉넉히 넘습니다. */
 const MAX_BODY_BYTES = 64 * 1024;
 
+/** 사진 파일 응답은 접근 규칙에 따라 라우트가 Cache-Control을 정합니다(modules/photos). */
+const PHOTO_FILE_PREFIX = "/api/photos/buildings/";
+
 /** 문서 경로만 캐시를 허용합니다. 나머지 /api 응답은 no-store입니다. */
 const CACHEABLE_PATHS = new Set(["/api/docs", "/api/swagger", "/api/openapi.json"]);
 
 /**
  * `push`를 넘기지 않으면 VAPID 키가 있을 때만 보내는 기본 발송기(web-push)를 씁니다. `tasks`는 응답 뒤에 이어서
- * 할 일(공지 푸시)을 돌리는 곳이고, 서버·테스트가 넘겨 `idle()`로 기다립니다.
+ * 할 일(공지 푸시)을 돌리는 곳이고, 서버·테스트가 넘겨 `idle()`로 기다립니다. `photos`를 넘기지 않으면 환경 변수로
+ * 사진 저장소를 만듭니다(null이면 사진을 받지 않음). 테스트는 메모리 저장소를 넘깁니다.
  */
-export function createApp(deps: { env: Env; db: Database; push?: PushSender; tasks?: TaskRunner }) {
+export function createApp(deps: {
+  env: Env;
+  db: Database;
+  push?: PushSender;
+  tasks?: TaskRunner;
+  photos?: PhotoStore | null;
+}) {
   const app = new Hono<AppEnv>();
   const push = deps.push ?? createWebPushSender(deps.env);
   const tasks = deps.tasks ?? createTaskRunner();
+  const photos = deps.photos === undefined ? createPhotoStore(deps.env) : deps.photos;
 
   app.use(requestId());
   app.use(async (c, next) => {
@@ -49,8 +62,11 @@ export function createApp(deps: { env: Env; db: Database; push?: PushSender; tas
     c.set("db", deps.db);
     c.set("push", push);
     c.set("tasks", tasks);
+    c.set("photos", photos);
     await next();
-    if (!CACHEABLE_PATHS.has(c.req.path)) c.header("Cache-Control", "no-store");
+    const photoFile =
+      c.req.path.startsWith(PHOTO_FILE_PREFIX) && (c.res.ok || c.res.status === 304);
+    if (!CACHEABLE_PATHS.has(c.req.path) && !photoFile) c.header("Cache-Control", "no-store");
     if (deps.env.NODE_ENV !== "test") {
       // 실제 URL·쿼리에는 토큰이 섞일 수 있어 등록된 경로 패턴만 남깁니다.
       log("info", "request", {
@@ -64,12 +80,13 @@ export function createApp(deps: { env: Env; db: Database; push?: PushSender; tas
   });
   // 다른 사이트의 폼 제출(쿠키가 따라오는 요청)을 막습니다. JSON 요청은 브라우저가 CORS로 막습니다.
   app.use("/api/*", csrf({ origin: deps.env.APP_ORIGIN }));
-  app.use(
-    "/api/*",
-    bodyLimit({
-      maxSize: MAX_BODY_BYTES,
-      onError: (c) => c.json({ error: { code: "PAYLOAD_TOO_LARGE" } }, 413),
-    }),
+  const tooLarge = (c: Context) => c.json({ error: { code: "PAYLOAD_TOO_LARGE" } }, 413);
+  const bodyLimitDefault = bodyLimit({ maxSize: MAX_BODY_BYTES, onError: tooLarge });
+  // 사진 올리기(`POST /api/buildings/:buildingId/photos`)는 라우트가 집주인 확인 뒤에 8MB 한도를 겁니다.
+  app.use("/api/*", (c, next) =>
+    c.req.method === "POST" && PHOTO_UPLOAD_PATH.test(c.req.path)
+      ? next()
+      : bodyLimitDefault(c, next),
   );
   app.use("/api/*", sessionMiddleware);
 
@@ -93,6 +110,7 @@ export function createApp(deps: { env: Env; db: Database; push?: PushSender; tas
   app.route("/api", buildingRoutes);
   app.route("/api", guideRoutes);
   app.route("/api", noticeRoutes);
+  app.route("/api", photoRoutes);
   app.route("/api", occupancyRoutes);
   app.route("/api", reportRoutes);
   app.route("/api", tipRoutes);

@@ -105,33 +105,7 @@
 }
 
 .gw-extra {
-  display: flex;
-  align-items: center;
-  gap: var(--wh-space-3);
-  margin-top: var(--wh-space-2_5);
-}
-.gw-photo-add {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 64px;
-  height: 64px;
-  border: 1.5px dashed var(--wh-gray-300);
-  border-radius: var(--wh-radius-m);
-  background: none;
-  color: var(--wh-text-muted);
-}
-.gw-photo-add:disabled {
-  cursor: not-allowed;
-  color: var(--wh-text-disabled);
-}
-.gw-photo-add svg {
-  width: var(--wh-icon-m);
-  height: var(--wh-icon-m);
-}
-.gw-extra__notes {
-  display: grid;
-  gap: var(--wh-space-1);
+  margin-top: var(--wh-space-2);
 }
 
 /* 공개한 안내 고치기(33, 수정본) */

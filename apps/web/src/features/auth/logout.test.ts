@@ -17,7 +17,12 @@ vi.mock("../../lib/api", () => ({
 }));
 
 const BUILDING = "5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f01";
-const VALUES = { category: "parcel", title: "택배", body: "1층 보관함" } as const;
+const VALUES = {
+  category: "parcel" as const,
+  title: "택배",
+  body: "1층 보관함",
+  photos: [] as string[],
+};
 const mine = { userId: "user-a", buildingId: BUILDING, guideId: undefined };
 const theirs = { userId: "user-b", buildingId: BUILDING, guideId: undefined };
 

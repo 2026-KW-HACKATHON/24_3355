@@ -48,6 +48,24 @@ export const EnvFields = z.object({
   VAPID_PUBLIC_KEY: optional(z.string().min(1)),
   VAPID_PRIVATE_KEY: optional(z.string().min(1)),
   VAPID_SUBJECT: optional(z.string().regex(/^(mailto:|https:\/\/)/)),
+  /**
+   * 안내·공지 사진 저장소(lib/photoStore.ts). `local`은 `PHOTO_LOCAL_DIR` 폴더, `s3`는 `PHOTO_BUCKET`(자격 증명은
+   * EC2 인스턴스 역할 같은 기본 체인), `off`는 사진을 받지 않음(올리기 503). 비우면 production은 `off`, 그 밖은 `local`.
+   */
+  PHOTO_STORE: optional(z.enum(["local", "s3", "off"])),
+  PHOTO_BUCKET: optional(z.string().regex(/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/)),
+  /** 저장소 안의 환경 접두사(예: `dev/`, `prod/`). 버킷 하나를 환경끼리 나눠 씁니다. 비우면 맨 위. */
+  PHOTO_PREFIX: z
+    .string()
+    .regex(/^(?:[a-z0-9-]+\/)*$/)
+    .default(""),
+  /** `PHOTO_STORE=local`의 폴더. API를 실행한 폴더 기준(pnpm dev면 apps/api/.data/photos, gitignore). */
+  PHOTO_LOCAL_DIR: z.string().min(1).default(".data/photos"),
+  /** S3 리전. */
+  AWS_REGION: z
+    .string()
+    .regex(/^[a-z]{2}(-[a-z]+)+-\d$/)
+    .default("ap-northeast-2"),
 });
 
 const VAPID_KEYS = ["VAPID_PUBLIC_KEY", "VAPID_PRIVATE_KEY", "VAPID_SUBJECT"] as const;
@@ -58,6 +76,21 @@ export const EnvSchema = EnvFields.superRefine((env, context) => {
       code: "custom",
       path: ["SESSION_SECRET"],
       message: "SESSION_SECRET is required when Kakao login is configured",
+    });
+  }
+  if (env.PHOTO_STORE === "s3" && !env.PHOTO_BUCKET) {
+    context.addIssue({
+      code: "custom",
+      path: ["PHOTO_BUCKET"],
+      message: "PHOTO_BUCKET is required when PHOTO_STORE=s3",
+    });
+  }
+  // 버킷 하나를 dev·prod가 나눠 쓰고 역할 권한도 두 접두사만 열므로, s3에서는 접두사를 꼭 정합니다.
+  if (env.PHOTO_STORE === "s3" && !/^(dev|prod)\/$/.test(env.PHOTO_PREFIX)) {
+    context.addIssue({
+      code: "custom",
+      path: ["PHOTO_PREFIX"],
+      message: "PHOTO_PREFIX must be dev/ or prod/ when PHOTO_STORE=s3",
     });
   }
   const vapid = VAPID_KEYS.filter((key) => env[key] !== undefined);
@@ -77,6 +110,11 @@ export type Env = z.infer<typeof EnvSchema>;
 /** 문서 화면은 외부 CDN 스크립트를 앱과 같은 출처에서 불러오므로 prod에서는 기본으로 끕니다. */
 export function apiDocsEnabled(env: Env): boolean {
   return env.API_DOCS ?? env.NODE_ENV !== "production";
+}
+
+/** 사진 저장소 종류. 비우면 production은 받지 않고(off), 로컬·테스트는 폴더(local)입니다. */
+export function photoStoreKind(env: Pick<Env, "PHOTO_STORE" | "NODE_ENV">): "local" | "s3" | "off" {
+  return env.PHOTO_STORE ?? (env.NODE_ENV === "production" ? "off" : "local");
 }
 
 /** server.ts가 시작할 때 한 번 부릅니다. 다른 모듈은 process.env를 직접 읽지 않습니다. */

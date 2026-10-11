@@ -30,6 +30,7 @@ import {
 import { createToken, hashToken, SESSION_COOKIE } from "../lib/auth.ts";
 import { createDatabase, type Database } from "../lib/db.ts";
 import { parseEnv } from "../lib/env.ts";
+import { createMemoryPhotoStore, type PhotoStore } from "../lib/photoStore.ts";
 import type { PushSender } from "../lib/push.ts";
 import { createTaskRunner, type TaskRunner } from "../lib/tasks.ts";
 
@@ -50,8 +51,16 @@ export function testEnv(overrides: Record<string, string> = {}) {
   });
 }
 
-/** `tasks.idle()`로 응답 뒤에 도는 일(공지 푸시)이 끝나기를 기다립니다. */
-type TestContext = { app: ReturnType<typeof createApp>; db: Database; tasks: TaskRunner };
+/**
+ * `tasks.idle()`로 응답 뒤에 도는 일(공지 푸시)이 끝나기를 기다립니다. `photos`는 메모리 사진 저장소입니다
+ * (`options.photos: null`이면 사진을 받지 않는 환경).
+ */
+type TestContext = {
+  app: ReturnType<typeof createApp>;
+  db: Database;
+  tasks: TaskRunner;
+  photos: (PhotoStore & { readonly size: number }) | null;
+};
 
 /**
  * 테스트 파일마다 마이그레이션을 적용하고 풀 하나를 엽니다.
@@ -59,7 +68,7 @@ type TestContext = { app: ReturnType<typeof createApp>; db: Database; tasks: Tas
  */
 export function useTestApp(
   envOverrides: Record<string, string> = {},
-  options: { push?: PushSender } = {},
+  options: { push?: PushSender; photos?: null } = {},
 ): TestContext {
   const context = {} as TestContext;
   let close: (() => Promise<void>) | undefined;
@@ -78,10 +87,12 @@ export function useTestApp(
     close = database.close;
     context.db = database.db;
     context.tasks = createTaskRunner();
+    context.photos = options.photos === null ? null : createMemoryPhotoStore();
     context.app = createApp({
       env: testEnv(envOverrides),
       db: database.db,
       tasks: context.tasks,
+      photos: context.photos,
       ...(options.push ? { push: options.push } : {}),
     });
   });

@@ -25,6 +25,7 @@
 | 건물 확인(LF-12·23: 이름 고치기·확인 시각) | 있음. 아래 표, §7 건물 확인 |
 | 약관 동의 기록(D-28: 동의한 판·시각, `/me`의 `termsUpToDate`) | 있음. §5, §7 약관 동의 |
 | 시연 시작(LF-20·29: 시연 건물·계정 목록, 시연 건물만 초기화) | 있음. `DEMO_MODE` 전용, §6 |
+| 안내·공지 사진(올리기·다시 만들기·접근 규칙, D-34) | 있음. `modules/photos`, §7 사진 |
 
 구현 순서 A(초대 → 안내 작성·공개 → 비회원이 공개 화면에서 읽기), B(가입코드 → 로그인 → 연결 → 공지·알림), C(수정 메모 → 집주인 판단 → 안내 갱신), D(재확인·이사), E(제보), F(생활 팁·신고)의 경로입니다. 요청·응답 스키마는 `packages/contracts`와 `/api/swagger`가 기준입니다.
 
@@ -56,6 +57,9 @@
 | `POST /notices/:noticeId/opened` | 로그인 | 공지 열람 기록. 이 공지의 알림 대상이었으면 처음 한 번 `opened_at`, 아니면 아무것도 안 함(둘 다 204). 없는 공지 404 |
 | `POST /buildings/:buildingId/notices`, `GET /buildings/:buildingId/notices/audience` | 집주인 | 공지 올리기(201, `attemptedCount` = 알림 대상 수, 발송은 응답 뒤) / 연결된 거주자 수·알림 대상 수 |
 | `GET /push-subscriptions/public-key` | 누구나 | VAPID 공개키. 보낼 수 없는 환경이면 `publicKey: null` |
+| `GET /photos/config` | 누구나 | 사진을 받는 환경인지(`uploadsEnabled`)와 한도(`maxPhotos` 4, `maxUploadBytes` 8MB) |
+| `POST /buildings/:buildingId/photos` | 그 건물 집주인 | 사진 올리기(multipart `file` 하나, JPEG·PNG·WebP 8MB 이하, 201 `{ photo: { key, url } }`). 다시 만든 WebP를 저장(§7 사진). 형식이 다르거나 풀 수 없으면 400 `PHOTO_INVALID`, 8MB 초과 413, 1시간에 60장 넘으면 429, 저장소 없으면 503 `PHOTO_STORAGE_UNAVAILABLE` |
+| `GET /photos/buildings/:buildingId/:file` | 공개된 안내·보이는 공지의 사진은 누구나 / 그 밖은 그 건물 집주인 | WebP 파일. 공개 사진은 `public, no-cache`, 집주인 전용은 `private, no-cache`, 강한 ETag(사진 id)와 `If-None-Match` → 304, `nosniff`. 볼 수 없거나 경로 형식이 틀리면 404(대문자 uuid는 소문자로 맞춤) |
 | `POST /push-subscriptions`, `DELETE /push-subscriptions` | active 거주자 / 로그인 | 이 브라우저 구독 저장(204. 알려진 푸시 서비스 주소만, 같은 endpoint는 `auth`가 같을 때만 덮어씀, 사용자마다 최근 5개, 10분에 10번 넘으면 429 `RATE_LIMITED`) / 내 구독 삭제(204, 없어도 성공) |
 | `POST /buildings/:buildingId/reports` | 누구나(그 건물 집주인 제외) | 집주인에게 알리기(201). 자주 쓰는 말 또는 직접 적기. 비회원이면 `accessToken`(한 번만)·`accessExpiresAt`. 집주인은 403 `FORBIDDEN`, 반복이면 429 `REPORT_TOO_FREQUENT`·`RATE_LIMITED` |
 | `POST /buildings/:buildingId/reports/lookup` | 누구나 | 같은 브라우저 재조회(30). 본문의 조회 토큰(1~20개)과 같은 순서로 이 건물의 유효한 제보, 무효 자리는 null |
@@ -92,7 +96,9 @@ apps/api/src/
 │  ├─ push.ts           웹 푸시 발송 창구 PushSender와 web-push 발송기 (createApp이 주입)
 │  ├─ cloudfront-ranges.json  CloudFront·EC2 ap-northeast-2 IP 대역 (scripts/update-cloudfront-ranges.ts로 갱신, fetchedAt 포함)
 │  ├─ tasks.ts          응답 뒤에 이어서 하는 일(TaskRunner, 공지 푸시). 실패해도 로그만
-│  ├─ rate-limit.ts     고정 창 횟수 제한(rate_limits, 푸시 구독 저장)
+│  ├─ rate-limit.ts     고정 창 횟수 제한(rate_limits, 푸시 구독 저장·사진 올리기)
+│  ├─ photoStore.ts     사진 저장소 PhotoStore(local 폴더·s3·memory). createApp이 주입(c.var.photos, 없으면 null)
+│  ├─ photoImage.ts     사진 다시 만들기(sharp): 앞 바이트 검사, 방향 보정, 메타데이터 제거, 1600px WebP
 │  ├─ errors.ts         AppError, 검증 실패 변환, 오류 응답 문서화
 │  ├─ context.ts        Hono 환경 타입 AppEnv (db·env·push·tasks·user·requestId)
 │  └─ log.ts            JSON 한 줄 로거
@@ -131,6 +137,7 @@ apps/api/src/
 | `buildings` | 건물, 건물 이름·확인, 집주인 초대·관리자, 가입코드와 실패 횟수 | `GET /buildings/:buildingId`, `POST /manager-invites/preview`, `POST /manager-invites/accept`, `GET·POST /buildings/:buildingId/join-code`, `POST /buildings/:buildingId/join-code/check` (이름 고치기·확인의 규칙은 여기, 경로는 `manage`) |
 | `manage` | 관리 화면(여러 모듈 묶음), 건물 이름 고치기·건물 확인 | `GET /manage/buildings`, `GET·PATCH /manage/buildings/:buildingId`, `POST /manage/buildings/:buildingId/confirm` |
 | `guides` | 기본 안내, 수정본, 수정 메모 | `GET·POST /buildings/:buildingId/guides`, `GET·PATCH /guides/:guideId`, `GET·DELETE /guides/:guideId/revision`, `POST /guides/:guideId/publish`, `GET·POST /guides/:guideId/correction-memos`, `GET /buildings/:buildingId/correction-memos`, `GET /correction-memos/:memoId`, `POST /correction-memos/:memoId/keep` |
+| `photos` | 사진 올리기, 사진 파일 내려주기(접근 규칙), 안내·공지 사진 키 확인, 빠진 사진 파일 지우기 | `GET /photos/config`, `POST /buildings/:buildingId/photos`, `GET /photos/buildings/:buildingId/:file` |
 | `notices` | 공지, 발송·열람 기록, 푸시 구독 | `GET·POST /buildings/:buildingId/notices`, `GET /buildings/:buildingId/notices/current`, `GET /buildings/:buildingId/notices/audience`, `GET /notices/:noticeId`, `POST /notices/:noticeId/opened`, `POST·DELETE /push-subscriptions`, `GET /push-subscriptions/public-key` |
 | `occupancies` | 연결, 재확인, 이사 | `POST /buildings/:buildingId/occupancies`, `POST /occupancies/:occupancyId/reconfirm`, `POST /occupancies/:occupancyId/move-out` |
 | `reports` | 제보, 비회원 조회 토큰, 반복 접수 제한 | `GET·POST /buildings/:buildingId/reports`, `POST /buildings/:buildingId/reports/lookup`, `GET /reports/:reportId`, `POST /reports/:reportId/acknowledge`, `POST /reports/:reportId/resolve` |
@@ -209,13 +216,14 @@ export const guideRoutes = new Hono<AppEnv>().post(
 
 | HTTP | 대표 `code` | 쓰는 때 |
 |---|---|---|
-| 400 | `VALIDATION_FAILED` | 입력 검증 실패. `fields`에 필드 경로별 사유 |
+| 400 | `VALIDATION_FAILED`, `PHOTO_INVALID` | 입력 검증 실패. `fields`에 필드 경로별 사유(이 건물에 없는 사진 키는 `photos.<순서>`). `PHOTO_INVALID`는 사진이 JPEG·PNG·WebP가 아니거나 풀 수 없거나 4천만 픽셀을 넘음 |
 | 401 | `UNAUTHENTICATED` | 세션 없음·만료 |
 | 403 | `FORBIDDEN`, `NOT_BUILDING_MANAGER`, `NOT_CONNECTED`, `RECONFIRM_NEEDED` | 로그인은 했지만 이 건물과의 관계가 없거나 멈춤. 다른 출처에서 온 폼 요청(CSRF 차단)도 `FORBIDDEN` |
 | 404 | `NOT_FOUND` | 없음. 볼 권한이 없는 대상의 존재를 숨길 때도 씀 (다른 사람의 초안, 틀린 제보 토큰) |
 | 409 | `CONFLICT`, `JOIN_CODE_INVALID`, `ALREADY_CONNECTED` | 이미 상태가 바뀜(조건부 UPDATE 0건·동시 요청의 유니크 충돌), 가입코드 불일치, 다른 건물과 연결돼 있는데 옮길 연결을 확인하지 않음 |
 | 410 | `REPORT_LINK_EXPIRED`, `NOTICE_ENDED`, `INVITE_EXPIRED` | 기간이 지남 |
-| 413 | `PAYLOAD_TOO_LARGE` | `/api/*` 요청 본문이 64KB를 넘음 |
+| 413 | `PAYLOAD_TOO_LARGE` | `/api/*` 요청 본문이 64KB를 넘음. 사진 올리기만 8MB(+ multipart 여유 64KB) |
+| 503 | `KAKAO_NOT_CONFIGURED`, `PHOTO_STORAGE_UNAVAILABLE` | 이 환경에 카카오 키·사진 저장소가 없음 |
 | 429 | `RATE_LIMITED`, `JOIN_CODE_LOCKED`, `REPORT_TOO_FREQUENT` | 반복 제한. `Retry-After` 헤더(남은 초)를 붙임. `AppError`의 네 번째 인자로 헤더를 넘김. `REPORT_TOO_FREQUENT`는 같은 문구의 제보, `RATE_LIMITED`는 그 밖의 횟수 제한(제보 시간당 상한, 같은 안내 메모 60초) |
 | 500 | `INTERNAL_ERROR` | 예상하지 못한 오류. 원인은 로그에만 남김 |
 
@@ -289,7 +297,8 @@ app.onError((error, c) => {
 
 - **상태 전이:** `UPDATE ... WHERE id = ? AND status = '<이전 상태>'`로 바꾸고, 0건이면 409 `CONFLICT`입니다. 조회만으로 상태를 바꾸지 않습니다(제보 `acknowledged`는 버튼 요청으로만).
 - **안내 공개:** `POST /guides/:guideId/publish` 한 번이 트랜잭션 하나입니다. 초안이면 `published`로 바꾸고 건물의 첫 공개면 `buildings.status`를 `preparing` → `open`으로 바꿉니다. 공개된 안내면 저장한 수정본을 공개 내용으로 옮기고(수정 공개) 수정본을 지웁니다. 수정본이 없으면 409입니다. 이어서 `applyMemoIds`(중복은 한 번으로)를 이 안내의 `pending` 메모만 `applied`로 바꾸고, 바뀐 수가 요청과 다르면(다른 안내의 메모·이미 반영하거나 유지한 메모) 409로 모두 되돌립니다. 어떤 실패든 공개 내용·수정본·메모 상태는 그대로 남습니다. `published_at`은 첫 공개 시각으로 두고, `updated_at`(화면의 ‘수정’ 날짜)은 공개 내용이 바뀔 때만 바뀝니다.
-- **공개된 안내 고치기:** 공개된 안내의 `PATCH`는 `guides` 행을 건드리지 않고 `guide_revisions`(안내마다 한 행)에 저장합니다. 보낸 필드만 바꾸고 보내지 않은 필드는 이전 수정본, 없으면 공개 내용에서 채웁니다. 병합은 한 문장(`INSERT … ON CONFLICT DO UPDATE`에서 보낸 필드만 `excluded`로)이라 서로 다른 필드를 동시에 저장해도 서로 덮어쓰지 않습니다. 공개 화면(`GET /guides/:guideId`, 목록)은 수정본을 보여주지 않습니다. 편집 취소는 `DELETE /guides/:guideId/revision`이고, 저장이나 공개가 실패하면 수정본은 남아 이어서 고칠 수 있습니다. 사진은 아직 수정본에 없습니다(사진 저장 위치를 정한 뒤).
+- **공개된 안내 고치기:** 공개된 안내의 `PATCH`는 `guides` 행을 건드리지 않고 `guide_revisions`(안내마다 한 행)에 저장합니다. 보낸 필드만 바꾸고 보내지 않은 필드는 이전 수정본, 없으면 공개 내용에서 채웁니다. 병합은 한 문장(`INSERT … ON CONFLICT DO UPDATE`에서 보낸 필드만 `excluded`로)이라 서로 다른 필드를 동시에 저장해도 서로 덮어쓰지 않습니다. 공개 화면(`GET /guides/:guideId`, 목록)은 수정본을 보여주지 않습니다. 편집 취소는 `DELETE /guides/:guideId/revision`이고, 저장이나 공개가 실패하면 수정본은 남아 이어서 고칠 수 있습니다. 사진(`photos`)도 같은 방식으로 수정본에 저장하고 수정 공개 때 함께 옮깁니다.
+- **사진(D-34):** 안내·공지마다 최대 4장(contracts `PHOTOS_MAX`), `photos`는 사진 키 배열이고 순서대로 보여줍니다. 안내 만들기·고치기(`photos`를 보내면 목록 전체를 바꿈)와 공지 올리기는 키가 `buildings/<이 건물>/`로 시작하고 저장소에 있어야 받습니다(아니면 400 `photos.<순서>`). 올리기는 건물·집주인 확인, 저장소, 반복 제한(1시간 60장), 처리 줄을 **본문을 읽기 전에** 보고(집주인이 아니면 본문 크기와 상관없이 403), 그다음 라우트가 8MB 본문 한도를 겁니다. 앞 바이트로 형식을 보고(보낸 Content-Type과도 같아야 함, SVG·GIF·HEIC 거절), `sharp`로 EXIF 방향 보정 → 메타데이터(EXIF·GPS·ICC·XMP) 제거 → 긴 변 1600px → WebP 80으로 다시 만듭니다. 원본이 4096×4096 픽셀을 넘거나 8비트(`uchar`)가 아니면 400 `PHOTO_INVALID`입니다. 컨테이너 메모리(256MB) 때문에 libvips 캐시를 끄고 한 번에 한 장씩 처리하며, 처리 중 1장 + 기다리는 3장을 넘으면 429 `RATE_LIMITED`(`Retry-After: 5`)입니다. S3 요청은 10초(연결 3초) 제한에 한 번만 다시 시도합니다. 응답은 접근 규칙(공개된 안내·`published_at ≤ now ≤ ends_at`인 공지에 붙음 → 누구나, 아니면 그 건물 집주인)을 jsonb 포함(`@>`) 쿼리 하나로 봅니다. 초안 고치기·수정 공개·편집 취소로 빠진 사진은 그 건물의 안내·수정본·공지 어디에도 없을 때 파일을 바로 지웁니다(실패해도 요청은 성공, `photo_release_failed` 로그). 올리기만 하고 붙이지 않은 사진은 남습니다. 본문 한도는 사진 올리기 경로만 8MB이고(라우트에서) 나머지는 64KB입니다(`app.ts`). `/api/photos/buildings/*`의 200·304 응답만 `Cache-Control: no-store`를 덮어쓰지 않습니다. 시연 초기화는 되돌린 건물의 사진 접두사를 지웁니다(`PhotoStore.deletePrefix`).
 - **수정 메모:** 공개된 안내에만 붙고 200자 이하입니다. 쓰기는 그 건물 active 거주자만, 읽기는 active·reconfirm_needed 거주자와 집주인입니다. 작성자는 `author_user_id`에만 저장하고 어떤 응답에도 넣지 않으며, 거주자 응답에는 요청한 사람이 쓴 메모인지(`mine`)만 붙입니다. 거주자는 안내 아래에서 자기 메모의 상태(확인 전·반영됨·기존 유지와 유지 사유)를 봅니다. 상태는 `pending` → `applied`(수정 공개 트랜잭션에서만) 또는 `kept`(`POST /correction-memos/:memoId/keep`, 사유 200자 이하 필수)이고, 이미 결정한 메모는 409입니다. 같은 사람이 같은 안내에 60초(contracts `CORRECTION_MEMO_REPEAT_SECONDS`) 안에 다시 쓰면 429 `RATE_LIMITED`와 `Retry-After`입니다((작성자, 안내) advisory lock 아래에서 마지막 메모 시각을 보므로 동시 요청도 하나만 들어감).
 - **건물 확인(LF-12·23):** 초대를 수락한 집주인은 23에서 건물 이름(고칠 수 있음)과 팀이 확인한 주소(`fullAddress`, 읽기만)를 확인합니다. `ManagedBuilding.confirmedAt`이 null이면 확인 전이라 웹은 수락 뒤 33(안내 쓰기) 전에 23을 보여 줍니다. ‘맞아요’는 `POST /manage/buildings/:buildingId/confirm`(이름을 고쳤으면 `name`)이고, `confirmed_at = coalesce(confirmed_at, now())`와 이름을 한 문장으로 적어 처음 확인한 시각만 남깁니다(뒤로 갔다가 다시 눌러도 200). 나중에 이름만 바꿀 때는 `PATCH /manage/buildings/:buildingId`이고 확인 시각은 바뀌지 않습니다. 둘 다 그 건물 집주인만(다른 집주인·거주자 403 `NOT_BUILDING_MANAGER`, 로그인 안 함 401, 없는 건물 404)입니다. 이름은 contracts `BuildingName`: 앞뒤 공백을 지운 뒤 1~40자(`BUILDING_NAME_MAX`), 보이지 않거나 방향을 바꾸는 문자 없음(유니코드 `\p{C}` 전부: 제어·서식(LRM·RLM·ALM·폭 없는 문자·BOM·태그 문자·방향 제어)·사용자 정의·미배정·짝 없는 서로게이트, 그리고 줄/문단 구분자), 결합 문자 세 개 이상 연속 없음, 한글 채움 문자(U+115F·1160·3164·FFA0)가 아닌 글자나 숫자 하나 이상(400). 주소는 API로 바꾸지 않습니다(‘주소가 다르거나 건물이 여러 개예요 → 팀에 알리기’). 이 기능 전에 초대를 수락한 건물은 마이그레이션이 첫 관리자가 생긴 시각으로 채웠습니다.
 - **약관 동의(D-28):** `users.terms_version`·`terms_agreed_at`에 마지막으로 동의한 판과 시각을 둡니다. 로그인(카카오·시연)의 `consent`나 `POST /me/terms-consent`의 `version`이 지금 판(`TERMS_VERSION`)일 때만, 그리고 저장된 판과 다를 때만(`is distinct from`) 적습니다. 같은 판에 다시 동의해도 처음 시각을 유지합니다. `/me`는 `termsVersion`·`termsAgreedAt`·`termsUpToDate`(= 저장된 판이 지금 판)를 돌려주고, false여도 세션과 기능은 막지 않습니다(기존 세션 유지, 다시 묻는 것은 웹). `POST /me/terms-consent`에 이전 판을 보내면 409 `CONFLICT`(웹이 오래된 약관을 보여 준 경우)입니다. 판을 바꾸면 contracts `TERMS_VERSION`만 고치면 됩니다.
@@ -358,6 +367,10 @@ export function log(level: Level, event: string, fields: Record<string, Field> =
 | `RECONFIRM_INTERVAL_DAYS` | 연결·‘아직 살아요’ 뒤 재확인을 요청하기까지의 일수(1~3650, 기본 365 = ‘1년에 한 번’). 요청 뒤 14일 무응답이면 reconfirm_needed(§7). 시드(`db:seed`)도 읽음 |
 | `ORIGIN_VERIFY_SECRET` | 앞단(CloudFront)이 원 서버로 보낼 때 붙이는 `X-Origin-Verify` 헤더 값(32자 이상). 있으면 이 헤더가 맞는 요청에서만 `X-Forwarded-For`를 믿고 체인 모양(바로 온 요청은 마지막 값, Amplify를 거친 요청은 끝에서 세 번째)으로 클라이언트 IP를 고릅니다(§7). 비우면 `TRUSTED_PROXY_HOPS` 방식. 로컬은 비움, 배포 값은 SSM |
 | `TRUSTED_PROXY_HOPS` | 요청 앞의 신뢰하는 프록시 수(0~5, 기본 0). 가입코드 반복 제한의 클라이언트 IP를 `X-Forwarded-For` 오른쪽에서 이 번째 값으로 봄(§7). 로컬은 0 |
+| `PHOTO_STORE` | 사진 저장소 `local`·`s3`·`off`. 비우면 production은 `off`(올리기 503, 웹은 사진 추가를 숨김), 그 밖은 `local`. 배포는 `s3`(D-34) |
+| `PHOTO_BUCKET`, `PHOTO_PREFIX` | `s3`의 버킷(필수)과 환경 접두사(`s3`면 `dev/`·`prod/` 중 하나 필수, 그 밖은 소문자·숫자·`-`와 `/`로 끝나는 경로). 키는 `<PHOTO_PREFIX>buildings/<건물>/<id>.webp`. 자격 증명은 SDK 기본 체인(EC2 인스턴스 역할)이라 키 값을 환경 변수에 두지 않음 |
+| `PHOTO_LOCAL_DIR` | `local`의 폴더(기본 `.data/photos`, API를 실행한 폴더 기준이라 `pnpm dev`면 `apps/api/.data/photos`, gitignore) |
+| `AWS_REGION` | S3 리전(기본 `ap-northeast-2`) |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | 웹 푸시(§7). 셋을 함께 넣거나 모두 비움(하나만 있으면 시작 실패, 키 형식이 틀려도 시작 실패). `VAPID_SUBJECT`는 `mailto:` 또는 `https://`. 비우면 공지 알림을 보내지 않고 공개키 응답이 null. 키 만들기: `pnpm --filter @wolgyeham/api exec web-push generate-vapid-keys`. 개인키는 로컬 `apps/api/.env`와 SSM에만 |
 
 - 로컬 값은 `apps/api/.env`(gitignore)에, 배포 값은 AWS SSM Parameter Store에 둡니다([deploy.md](deploy.md)).
@@ -376,6 +389,7 @@ export function log(level: Level, event: string, fields: Record<string, Field> =
 - 스펙에 새 경로가 들어갔는지 `/api/openapi.json` 테스트에 한 줄 추가합니다.
 - DB 테스트는 `TEST_DATABASE_URL`(없으면 로컬 `postgres://wolgyeham:local-development-only@127.0.0.1:54329/wolgyeham_test`)에 연결합니다. 로컬은 `pnpm db:up` 후 테스트 DB를 한 번 만듭니다([database.md §1](database.md#1-현재-상태)). CI(`ci.yml`, `deploy-api.yml`의 check)는 Postgres 17 서비스로 `wolgyeham_test`를 띄웁니다.
 - 카카오 API는 테스트에서 `vi.stubGlobal("fetch", ...)`로 대신합니다. 실제 카카오 호출은 테스트하지 않습니다.
+- 사진은 `useTestApp`이 메모리 저장소(`t.photos`)를 넣습니다. 저장소가 없는 환경은 `useTestApp({}, { photos: null })`로 봅니다. 시험용 사진은 `sharp`로 만들고(EXIF 방향·GPS를 넣은 JPEG 등), 다시 만든 결과의 크기·메타데이터를 `sharp().metadata()`로 확인합니다(`modules/photos/photos.test.ts`). S3 저장소는 가짜 `S3Client`로 보낸 명령과 키만 봅니다(`lib/photoStore.test.ts`).
 - 웹 푸시는 `useTestApp(env, { push })`에 가짜 `PushSender`를 넘겨 보낸 내용과 endpoint별 결과(`gone`·`failed`)를 정합니다(`modules/notices/push.test.ts`). 기본 발송기는 `web-push`를 모킹하지 않고(암호화·VAPID·`url.parse`를 실제로 거침) `vi.spyOn(https, "request")`로 네트워크만 가로채, 연결하는 호스트·VAPID audience·결과 매핑·10초 제한·64KB 제한·허용하지 않은 주소(해석기 차이 주소 포함)를 봅니다(`lib/push.test.ts`). 실제 푸시 서비스는 테스트하지 않습니다.
 - 시연 건물 행을 지우고 다시 만드는 테스트(`resetDemo`, `POST /api/dev/reset`, `GET /api/dev/demo`)는 `db/seed.test.ts` 한 파일에 둡니다. 파일끼리 병렬로 돌 때 다른 파일의 초기화가 Given을 지우지 않도록 한 파일 안에서 차례로 돌립니다. 초기화 제한에는 모든 사람 합친 것도 있어 테스트마다 `rate_limits`의 초기화 버킷 네 개를 지우고 시작하고, 같은 사람 제한은 `TRUSTED_PROXY_HOPS=1`과 `X-Forwarded-For`로 주소를 바꿔 봅니다.
 - 응답 뒤에 도는 일(공지 푸시)은 `useTestApp`이 넘기는 `t.tasks`의 `idle()`을 기다린 뒤 확인합니다.

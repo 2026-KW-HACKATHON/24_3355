@@ -11,7 +11,12 @@ import {
 const BUILDING = "5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f01";
 const ALICE: DraftTarget = { userId: "user-a", buildingId: BUILDING, guideId: undefined };
 const BOB: DraftTarget = { userId: "user-b", buildingId: BUILDING, guideId: undefined };
-const VALUES = { category: "recycling", title: "분리수거", body: "화요일 저녁" } as const;
+const VALUES = {
+  category: "recycling" as const,
+  title: "분리수거",
+  body: "화요일 저녁",
+  photos: [] as string[],
+};
 
 beforeEach(() => {
   vi.stubGlobal("localStorage", memoryStorage());
@@ -86,5 +91,24 @@ describe("local guide drafts", () => {
     // Then
     expect(run).not.toThrow();
     expect(run()).toBeUndefined();
+  });
+
+  it("reads a draft saved before photos existed with no photos", () => {
+    // Given
+    localStorage.setItem(
+      `wh.guideDraft.user-a.${BUILDING}.new`,
+      JSON.stringify({ category: "parcel", title: "택배", body: "선반", savedAt: Date.now() }),
+    );
+    // When
+    const draft = loadLocalDraft(ALICE);
+    // Then
+    expect(draft?.photos).toEqual([]);
+  });
+
+  it("keeps photo keys in order", () => {
+    // When
+    saveLocalDraft(ALICE, { ...VALUES, photos: ["b", "a"] });
+    // Then
+    expect(loadLocalDraft(ALICE)?.photos).toEqual(["b", "a"]);
   });
 });

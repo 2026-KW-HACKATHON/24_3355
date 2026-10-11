@@ -151,7 +151,7 @@ erDiagram
 
 | 테이블 | 주요 컬럼 | 제약·인덱스 |
 |---|---|---|
-| `guides` | `building_id`(cascade), `category`, `title`, `body`, `photos jsonb`, `position`, `status` draft·published, `published_at`, `author_user_id`(set null) | CHECK `status`, CHECK `status = 'draft' or published_at is not null`, `guides_building_id_status_idx` |
+| `guides` | `building_id`(cascade), `category`, `title`, `body`, `photos jsonb`(사진 키 배열, D-34), `position`, `status` draft·published, `published_at`, `author_user_id`(set null) | CHECK `status`, CHECK `status = 'draft' or published_at is not null`, CHECK `guides_photos_check`(배열, 4개 이하), `guides_building_id_status_idx` |
 | `guide_revisions` | `guide_id`(cascade), `category`, `title` ≤80, `body` ≤2000, `author_user_id`(set null). 저장 시각은 `updated_at` | `guide_revisions_guide_id_key`(안내마다 하나), CHECK `category`·글자 수. 공개된 안내의 아직 공개하지 않은 수정본 |
 | `correction_memos` | `guide_id`(cascade), `author_user_id`(set null), `body` ≤200, `status` pending·applied·kept, `kept_reason` ≤200, `resolved_at` | CHECK 글자 수·`status`, CHECK `status <> 'kept' or kept_reason is not null`, CHECK `(status = 'pending') = (resolved_at is null)`, `correction_memos_guide_id_status_idx`, `correction_memos_author_user_id_idx` |
 | `notices` | `building_id`(cascade), `title` ≤80, `body` ≤1000, `starts_at`, `ends_at`, `status` published·expired, `author_user_id`(set null), `published_at` | CHECK `ends_at >= starts_at`·글자 수, `notices_building_id_ends_at_idx` |
@@ -170,7 +170,7 @@ erDiagram
 | `rate_limits` | `bucket`, `subject_key`, `hit_count`, `window_started_at` | `rate_limits_bucket_subject_key_key`, `rate_limits_updated_at_idx`. 고정 창 횟수 제한(`lib/rate-limit.ts`: `push_subscribe` 사용자마다 10분에 10번, 시연 초기화 `demo-reset-interval` 30초에 1번·`demo-reset-hourly` 한 시간에 20번, 둘 다 키 `all` 하나). 하루 넘게 쓰이지 않은 행은 부를 때마다 100행씩 지움 |
 
 - 안내 `category`는 contracts `GUIDE_CATEGORIES`(`recycling`·`parcel`·`facility`·`common`·`contact` = 분리수거·택배·보일러·설비·공용공간·연락, 로파이 33)와 CHECK로 정했습니다. 안내 제목·본문은 80·2000자 이하입니다. 팁 `category`는 contracts `TIP_CATEGORIES`(`recycling`·`parcel`·`winter`·`common`·`other`, 로파이 19), 제보 `kind`·`location`·`preset`은 `REPORT_KINDS`·`REPORT_LOCATIONS`·`REPORT_PRESETS`(로파이 05·01·20)이고 CHECK와 같은 목록입니다. 값을 바꾸면 contracts enum과 CHECK 마이그레이션을 같은 PR에 넣습니다.
-- 사진 파일의 저장 위치는 정할 것입니다. DB에는 파일 키 목록(`photos jsonb`)만 둡니다.
+- 사진 파일은 사진 저장소(S3, 로컬은 폴더, D-34)에 두고 DB에는 키 목록(`photos jsonb`, `buildings/<건물>/<id>.webp`, 최대 4개)만 둡니다. `guides`·`guide_revisions`·`notices`가 같은 모양이고 CHECK `<테이블>_photos_check`가 배열·4개 이하를 지킵니다. 키 형식과 파일 존재는 서비스가 확인합니다. 건물·안내 행을 지워도 파일은 따로 지워지지 않습니다.
 - 공개된 안내를 고치는 동안의 내용은 별도 테이블 `guide_revisions`에 둡니다. 저장해도 `guides` 행(공개 내용·`updated_at`)은 바뀌지 않고, 수정 공개 트랜잭션에서만 수정본을 `guides`로 옮기고 지웁니다. 공개가 실패하면 공개된 내용·수정본·메모 상태는 그대로입니다([backend.md §7](backend.md#7-도메인-규칙)).
 - 공개 건물 URL은 `buildings.id`(uuid v4)를 씁니다. 더 짧은 공개 키가 필요하면 정할 것입니다.
 - `reporter_kind`는 제보 시점의 스냅숏입니다(`resident` 이 건물 거주자, `member` 로그인했지만 거주자가 아님, `guest` 로그인하지 않음). 집주인 화면의 ‘거주자’·‘회원’·‘비회원’ 표시에만 씁니다. 값 목록을 바꾼 CHECK는 `0006_report_kinds_optional_note`입니다.

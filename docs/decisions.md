@@ -36,6 +36,7 @@
 | D-30 | 시연 데이터 만들기·되돌리기는 `db/demo.ts` 함수로 두고 CLI(`seed.ts`)와 API가 같이 쓴다 | 확정 | 2026-09-30 |
 | D-31 | CloudFront → EC2 구간을 caddy + Let's Encrypt로 암호화한다(원본 이름은 탄력적 IP의 sslip.io 이름) | 확정, 관리자 반영 필요 | 2026-10-01 |
 | D-32 | 로그인하는 모든 입구에서 같은 약관 동의를 받고, 폰트는 직접 호스팅한다 | 확정 | 2026-09-30 |
+| D-34 | 안내·공지 사진은 API가 받아 다시 만든 WebP를 S3(로컬은 폴더)에 두고 API가 접근 규칙대로 내려준다 | 확정, 관리자 반영 필요 | 2026-10-11 |
 
 ---
 
@@ -202,3 +203,14 @@
 
 - **결정 (2026-10-06):** dev Amplify의 GitHub 연결은 유지하고, prod는 별도 WEB 앱에 GitHub Actions가 `release`의 빌드 결과물을 업로드한다. API 배포 성공 뒤 웹을 올려 계약 버전 순서를 지킨다. 저장소 인증 토큰을 복제하지 않고 기존 OIDC 배포 역할에 prod 앱 release 브랜치만 허용한다.
 - **비용 범위:** EC2·DB·CloudFront는 기존 자원을 사용한다. prod 웹은 SSR·WAF 없이 정적 파일만 호스팅하며 추가 사용량은 빌드·저장·전송이다. 무료 한도 적용 여부와 남은 크레딧은 계정 상태에 따라 달라진다.
+
+### D-34. 안내·공지 사진은 API가 받아 다시 만들어 저장한다
+
+- **결정 (2026-10-11):** 집주인이 고른 사진은 웹이 긴 변 2048px JPEG로 줄여(iOS HEIC도 브라우저가 풀어 JPEG로) `POST /api/buildings/:buildingId/photos`(multipart, 8MB, 집주인만)로 보낸다. API는 앞 바이트로 JPEG·PNG·WebP만 받고 `sharp`로 다시 만든다: EXIF 방향대로 돌리고, EXIF(GPS 포함)·ICC·XMP를 모두 버리고, 긴 변 1600px, WebP 품질 80. 원본이 4096×4096 픽셀을 넘거나 8비트가 아니면(16비트 PNG 등) 거절하고, 처리는 한 번에 한 장·기다리는 사진 3장까지(넘으면 429). 집주인 확인과 반복 제한은 본문을 읽기 전에 한다(시연 집주인은 `/demo`로 누구나 쓸 수 있으므로 집주인도 믿지 않는다). 파일은 `lib/photoStore.ts`(`local` 폴더·`s3`·테스트 `memory`)에 `PHOTO_PREFIX` + `buildings/<건물>/<uuid>.webp`로 두고, DB(`guides`·`guide_revisions`·`notices`의 `photos jsonb`)에는 접두사 없는 키만 둔다. 화면은 `GET /api/photos/buildings/:buildingId/:file`로 받는다. 공개된 안내·보이는 공지에 붙은 사진은 누구나(`public, no-cache`), 그 밖은 그 건물 집주인만(`private, no-cache`) 보고, 볼 수 없으면 404다. 키가 바뀌지 않는 이름이라 강한 ETag(사진 id)를 붙이고 `If-None-Match`가 같으면 304로 답한다. `immutable`로 오래 캐시하지 않는 것은 공개를 내리거나 사진을 빼면 다음 요청부터 바로 보이지 않아야 하기 때문이다.
+- **이유:** 사진에는 위치·기기 정보가 들어 있고 공개 건물 화면은 링크만 있으면 누구나 연다. 브라우저가 지운다고 믿지 않고 서버에서 반드시 다시 만든다. 미리 서명한 S3 주소(presigned PUT)로 바로 올리면 서버가 내용을 다시 만들 수 없고, 공개 전 사진의 접근 규칙을 버킷 정책으로 다시 짜야 한다. 사진은 안내당 4장·건물당 수십 장이라 API를 한 번 거쳐도 부담이 작다. 버킷은 공개하지 않고(퍼블릭 액세스 차단) 자격 증명은 EC2 인스턴스 역할에서 받는다.
+- **지우기:** 안내에서 빠진 사진(초안 고치기, 수정 공개로 바뀐 공개 사진, 편집 취소한 수정본의 사진)은 그 건물의 다른 행이 쓰지 않을 때 요청 안에서 바로 지운다. 시연 초기화(`POST /api/dev/reset`, `db:seed --reset-demo`)는 되돌린 시연 건물의 사진 접두사(`buildings/<id>/`)를 통째로 지운다(S3는 ListObjectsV2 + DeleteObjects, 실패하면 로그만). 올렸지만 어디에도 붙이지 않은 사진은 남는다.
+- **약관 판:** 개인정보 처리방침에 사진 항목이 생겨 동의 판을 `2026-10-11-draft`로 올렸다. 시연 로그인은 지금 판을 함께 보내므로 `/demo`에서 다시 동의 시트가 뜨지 않는다.
+- **정식 서비스 전에 할 일:** 붙이지 않은 사진 정리 작업(올린 뒤 일정 시간 유예 후 삭제), Docker 이미지의 sharp 설치를 잠금 파일로 고정, dev·prod가 같은 EC2 역할로 서로의 접두사를 쓸 수 있는 점(역할·버킷 분리), 공개 사진 GET의 반복 제한.
+- **사진을 받지 않는 환경:** `PHOTO_STORE`를 비운 production은 `off`다. 올리기는 503 `PHOTO_STORAGE_UNAVAILABLE`, `GET /api/photos/config`의 `uploadsEnabled: false`로 웹이 사진 추가를 숨긴다.
+- **대안:** presigned PUT + CloudFront OAC로 버킷 직접 공개. 다시 만들기·초안 접근 규칙이 없어 택하지 않았다. 사진 수가 크게 늘면 공개 사진만 CloudFront 캐시를 거치게 바꾼다.
+- **관리자 반영:** 버킷(퍼블릭 액세스 차단), EC2 역할 권한, SSM 값, 컨테이너의 인스턴스 메타데이터 접근(hop limit 2)은 [deploy.md](deploy.md#사진-저장소)를 따른다.

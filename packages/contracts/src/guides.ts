@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Photo, PhotoKeys } from "./photos.ts";
 
 /** 안내 종류. 화면 문구: 분리수거·택배·보일러·설비·공용공간·연락. DB CHECK와 같은 목록입니다. */
 export const GUIDE_CATEGORIES = ["recycling", "parcel", "facility", "common", "contact"] as const;
@@ -12,11 +13,8 @@ export type GuideStatus = z.infer<typeof GuideStatus>;
 export const GUIDE_TITLE_MAX = 80;
 export const GUIDE_BODY_MAX = 2000;
 
-/** 사진 저장 위치는 정할 것. 지금은 항상 빈 배열입니다. */
-export const GuidePhoto = z.object({
-  url: z.string(),
-  alt: z.string().optional(),
-});
+/** 안내 사진. 대체 텍스트는 웹이 안내 제목으로 만듭니다(“<제목> 사진 1”). */
+export const GuidePhoto = Photo;
 export type GuidePhoto = z.infer<typeof GuidePhoto>;
 
 /** 집주인이 입력한 종류·제목·본문·사진을 그대로 담습니다(D-08). 작성자는 내보내지 않습니다. */
@@ -43,10 +41,12 @@ export type GuideParams = z.infer<typeof GuideParams>;
 const GuideTitle = z.string().trim().min(1).max(GUIDE_TITLE_MAX);
 const GuideBody = z.string().trim().min(1).max(GUIDE_BODY_MAX);
 
+/** `photos`는 이 건물에 올린 사진 키(`POST /buildings/:buildingId/photos`)이고 순서대로 보여줍니다. */
 export const CreateGuideBody = z.object({
   category: GuideCategory,
   title: GuideTitle,
   body: GuideBody,
+  photos: PhotoKeys.default([]),
 });
 export type CreateGuideBody = z.infer<typeof CreateGuideBody>;
 
@@ -59,6 +59,8 @@ export const UpdateGuideBody = z
     category: GuideCategory.optional(),
     title: GuideTitle.optional(),
     body: GuideBody.optional(),
+    /** 보내면 사진 목록 전체를 이것으로 바꿉니다(빈 배열이면 모두 뺌). */
+    photos: PhotoKeys.optional(),
   })
   .refine((value) => Object.values(value).some((field) => field !== undefined), {
     message: "At least one field is required",
@@ -71,6 +73,8 @@ export const GuideRevision = z.object({
   category: GuideCategory,
   title: z.string(),
   body: z.string(),
+  /** 이전 API에는 없어서 빈 배열로 채웁니다. */
+  photos: z.array(GuidePhoto).default([]),
   savedAt: z.iso.datetime(),
 });
 export type GuideRevision = z.infer<typeof GuideRevision>;

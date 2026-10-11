@@ -13,10 +13,12 @@ import type { Database } from "../../lib/db.ts";
 import type { Env } from "../../lib/env.ts";
 import { AppError } from "../../lib/errors.ts";
 import { log } from "../../lib/log.ts";
+import type { PhotoStore } from "../../lib/photoStore.ts";
 import type { PushResult, PushSender } from "../../lib/push.ts";
 import { hitRateLimit } from "../../lib/rate-limit.ts";
 import type { TaskRunner } from "../../lib/tasks.ts";
 import * as buildingService from "../buildings/service.ts";
+import * as photoService from "../photos/service.ts";
 import * as repo from "./repo.ts";
 
 export async function getCurrentNotice(
@@ -80,23 +82,25 @@ const PUSH_SUBSCRIBE_LIMIT = { limit: 10, windowSeconds: 10 * 60 };
  */
 export async function createNotice(
   db: Database,
-  push: PushSender,
-  tasks: TaskRunner,
+  deps: { push: PushSender; tasks: TaskRunner; photos: PhotoStore | null },
   userId: string,
   buildingId: string,
   input: CreateNoticeBody,
 ): Promise<CreateNoticeResult> {
+  const { push, tasks } = deps;
   const building = await buildingService.requireBuilding(db, buildingId);
   await requireManager(db, userId, building.id);
   const endsAt = new Date(input.endsAt);
   if (endsAt.getTime() <= Date.now()) {
     throw new AppError(400, "VALIDATION_FAILED", { endsAt: "endsAt must be in the future" });
   }
+  await photoService.requirePhotoKeys(deps.photos, building.id, input.photos);
   const { notice, deliveries } = await db.transaction(async (tx) => {
     const row = await repo.insertNotice(tx, {
       buildingId: building.id,
       title: input.title,
       body: input.body,
+      photos: input.photos,
       startsAt: new Date(input.startsAt),
       endsAt,
       authorUserId: userId,

@@ -4,6 +4,7 @@
  */
 import { createDatabase } from "../lib/db.ts";
 import { EnvFields } from "../lib/env.ts";
+import { createPhotoStore, deleteBuildingPhotos } from "../lib/photoStore.ts";
 import {
   DEMO_BUILDING_ID,
   DEMO_E2E_BUILDING_ID,
@@ -28,6 +29,11 @@ if (import.meta.main) {
     NODE_ENV: true,
     DEMO_MODE: true,
     RECONFIRM_INTERVAL_DAYS: true,
+    PHOTO_STORE: true,
+    PHOTO_BUCKET: true,
+    PHOTO_PREFIX: true,
+    PHOTO_LOCAL_DIR: true,
+    AWS_REGION: true,
   }).parse(process.env);
   const options: DemoSeedOptions = {
     reconfirmRequested: args.includes("--reconfirm-requested"),
@@ -44,7 +50,13 @@ if (import.meta.main) {
   const database = createDatabase(env.DATABASE_URL, { max: 1 });
   try {
     if (reset) {
-      for (const building of await resetDemo(database.db, options)) {
+      const summary = await resetDemo(database.db, options);
+      // 시연 건물에 올렸던 사진 파일도 지웁니다(실패하면 로그만).
+      await deleteBuildingPhotos(
+        createPhotoStore(env),
+        summary.map((building) => building.id),
+      );
+      for (const building of summary) {
         console.info(
           `초기화: ${building.name} (${building.id}) — 안내 ${building.guides}·수정 메모 ${building.memos}·공지 ${building.notices}·관리자 ${building.managers}·초대 ${building.invites}·가입코드 ${building.joinCodes}·연결 ${building.occupancies}·제보 ${building.reports}·팁 ${building.tips}건을 지우고 처음 시드 상태로 다시 만들었습니다.`,
         );

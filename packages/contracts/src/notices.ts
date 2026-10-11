@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Photo, PhotoKeys } from "./photos.ts";
 
 export const NOTICE_STATUSES = ["published", "expired"] as const;
 export const NoticeStatus = z.enum(NOTICE_STATUSES);
@@ -10,6 +11,8 @@ export const Notice = z.object({
   buildingId: z.uuid(),
   title: z.string(),
   body: z.string(),
+  /** 이전 API에는 없어서 빈 배열로 채웁니다. */
+  photos: z.array(Photo).default([]),
   startsAt: z.iso.datetime(),
   endsAt: z.iso.datetime(),
   publishedAt: z.iso.datetime(),
@@ -35,6 +38,8 @@ export const CreateNoticeBody = z
   .object({
     title: z.string().trim().min(1).max(NOTICE_TITLE_MAX),
     body: z.string().trim().min(1).max(NOTICE_BODY_MAX),
+    /** 이 건물에 올린 사진 키(최대 4개). */
+    photos: PhotoKeys.default([]),
     startsAt: z.iso.datetime({ offset: true }),
     endsAt: z.iso.datetime({ offset: true }),
   })

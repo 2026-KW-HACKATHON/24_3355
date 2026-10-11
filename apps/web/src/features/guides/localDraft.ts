@@ -3,7 +3,13 @@ import { GUIDE_CATEGORIES, type GuideCategory } from "@wolgyeham/contracts";
 // 쓰는 중인 안내를 이 기기에 따로 둡니다(lofi 33 “쓰는 중인 내용은 따로 저장돼요”).
 // 서버 초안(draft)은 ‘미리 보기’를 누를 때 저장합니다. 저장이 막힌 브라우저에서는 아무것도 하지 않습니다.
 // 같은 기기를 다른 계정이 써도 섞이지 않게 사용자별로 두고, 7일이 지나거나 로그아웃하면 지웁니다.
-export type GuideFormValues = { category: GuideCategory; title: string; body: string };
+/** `photos`는 올린 사진 키(순서대로). 이전에 저장한 쓰던 안내에는 없어서 빈 배열로 읽습니다. */
+export type GuideFormValues = {
+  category: GuideCategory;
+  title: string;
+  body: string;
+  photos: string[];
+};
 type Stored = GuideFormValues & { savedAt: number };
 
 /** 어느 사용자가 어느 건물의 어느 안내(새 안내면 undefined)를 쓰는지. */
@@ -26,11 +32,18 @@ function isStored(value: unknown): value is Stored {
   );
 }
 
+function photoKeys(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
+}
+
 function parse(raw: string | null): Stored | undefined {
   if (!raw) return undefined;
   try {
     const parsed: unknown = JSON.parse(raw);
-    return isStored(parsed) ? parsed : undefined;
+    if (!isStored(parsed)) return undefined;
+    return { ...parsed, photos: photoKeys((parsed as Record<string, unknown>)["photos"]) };
   } catch {
     return undefined;
   }

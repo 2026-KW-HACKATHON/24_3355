@@ -66,6 +66,7 @@ const notice: Notice = {
   buildingId: BUILDING_ID,
   title: "오전 단수 안내",
   body: "물탱크 청소",
+  photos: [],
   startsAt: "2026-09-28T01:00:00.000Z",
   endsAt: "2026-09-28T03:00:00.000Z",
   publishedAt: "2026-09-22T01:00:00.000Z",

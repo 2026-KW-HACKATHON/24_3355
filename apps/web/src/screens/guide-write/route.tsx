@@ -14,7 +14,7 @@ import {
 import { type FormEvent, type ReactNode, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { Icon } from "../../components/Icon";
-import { BackButton, Dock, Screen, SoonNote, TopBar, useGoBack } from "../../components/Screen";
+import { BackButton, Dock, Screen, TopBar, useGoBack } from "../../components/Screen";
 import { Delayed, EmptyState, LoadError, SkeletonLines } from "../../components/ScreenState";
 import { ManagerGate } from "../../features/auth/ManagerGate";
 import { applySearch, readApplyIds } from "../../features/guides/applyMemos";
@@ -33,6 +33,8 @@ import {
   useGuideRevision,
   useUpdateGuide,
 } from "../../features/guides/queries";
+import { PhotoPicker, usePhotoPicker } from "../../features/photos/PhotoPicker";
+import { sameKeys } from "../../features/photos/pickerState";
 import { type AppError, errorMessage, toAppError } from "../../lib/errors";
 import "./guide-write.css";
 
@@ -112,22 +114,33 @@ function startingValues(
   const used = new Set(detail.guides.map((item) => item.category));
   const source = revision ?? guide;
   const baseline: GuideFormValues = source
-    ? { category: source.category, title: source.title, body: source.body }
+    ? {
+        category: source.category,
+        title: source.title,
+        body: source.body,
+        photos: source.photos.map((photo) => photo.key),
+      }
     : {
         category: CATEGORY_ORDER.find((item) => !used.has(item)) ?? "recycling",
         title: "",
         body: "",
+        photos: [],
       };
   const serverTime = revision ? revision.savedAt : guide?.updatedAt;
   const useLocal = local && (!serverTime || local.savedAt > Date.parse(serverTime));
   const initial: GuideFormValues = useLocal
-    ? { category: local.category, title: local.title, body: local.body }
+    ? { category: local.category, title: local.title, body: local.body, photos: local.photos }
     : baseline;
   return { baseline, initial };
 }
 
 function sameValues(a: GuideFormValues, b: GuideFormValues) {
-  return a.category === b.category && a.title === b.title && a.body === b.body;
+  return (
+    a.category === b.category &&
+    a.title === b.title &&
+    a.body === b.body &&
+    sameKeys(a.photos, b.photos)
+  );
 }
 
 function validate(values: GuideFormValues): FieldErrors {
@@ -163,7 +176,13 @@ function saveErrorMessage(error: AppError, revise: boolean): string {
       ? "안내 상태가 바뀌었어요. 관리 홈에서 다시 열어 주세요"
       : "이미 공개한 안내라 여기서 고칠 수 없어요";
   }
-  if (error.code === "VALIDATION_FAILED") return "입력한 내용을 확인해 주세요";
+  if (error.code === "VALIDATION_FAILED") {
+    // 다른 기기에서 뺀 사진처럼 서버에 없는 사진이 남아 있을 때
+    if (Object.keys(error.fields).some((field) => field.startsWith("photos"))) {
+      return "찾을 수 없는 사진이 있어요. 사진을 빼고 다시 골라 주세요";
+    }
+    return "입력한 내용을 확인해 주세요";
+  }
   return errorMessage(error);
 }
 
@@ -197,6 +216,12 @@ function GuideForm({
   const [cancelOpen, setCancelOpen] = useState(false);
   const [start] = useState(() => startingValues(detail, guide, revision, draft));
   const [values, setValues] = useState(start.initial);
+  const picker = usePhotoPicker(buildingId, start.initial.photos);
+  // 사진은 고르는 즉시 올리고, 폼 값에는 올린 사진의 키만 들어갑니다.
+  const form = useMemo<GuideFormValues>(
+    () => ({ ...values, photos: picker.keys }),
+    [values, picker.keys],
+  );
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saveError, setSaveError] = useState<string>();
   const [pasteHint, setPasteHint] = useState(false);
@@ -208,9 +233,9 @@ function GuideForm({
 
   // 서버 값에서 달라지면 이 기기에 따로 둡니다. 다시 같아지면 지웁니다.
   useEffect(() => {
-    if (sameValues(values, start.baseline)) clearLocalDraft(draft);
-    else saveLocalDraft(draft, values);
-  }, [draft, start.baseline, values]);
+    if (sameValues(form, start.baseline)) clearLocalDraft(draft);
+    else saveLocalDraft(draft, form);
+  }, [draft, start.baseline, form]);
 
   function change<K extends keyof GuideFormValues>(field: K, value: GuideFormValues[K]) {
     setValues((prev) => ({ ...prev, [field]: value }));
@@ -239,8 +264,12 @@ function GuideForm({
     event.preventDefault();
     if (inFlight.current) return;
     setSaveError(undefined);
-    const found = validate(values);
-    const parsed = CreateGuideBody.safeParse(values);
+    if (picker.busy) {
+      setSaveError("사진을 다 올린 뒤 눌러 주세요");
+      return;
+    }
+    const found = validate(form);
+    const parsed = CreateGuideBody.safeParse(form);
     if (found.title || found.body || !parsed.success) {
       setErrors(found);
       (found.title ? titleRef : bodyRef).current?.focus();
@@ -257,6 +286,8 @@ function GuideForm({
         if (parsed.data.category !== guide.category) patch.category = parsed.data.category;
         if (parsed.data.title !== guide.title) patch.title = parsed.data.title;
         if (parsed.data.body !== guide.body) patch.body = parsed.data.body;
+        const before = guide.photos.map((photo) => photo.key);
+        if (!sameKeys(parsed.data.photos, before)) patch.photos = parsed.data.photos;
         saved = Object.keys(patch).length > 0 ? await update.mutateAsync(patch) : guide;
       } else {
         saved = await create.mutateAsync(parsed.data);
@@ -277,9 +308,14 @@ function GuideForm({
 
   // 편집 취소(닫기). 저장한 수정본이 있거나 고친 게 있으면 한 번 묻고, 수정본만 지웁니다.
   const published: GuideFormValues | undefined = guide
-    ? { category: guide.category, title: guide.title, body: guide.body }
+    ? {
+        category: guide.category,
+        title: guide.title,
+        body: guide.body,
+        photos: guide.photos.map((photo) => photo.key),
+      }
     : undefined;
-  const hasChanges = Boolean(revision) || (published ? !sameValues(values, published) : false);
+  const hasChanges = Boolean(revision) || (published ? !sameValues(form, published) : false);
   function requestCancel() {
     if (hasChanges) setCancelOpen(true);
     else goBack();
@@ -444,25 +480,16 @@ function GuideForm({
             ) : null}
           </div>
 
-          <div className="gw-extra">
-            <button
-              type="button"
-              className="gw-photo-add"
-              disabled
-              aria-label="사진 추가"
-              aria-describedby={`${ids}-photo-soon`}
-            >
-              <Icon name="image-plus" />
-            </button>
-            <div className="gw-extra__notes">
-              <SoonNote id={`${ids}-photo-soon`}>사진 추가는 다음 업데이트에서 열려요</SoonNote>
-              <span className="wh-caption">
-                {revise
-                  ? "쓰는 중인 내용은 이 기기에, 미리 보기를 누르면 수정본으로 저장돼요"
-                  : "쓰는 중인 내용은 이 기기에 따로 저장돼요"}
-              </span>
-            </div>
-          </div>
+          <PhotoPicker
+            picker={picker}
+            label={values.title.trim() || CATEGORY[values.category].label}
+            disabled={saving}
+          />
+          <p className="wh-caption gw-extra">
+            {revise
+              ? "쓰는 중인 내용은 이 기기에, 미리 보기를 누르면 수정본으로 저장돼요"
+              : "쓰는 중인 내용은 이 기기에 따로 저장돼요"}
+          </p>
         </div>
       </Screen>
       {revise ? (

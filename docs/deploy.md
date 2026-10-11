@@ -174,6 +174,33 @@ unset KEYS
 
 `RECONFIRM_INTERVAL_DAYS`(재확인 주기, 기본 365)는 기본값을 쓰면 SSM에 넣지 않습니다. 시연에서 짧게 보여줄 때만 dev에 넣습니다.
 
+## 사진 저장소
+
+안내·공지 사진(D-34)은 배포 환경에서 S3 버킷 하나를 dev·prod가 접두사로 나눠 씁니다. 버킷과 EC2 역할 권한은 관리자가 [aws-setup.md 4-A](aws-setup.md#4-a-사진-버킷-추가-이미-돌고-있는-환경)로 만듭니다. 값을 넣기 전까지 배포 API는 사진을 받지 않고(`PHOTO_STORE`가 비면 production은 `off`), 웹은 사진 추가를 숨깁니다.
+
+| SSM 키 (`/wolgyeham/<env>/`) | dev | prod | 용도 |
+|---|---|---|---|
+| `PHOTO_STORE` | `s3` | `s3` | 사진 저장소 종류(`local`·`s3`·`off`) |
+| `PHOTO_BUCKET` | `wolgyeham-photos-<계정 ID>` | 같은 버킷 | 사진 버킷 |
+| `PHOTO_PREFIX` | `dev/` | `prod/` | 환경 접두사. 역할 권한이 이 두 접두사만 엽니다 |
+| `AWS_REGION` | 넣지 않음 | 넣지 않음 | 기본 `ap-northeast-2` |
+
+```bash
+for e in dev prod; do
+  aws ssm put-parameter --name /wolgyeham/$e/PHOTO_STORE --type SecureString --overwrite --value s3
+  aws ssm put-parameter --name /wolgyeham/$e/PHOTO_BUCKET --type SecureString --overwrite --value "wolgyeham-photos-<계정 ID>"
+  aws ssm put-parameter --name /wolgyeham/$e/PHOTO_PREFIX --type SecureString --overwrite --value "$e/"
+done
+```
+
+- 자격 증명은 컨테이너 안의 AWS SDK가 EC2 인스턴스 역할(`wolgyeham-ec2`)에서 받습니다. 액세스 키를 SSM이나 env 파일에 넣지 않습니다.
+- 필요한 권한: `arn:aws:s3:::<PHOTO_BUCKET>/dev/*`·`/prod/*`에 `s3:GetObject`·`s3:PutObject`·`s3:DeleteObject`, 버킷 `arn:aws:s3:::<PHOTO_BUCKET>`에 `s3:ListBucket`. ListBucket이 없으면 없는 사진을 확인할 때 S3가 404 대신 403을 돌려줘 API가 500으로 답합니다.
+- 컨테이너는 docker 브리지 네트워크를 한 번 더 거치므로 인스턴스 메타데이터(IMDSv2) 응답 hop limit이 2 이상이어야 역할 자격 증명을 받습니다. Amazon Linux 2023 기본값은 2입니다. 확인: `aws ec2 describe-instances --instance-ids <ID> --query 'Reservations[].Instances[].MetadataOptions'`, 1이면 관리자가 `aws ec2 modify-instance-metadata-options --instance-id <ID> --http-tokens required --http-put-response-hop-limit 2`.
+- 사진 처리(sharp)는 한 번에 한 장, libvips 캐시 없이 돌지만 큰 PNG는 잠깐 수십 MB를 씁니다. API 컨테이너 `mem_limit`(256MB)에서 메모리 부족이 보이면 먼저 로그의 재시작을 확인합니다.
+- `PHOTO_STORE=s3`인데 `PHOTO_BUCKET`이 없거나 `PHOTO_PREFIX`가 `dev/`·`prod/`가 아니면 API가 시작하지 않습니다(키 이름만 로그에 남음).
+- 시연 초기화(dev `POST /api/dev/reset`, `seed.mjs --reset-demo`)는 시연 건물의 사진 파일도 지웁니다(`s3:ListBucket`, `s3:DeleteObject`).
+- 확인: 배포 뒤 `curl https://<웹 주소>/api/photos/config`가 `uploadsEnabled: true`이고, 관리 화면에서 사진을 올려 공개한 안내에서 보이면 됩니다. 올리기가 500이면 로그(`request_failed`의 오류 이름)에서 `CredentialsProviderError`(hop limit·역할)나 `AccessDenied`(정책 접두사)를 봅니다.
+
 ## DB 마이그레이션
 
 - 마이그레이션 파일은 [database.md](database.md)의 규칙대로 PR에 함께 올립니다.

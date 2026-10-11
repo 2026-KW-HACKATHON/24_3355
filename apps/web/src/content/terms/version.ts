@@ -7,11 +7,9 @@ import { TERMS_VERSION } from "@wolgyeham/contracts";
 export const TERMS_RELEASE: { readonly version: string; readonly changes: readonly string[] } = {
   version: TERMS_VERSION,
   changes: [
-    "CloudFront에서 서버까지 HTTPS 전환을 완료해 보호 조치에 반영했어요.",
-    "모든 로그인 화면에서 로그인 전에 필수 동의를 받아요.",
-    "카카오에는 회원번호만 요청하고, 이 기기에만 저장하는 것과 지우는 방법을 자세히 적었어요.",
-    "알림을 전하는 푸시 서비스와, 파일럿 동안 알린 내용을 집주인에게 전하는 카카오톡을 맡기는 곳에 적었어요.",
-    "이용을 막는 기능은 아직 없다는 것과 지금 실제로 걸려 있는 제한만 적었어요.",
+    "집주인이 안내와 공지에 붙이는 사진을 저장하는 것으로 적었어요. 사진 속 위치·기기 정보는 지우고 저장해요.",
+    "공개한 안내와 기간 중인 공지의 사진은 건물 화면을 여는 누구나 볼 수 있고, 공개 전 사진은 집주인만 봐요.",
+    "사진을 지우는 때와, 사진 파일을 AWS 서울 리전(S3)에 둔다는 것을 적었어요.",
   ],
 };
 

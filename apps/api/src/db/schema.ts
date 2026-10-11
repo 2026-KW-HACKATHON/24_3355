@@ -12,6 +12,7 @@ import {
   NOTICE_STATUSES,
   NOTICE_TITLE_MAX,
   OCCUPANCY_STATUSES,
+  PHOTOS_MAX,
   REPORT_BODY_MAX,
   REPORT_KINDS,
   REPORT_LOCATIONS,
@@ -55,6 +56,16 @@ const timestamps = {
 /** contracts의 enum 목록으로 CHECK를 만듭니다. 값은 코드 상수라 raw로 넣어도 안전합니다. */
 function oneOf(column: AnyPgColumn, values: readonly string[]): SQL {
   return sql`${column} in (${sql.raw(values.map((value) => `'${value}'`).join(", "))})`;
+}
+
+/** 사진 키 목록(jsonb 문자열 배열). 키 형식·저장소 존재는 서비스가 확인합니다. */
+function photoKeys() {
+  return jsonb("photos").$type<string[]>().notNull().default(sql`'[]'::jsonb`);
+}
+
+/** 배열이고 contracts `PHOTOS_MAX`개 이하. */
+function photoKeysCheck(column: AnyPgColumn): SQL {
+  return sql`jsonb_typeof(${column}) = 'array' and jsonb_array_length(${column}) <= ${sql.raw(String(PHOTOS_MAX))}`;
 }
 
 export const users = pgTable(
@@ -165,8 +176,8 @@ export const guides = pgTable(
     category: text("category", { enum: GUIDE_CATEGORIES }).notNull(),
     title: text("title").notNull(),
     body: text("body").notNull(),
-    /** 사진 파일 키 목록. 저장 위치는 정할 것. */
-    photos: jsonb("photos").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+    /** 사진 키 목록(`buildings/<건물>/<id>.webp`, 순서대로, 최대 4개). 파일은 사진 저장소(lib/photoStore.ts)에. */
+    photos: photoKeys(),
     position: integer("position").notNull().default(0),
     status: text("status", { enum: GUIDE_STATUSES }).notNull().default("draft"),
     publishedAt: timestamp("published_at", { withTimezone: true }),
@@ -185,6 +196,7 @@ export const guides = pgTable(
       "guides_body_length_check",
       sql`char_length(${t.body}) <= ${sql.raw(String(GUIDE_BODY_MAX))}`,
     ),
+    check("guides_photos_check", photoKeysCheck(t.photos)),
     index("guides_building_id_status_idx").on(t.buildingId, t.status),
     index("guides_author_user_id_idx").on(t.authorUserId),
   ],
@@ -204,11 +216,13 @@ export const guideRevisions = pgTable(
     category: text("category", { enum: GUIDE_CATEGORIES }).notNull(),
     title: text("title").notNull(),
     body: text("body").notNull(),
+    photos: photoKeys(),
     authorUserId: uuid("author_user_id").references(() => users.id, { onDelete: "set null" }),
     ...timestamps,
   },
   (t) => [
     uniqueIndex("guide_revisions_guide_id_key").on(t.guideId),
+    check("guide_revisions_photos_check", photoKeysCheck(t.photos)),
     index("guide_revisions_author_user_id_idx").on(t.authorUserId),
     check("guide_revisions_category_check", oneOf(t.category, GUIDE_CATEGORIES)),
     check(
@@ -272,6 +286,7 @@ export const notices = pgTable(
       .references(() => buildings.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     body: text("body").notNull(),
+    photos: photoKeys(),
     startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
     endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
     status: text("status", { enum: NOTICE_STATUSES }).notNull().default("published"),
@@ -282,6 +297,7 @@ export const notices = pgTable(
   (t) => [
     check("notices_status_check", oneOf(t.status, NOTICE_STATUSES)),
     check("notices_period_check", sql`${t.endsAt} >= ${t.startsAt}`),
+    check("notices_photos_check", photoKeysCheck(t.photos)),
     check(
       "notices_title_length_check",
       sql`char_length(${t.title}) <= ${sql.raw(String(NOTICE_TITLE_MAX))}`,

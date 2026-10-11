@@ -99,6 +99,7 @@ describe("editing a published guide", () => {
         category: "recycling",
         title: "재활용은 월·목",
         body: "재활용은 월·목 저녁에 내놓아 주세요",
+        photos: [],
         savedAt: expect.any(String),
       },
     });

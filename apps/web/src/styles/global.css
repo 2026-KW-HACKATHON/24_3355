@@ -1039,3 +1039,13 @@ button.wh-list-row:active:not(:disabled) {
 .wh-qr__dots {
   fill: var(--wh-navy-700);
 }
+
+/* 안내·공지 사진을 누르면 원본을 엽니다(features/photos/PhotoList.tsx). */
+.wh-photo-link {
+  display: block;
+  border-radius: var(--wh-radius-card);
+}
+.wh-photo-link:focus-visible {
+  outline: 3px solid var(--wh-focus);
+  outline-offset: 2px;
+}

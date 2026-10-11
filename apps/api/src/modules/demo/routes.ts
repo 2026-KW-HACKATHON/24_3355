@@ -38,6 +38,7 @@ export const demoRoutes = new Hono<AppEnv>()
         reconfirmIntervalDays: c.var.env.RECONFIRM_INTERVAL_DAYS,
         // 로그인해도 IP 키로 셉니다(시연 계정을 바꿔 가며 한도를 늘리지 못하게).
         clientKey: ipKey(c),
+        photos: c.var.photos,
       });
       return c.json(result, 200);
     },

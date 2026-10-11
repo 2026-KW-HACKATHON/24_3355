@@ -75,6 +75,8 @@ const messages: Readonly<Record<AppErrorCode, string>> = {
   KAKAO_NOT_CONFIGURED: "지금은 카카오 로그인을 쓸 수 없어요",
   ALREADY_CONNECTED: "이미 다른 건물에 연결되어 있어요. 연결을 옮길지 먼저 확인해 주세요",
   PAYLOAD_TOO_LARGE: "내용이 너무 길어요. 조금 줄여서 다시 보내 주세요",
+  PHOTO_INVALID: "이 사진은 올릴 수 없어요. JPG·PNG 사진을 골라 주세요",
+  PHOTO_STORAGE_UNAVAILABLE: "지금은 사진을 올릴 수 없어요. 글만 먼저 저장해 주세요",
 };
 
 export function errorMessage(error: unknown): string {

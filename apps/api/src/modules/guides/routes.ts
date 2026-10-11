@@ -56,8 +56,11 @@ export const guideRoutes = new Hono<AppEnv>()
     "/buildings/:buildingId/guides",
     describeRoute({
       tags: ["guides"],
-      summary: "안내 초안 만들기 (집주인)",
-      responses: { 201: jsonResponse("만든 초안", Guide), ...errorResponses(400, 401, 403, 404) },
+      summary: "안내 초안 만들기 (집주인). photos는 이 건물에 올린 사진 키 최대 4개",
+      responses: {
+        201: jsonResponse("만든 초안", Guide),
+        ...errorResponses(400, 401, 403, 404, 503),
+      },
     }),
     validator("param", BuildingParams, onInvalid),
     validator("json", CreateGuideBody, onInvalid),
@@ -66,6 +69,7 @@ export const guideRoutes = new Hono<AppEnv>()
       const { buildingId } = c.req.valid("param");
       const guide = await guideService.createDraft(
         c.var.db,
+        c.var.photos,
         user.id,
         buildingId,
         c.req.valid("json"),
@@ -81,7 +85,7 @@ export const guideRoutes = new Hono<AppEnv>()
         "안내 고치기 (집주인). 초안은 바로 고치고, 공개된 안내는 공개 내용을 두고 수정본(revision)에 저장",
       responses: {
         200: jsonResponse("고친 초안 또는 공개 내용 + 저장한 수정본", ManagedGuide),
-        ...errorResponses(400, 401, 403, 404, 409),
+        ...errorResponses(400, 401, 403, 404, 409, 503),
       },
     }),
     validator("param", GuideParams, onInvalid),
@@ -90,7 +94,13 @@ export const guideRoutes = new Hono<AppEnv>()
       const user = requireUser(c);
       const { guideId } = c.req.valid("param");
       return c.json(
-        await guideService.updateGuide(c.var.db, user.id, guideId, c.req.valid("json")),
+        await guideService.updateGuide(
+          c.var.db,
+          c.var.photos,
+          user.id,
+          guideId,
+          c.req.valid("json"),
+        ),
         200,
       );
     },
@@ -123,7 +133,7 @@ export const guideRoutes = new Hono<AppEnv>()
     async (c) => {
       const user = requireUser(c);
       const { guideId } = c.req.valid("param");
-      await guideService.discardRevision(c.var.db, user.id, guideId);
+      await guideService.discardRevision(c.var.db, c.var.photos, user.id, guideId);
       return c.body(null, 204);
     },
   )
@@ -144,7 +154,7 @@ export const guideRoutes = new Hono<AppEnv>()
       const user = requireUser(c);
       const { guideId } = c.req.valid("param");
       return c.json(
-        await guideService.publish(c.var.db, user.id, guideId, c.req.valid("json")),
+        await guideService.publish(c.var.db, c.var.photos, user.id, guideId, c.req.valid("json")),
         200,
       );
     },

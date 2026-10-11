@@ -168,7 +168,7 @@ apps/web/src/
 |---|---|---|
 | localStorage | `wh.size` | 크게 보기 |
 | localStorage | `wh.visited.<buildingId>` | 첫 방문 여부 (LF-01 함이) |
-| localStorage | `wh.guideDraft.<userId>.<buildingId>.<guideId\|new>` | 쓰던 안내와 `savedAt`. 7일 뒤·로그아웃 때 지움 |
+| localStorage | `wh.guideDraft.<userId>.<buildingId>.<guideId\|new>` | 쓰던 안내(고른 사진 키 `photos` 포함)와 `savedAt`. 7일 뒤·로그아웃 때 지움 |
 | localStorage | `wh.reportAccess` | 비회원 제보 조회 토큰 `[{ reportId, buildingId, token, savedAt, expiresAt }]`. 건물마다 최근 20개, 서버 만료 시각이 지나거나 재조회에서 null이면 지움 |
 | sessionStorage | `wh.inviteToken` | 로그인을 거치는 동안의 초대 토큰. 수락·쓸 수 없는 초대·로그아웃 때 지움 |
 | sessionStorage | `wh.connect` | 확인한 가입코드·건물·돌아갈 곳과 `savedAt`(LF-04). 30분 뒤·연결·로그아웃 때 지움 |
@@ -217,6 +217,7 @@ apps/web/src/
 
 **안내와 숫자는 데이터 그대로 보여줍니다.**
 
+- **사진(D-34):** 안내 쓰기(33)와 공지 올리기(34)는 `features/photos/PhotoPicker.tsx`로 최대 4장을 고릅니다. 고르는 즉시 브라우저에서 긴 변 2048px JPEG로 줄여(`downscale.ts`, `createImageBitmap` → 안 되면 `<img>`, iOS의 HEIC도 여기서 JPEG가 됨) 올리고, 폼에는 올린 사진의 키만 순서대로 둡니다(`pickerState.ts`, 순수 함수). 올리는 중에는 저장 버튼이 “사진을 다 올린 뒤 눌러 주세요”로 막습니다. 칸마다 44px 빼기 버튼(“사진 n 빼기”), 실패한 칸은 지우고 다시 고릅니다. 사진 아래에 “사람 얼굴·호수·차량번호가 보이지 않게 찍어 주세요. 사진 위치 정보는 지워져요.”를 둡니다. `GET /api/photos/config`의 `uploadsEnabled`가 false면 고르기를 그리지 않습니다. 쓰던 안내(localStorage)에는 사진 키도 들어갑니다. 상세(11)·미리 보기(43)·공지 상세(15)는 `PhotoList`로 4:3 칸(`aspect-ratio`, `width`·`height`)에 `loading="lazy"`로 그리고, 누르면 원본을 새 탭에서 엽니다(첫날 카드 36은 1장, 누르지 않음). 대체 텍스트는 “<제목> 사진 n”입니다.
 - 안내는 집주인이 입력한 제목·본문·사진만 보여주고, 상세(11)·첫날 카드(36)·미리 보기(43)가 같은 본문 컴포넌트를 씁니다. 줄바꿈은 `white-space: pre-line`으로 살리고 본문을 HTML로 해석하지 않습니다(`dangerouslySetInnerHTML` 금지). 요일표처럼 입력하지 않은 구조를 만들지 않습니다.
 - 1/4, 안내 N개, ‘월계함에 연결된 거주자 N명’ 같은 숫자는 응답에서 셉니다. 화면에 숫자를 적어 두지 않습니다.
 - 안내 타일은 종류 이름만 보여서, 같은 종류 안내가 둘 이상이면 타일 대신 제목 전체와 종류가 보이는 목록(`GuideRows`)으로 그립니다. 공개 화면(01)의 ‘전체 보기’는 타일을 같은 목록으로 펼칩니다(`aria-expanded`). 건물 이름 옆 ‘현관 QR’ 배지(lofi 01)는 인쇄한 QR 주소(`?via=qr`)로 열었을 때만 보입니다.
@@ -245,7 +246,7 @@ API 오류 본문은 contracts의 `ErrorResponse`(`{ error: { code, message?, fi
 | 읽어주기 | Web Speech API `speechSynthesis`, `lang="ko-KR"`. 지원하지 않으면 버튼을 비활성으로 두고 이유를 적습니다. 화면을 떠나면 `cancel()` |
 | 터치 영역 | 44×44 이상. 주요 버튼은 `ActionButton size="large"`. lofi 모양이 44px보다 작은 것(칩 40px, ‘한 문장으로 다듬기’ 30px)은 모양은 두고 `::before`로 누를 자리를 44px로 넓힙니다. 크게 보기에서 칩은 48px(`--wh-chip-height`). 문장 속 링크는 예외 |
 | 포커스·구조 | `:focus-visible` 윤곽선(global.css)을 지우지 않습니다. 화면마다 `h1` 하나, 구역은 `h2` |
-| 이미지 | 안내 사진은 `alt`를 채웁니다(예: “분리수거 안내 사진 1”). 함이는 옆 문장이 상태를 설명하므로 `alt=""` |
+| 이미지 | 안내·공지 사진은 `alt`를 “<제목> 사진 n”으로 채웁니다(예: “분리수거함 위치 사진 1”). 함이는 옆 문장이 상태를 설명하므로 `alt=""` |
 | 색 | 색만으로 구분하지 않습니다. 상태 배지는 글자(접수됨·확인함·처리 완료·처리가 어려움)를 함께 씁니다 |
 | 확대 | 글자 200%에서 가로 스크롤이 없어야 합니다. `rem`과 `min-height`를 쓰고 고정 높이를 피합니다 |
 

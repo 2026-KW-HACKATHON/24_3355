@@ -9,6 +9,7 @@ import { Delayed, EmptyState, LoadError, SkeletonLines } from "../../components/
 import { useMe } from "../../features/auth/queries";
 import { usePublicBuilding } from "../../features/buildings/queries";
 import { recordNoticeOpened, useNotice } from "../../features/notices/queries";
+import { PhotoList } from "../../features/photos/PhotoList";
 import { toAppError } from "../../lib/errors";
 import { formatDay, formatPeriod, noticeTiming } from "../../lib/format";
 import { useSpeech } from "../../lib/speech";
@@ -166,6 +167,7 @@ function NoticeDetail({ notice, home }: { notice: Notice; home: string }) {
           </div>
         </dl>
 
+        <PhotoList photos={notice.photos} label={notice.title} className="nd-photo" />
         <p className="nd-body">{notice.body}</p>
 
         <p className="wh-note nd-note">

@@ -13,13 +13,15 @@
   letter-spacing: var(--wh-tracking-tight);
 }
 .guide-body__photo {
+  display: block;
   width: 100%;
   height: auto;
+  aspect-ratio: 4 / 3;
   max-height: 60vh;
   margin-top: var(--wh-space-4);
   border-radius: var(--wh-radius-card);
   background: var(--wh-surface-muted);
-  object-fit: cover;
+  object-fit: contain;
 }
 .guide-body__text {
   margin-top: var(--wh-space-4);

@@ -19,6 +19,8 @@ export const ERROR_CODES = [
   "REPORT_TOO_FREQUENT",
   "KAKAO_NOT_CONFIGURED",
   "PAYLOAD_TOO_LARGE",
+  "PHOTO_INVALID",
+  "PHOTO_STORAGE_UNAVAILABLE",
   "INTERNAL_ERROR",
 ] as const;
 export const ErrorCode = z.enum(ERROR_CODES);

@@ -85,6 +85,9 @@ describe("API foundation", () => {
         "/api/notices/{noticeId}": { get: expect.any(Object) },
         "/api/push-subscriptions": { post: expect.any(Object), delete: expect.any(Object) },
         "/api/push-subscriptions/public-key": { get: expect.any(Object) },
+        "/api/photos/config": { get: expect.any(Object) },
+        "/api/buildings/{buildingId}/photos": { post: expect.any(Object) },
+        "/api/photos/buildings/{buildingId}/{file}": { get: expect.any(Object) },
         "/api/guides/{guideId}/revision": { get: expect.any(Object), delete: expect.any(Object) },
         "/api/guides/{guideId}/correction-memos": {
           get: expect.any(Object),

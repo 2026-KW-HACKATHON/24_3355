@@ -1,10 +1,11 @@
-import type {
-  CorrectionMemo,
-  CorrectionMemoStatus,
-  CreateGuideBody,
-  Guide,
-  GuideRevision,
-  UpdateGuideBody,
+import {
+  type CorrectionMemo,
+  type CorrectionMemoStatus,
+  type CreateGuideBody,
+  type Guide,
+  type GuideRevision,
+  photoUrl,
+  type UpdateGuideBody,
 } from "@wolgyeham/contracts";
 import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
 import { correctionMemos, guideRevisions, guides } from "../../db/schema.ts";
@@ -14,6 +15,10 @@ type GuideRow = typeof guides.$inferSelect;
 type RevisionRow = typeof guideRevisions.$inferSelect;
 type MemoRow = typeof correctionMemos.$inferSelect;
 
+function toPhotos(keys: readonly string[]) {
+  return keys.map((key) => ({ key, url: photoUrl(key) }));
+}
+
 export function toGuide(row: GuideRow): Guide {
   return {
     id: row.id,
@@ -21,7 +26,7 @@ export function toGuide(row: GuideRow): Guide {
     category: row.category,
     title: row.title,
     body: row.body,
-    photos: row.photos.map((key) => ({ url: key })),
+    photos: toPhotos(row.photos),
     status: row.status,
     position: row.position,
     publishedAt: row.publishedAt?.toISOString() ?? null,
@@ -97,6 +102,7 @@ export function toRevision(row: RevisionRow): GuideRevision {
     category: row.category,
     title: row.title,
     body: row.body,
+    photos: toPhotos(row.photos),
     savedAt: row.updatedAt.toISOString(),
   };
 }
@@ -128,6 +134,7 @@ export async function upsertRevision(
       category: patch.category ?? guide.category,
       title: patch.title ?? guide.title,
       body: patch.body ?? guide.body,
+      photos: patch.photos ?? guide.photos,
       authorUserId,
     })
     .onConflictDoUpdate({
@@ -136,6 +143,7 @@ export async function upsertRevision(
         ...(patch.category === undefined ? {} : { category: sql`excluded.category` }),
         ...(patch.title === undefined ? {} : { title: sql`excluded.title` }),
         ...(patch.body === undefined ? {} : { body: sql`excluded.body` }),
+        ...(patch.photos === undefined ? {} : { photos: sql`excluded.photos` }),
         authorUserId,
         updatedAt: sql`now()`,
       },
@@ -157,7 +165,12 @@ export async function deleteRevision(db: Database, guideId: string) {
 export async function applyRevision(db: Database, guideId: string, revision: RevisionRow) {
   const [row] = await db
     .update(guides)
-    .set({ category: revision.category, title: revision.title, body: revision.body })
+    .set({
+      category: revision.category,
+      title: revision.title,
+      body: revision.body,
+      photos: revision.photos,
+    })
     .where(and(eq(guides.id, guideId), eq(guides.status, "published")))
     .returning();
   return row;

@@ -16,7 +16,9 @@ import { isManager, requireManager, requireOccupancy } from "../../lib/auth.ts";
 import type { SessionUser } from "../../lib/context.ts";
 import type { Database } from "../../lib/db.ts";
 import { AppError } from "../../lib/errors.ts";
+import type { PhotoStore } from "../../lib/photoStore.ts";
 import * as buildingService from "../buildings/service.ts";
+import * as photoService from "../photos/service.ts";
 import * as repo from "./repo.ts";
 
 async function requireGuide(db: Database, guideId: string) {
@@ -47,14 +49,17 @@ export async function getGuide(
   throw new AppError(404, "NOT_FOUND");
 }
 
+/** 사진은 이 건물에 올린 키만 받습니다(photoService.requirePhotoKeys). */
 export async function createDraft(
   db: Database,
+  photos: PhotoStore | null,
   userId: string,
   buildingId: string,
   input: CreateGuideBody,
 ): Promise<Guide> {
   const building = await buildingService.requireBuilding(db, buildingId);
   await requireManager(db, userId, building.id);
+  await photoService.requirePhotoKeys(photos, building.id, input.photos);
   const row = await repo.insertDraft(db, {
     ...input,
     buildingId: building.id,
@@ -67,22 +72,32 @@ export async function createDraft(
 /**
  * 안내 고치기. 초안은 그대로 고치고, 공개된 안내는 공개 내용을 두고 수정본에 저장합니다(보내지 않은 필드는
  * 이전 수정본, 없으면 공개 내용에서 가져옴). 수정본은 `publish`(수정 공개)를 해야 공개 내용이 됩니다.
+ * `photos`를 보내면 목록 전체를 바꾸고, 빠진 사진은 다른 행이 쓰지 않을 때 파일을 지웁니다.
  */
 export async function updateGuide(
   db: Database,
+  photos: PhotoStore | null,
   userId: string,
   guideId: string,
   patch: UpdateGuideBody,
 ): Promise<ManagedGuide> {
   const guide = await requireGuide(db, guideId);
   await requireManager(db, userId, guide.buildingId);
+  if (patch.photos) await photoService.requirePhotoKeys(photos, guide.buildingId, patch.photos);
   if (guide.status === "draft") {
     const row = await repo.updateDraft(db, guide.id, patch);
     if (!row) throw new AppError(409, "CONFLICT");
+    const removed = photoService.removedKeys(guide.photos, row.photos);
+    await photoService.releasePhotos(db, photos, guide.buildingId, removed);
     return { ...repo.toGuide(row), revision: null };
   }
+  const previous = patch.photos ? await repo.findRevision(db, guide.id) : undefined;
   const revision = await repo.upsertRevision(db, guide, patch, userId);
   if (!revision) throw new Error("guide revision upsert returned no row");
+  if (previous) {
+    const removed = photoService.removedKeys(previous.photos, revision.photos);
+    await photoService.releasePhotos(db, photos, guide.buildingId, removed);
+  }
   return { ...repo.toGuide(guide), revision: repo.toRevision(revision) };
 }
 
@@ -98,22 +113,32 @@ export async function getRevision(
   return { revision: row ? repo.toRevision(row) : null };
 }
 
-/** 편집 취소: 수정본만 지웁니다. 공개 내용과 메모 상태는 그대로입니다. 없어도 성공입니다. */
-export async function discardRevision(db: Database, userId: string, guideId: string) {
+/**
+ * 편집 취소: 수정본만 지웁니다. 공개 내용과 메모 상태는 그대로입니다. 없어도 성공입니다. 수정본에만 있던 사진
+ * 파일은 지웁니다.
+ */
+export async function discardRevision(
+  db: Database,
+  photos: PhotoStore | null,
+  userId: string,
+  guideId: string,
+) {
   const guide = await requireGuide(db, guideId);
   await requireManager(db, userId, guide.buildingId);
-  await repo.deleteRevision(db, guide.id);
+  const deleted = await repo.deleteRevision(db, guide.id);
+  if (deleted) await photoService.releasePhotos(db, photos, guide.buildingId, deleted.photos);
 }
 
 /**
  * 공개와 수정 공개는 트랜잭션 하나입니다.
  * - 초안: draft → published, 건물의 첫 공개면 preparing → open.
- * - 공개된 안내: 저장한 수정본을 공개 내용으로 옮기고 수정본을 지움. 수정본이 없으면 409.
+ * - 공개된 안내: 저장한 수정본(사진 포함)을 공개 내용으로 옮기고 수정본을 지움. 수정본이 없으면 409.
  * - `applyMemoIds`: 이 안내의 pending 메모를 applied로. 하나라도 이 안내의 pending 메모가 아니면 409이고
  *   모두 되돌려져 공개 내용·수정본·메모 상태가 그대로 남습니다.
  */
 export async function publish(
   db: Database,
+  photos: PhotoStore | null,
   userId: string,
   guideId: string,
   input: PublishGuideBody,
@@ -121,7 +146,7 @@ export async function publish(
   const guide = await requireGuide(db, guideId);
   await requireManager(db, userId, guide.buildingId);
   const memoIds = [...new Set(input.applyMemoIds)];
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     let row: Awaited<ReturnType<typeof repo.publishDraft>>;
     let buildingOpened = false;
     if (guide.status === "draft") {
@@ -136,8 +161,16 @@ export async function publish(
     }
     const appliedMemoIds = await repo.applyMemos(tx, guide.id, memoIds);
     if (appliedMemoIds.length !== memoIds.length) throw new AppError(409, "CONFLICT");
-    return { guide: repo.toGuide(row), buildingOpened, appliedMemoIds };
+    return { row, buildingOpened, appliedMemoIds };
   });
+  // 수정 공개로 공개 내용에서 빠진 사진은 다른 행이 쓰지 않으면 파일을 지웁니다.
+  const removed = photoService.removedKeys(guide.photos, result.row.photos);
+  await photoService.releasePhotos(db, photos, guide.buildingId, removed);
+  return {
+    guide: repo.toGuide(result.row),
+    buildingOpened: result.buildingOpened,
+    appliedMemoIds: result.appliedMemoIds,
+  };
 }
 
 export async function countGuides(db: Database, buildingIds: string[]) {

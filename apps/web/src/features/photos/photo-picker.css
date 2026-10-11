@@ -1,0 +1,117 @@
+/* 사진 고르기(33·34). 칸 72px, 빼기 버튼 누를 자리 44px */
+.ph-picker {
+  margin-top: var(--wh-space-2_5);
+}
+.ph-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--wh-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ph-tile {
+  position: relative;
+  width: 72px;
+  height: 72px;
+}
+.ph-tile__img,
+.ph-tile__state {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--wh-radius-m);
+  background: var(--wh-surface-muted);
+  object-fit: cover;
+}
+.ph-tile--failed .ph-tile__state {
+  border: 1.5px solid var(--wh-danger);
+  color: var(--wh-danger);
+}
+.ph-tile__state svg {
+  width: var(--wh-icon-m);
+  height: var(--wh-icon-m);
+}
+/* 오른쪽 위 모서리에 걸친 44px 누를 자리, 보이는 점은 24px */
+.ph-tile__remove {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  display: grid;
+  place-items: center;
+  width: var(--wh-touch);
+  height: var(--wh-touch);
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.ph-tile__remove-dot {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--wh-gray-900);
+  color: #fff;
+  box-shadow: 0 0 0 2px var(--wh-surface);
+}
+.ph-tile__remove-dot svg {
+  width: 14px;
+  height: 14px;
+}
+.ph-tile__remove:focus-visible .ph-tile__remove-dot {
+  outline: 3px solid var(--wh-focus);
+  outline-offset: 2px;
+}
+.ph-add {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border: 1.5px dashed var(--wh-gray-300);
+  border-radius: var(--wh-radius-m);
+  background: none;
+  color: var(--wh-text-muted);
+  cursor: pointer;
+}
+.ph-add:disabled {
+  cursor: not-allowed;
+  color: var(--wh-text-disabled);
+}
+.ph-add svg {
+  width: var(--wh-icon-m);
+  height: var(--wh-icon-m);
+}
+.ph-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.ph-hint {
+  margin-top: var(--wh-space-2);
+}
+.ph-status:empty {
+  display: none;
+}
+.ph-spinner {
+  width: 22px;
+  height: 22px;
+  border: 2.5px solid var(--wh-gray-300);
+  border-top-color: var(--wh-primary);
+  border-radius: 50%;
+  animation: ph-spin 0.9s linear infinite;
+}
+@keyframes ph-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ph-spinner {
+    animation-duration: 2.4s;
+  }
+}

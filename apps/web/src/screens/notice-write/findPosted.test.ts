@@ -10,6 +10,7 @@ function notice(overrides: Partial<Notice>): Notice {
     buildingId: "5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f01",
     title: "오전 단수 안내",
     body: "물탱크 청소",
+    photos: [],
     startsAt: "2026-09-30T00:00:00.000Z",
     endsAt: "2026-09-30T03:00:00.000Z",
     publishedAt: "2026-09-29T12:00:03.000Z",

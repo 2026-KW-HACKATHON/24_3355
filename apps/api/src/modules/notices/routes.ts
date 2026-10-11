@@ -73,7 +73,7 @@ export const noticeRoutes = new Hono<AppEnv>()
         "공지 올리기 (집주인). attemptedCount는 알림 대상 수이고 발송은 응답 뒤에 함 (도착·열람 아님)",
       responses: {
         201: jsonResponse("올린 공지와 발송을 시도한 대상 수", CreateNoticeResult),
-        ...errorResponses(400, 401, 403, 404),
+        ...errorResponses(400, 401, 403, 404, 503),
       },
     }),
     validator("param", BuildingParams, onInvalid),
@@ -83,8 +83,7 @@ export const noticeRoutes = new Hono<AppEnv>()
       const { buildingId } = c.req.valid("param");
       const result = await noticeService.createNotice(
         c.var.db,
-        c.var.push,
-        c.var.tasks,
+        { push: c.var.push, tasks: c.var.tasks, photos: c.var.photos },
         user.id,
         buildingId,
         c.req.valid("json"),

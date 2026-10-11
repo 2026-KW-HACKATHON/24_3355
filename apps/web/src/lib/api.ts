@@ -65,3 +65,8 @@ export async function sendJsonEmpty(
 export function seg(value: string): string {
   return encodeURIComponent(value);
 }
+
+/** multipart 본문(사진 올리기). 큰 파일이라 제한 시간을 늘립니다. */
+export function postForm<S extends StandardSchemaV1>(path: string, body: FormData, schema: S) {
+  return run(() => http.post(path, { body, timeout: 60_000 }), schema);
+}

@@ -41,6 +41,7 @@ const notice: Notice = {
   buildingId: BUILDING_ID,
   title: "단수 안내",
   body: "오전 9시부터 12시까지",
+  photos: [],
   startsAt: "2026-10-01T00:00:00.000Z",
   endsAt: "2026-10-02T00:00:00.000Z",
   publishedAt: "2026-09-30T00:00:00.000Z",

@@ -21,6 +21,7 @@ import {
   type ScheduleErrors,
   scheduleErrors,
 } from "../../features/notices/schedule";
+import { PhotoPicker, usePhotoPicker } from "../../features/photos/PhotoPicker";
 import { usePushPublicKey } from "../../features/push/queries";
 import { getJson, seg } from "../../lib/api";
 import { type AppError, errorMessage, toAppError } from "../../lib/errors";
@@ -76,7 +77,8 @@ function NoticeForm({ detail }: { detail: ManagedBuildingDetail }) {
   const create = useCreateNotice(buildingId);
   const audience = useNoticeAudience(buildingId);
   const publicKey = usePushPublicKey();
-  const dirty = values.title.trim() !== "" || values.body.trim() !== "";
+  const picker = usePhotoPicker(buildingId, []);
+  const dirty = values.title.trim() !== "" || values.body.trim() !== "" || picker.items.length > 0;
 
   // 쓰던 공지가 있으면 탭 닫기·새로고침도 한 번 묻습니다(lofi ‘작성 중 닫기’). 앱 안 이동은 LeaveConfirm이 묻습니다.
   useEffect(() => {
@@ -130,6 +132,10 @@ function NoticeForm({ detail }: { detail: ManagedBuildingDetail }) {
     const found = validate(values, Date.now());
     setErrors(found);
     setSaveError(undefined);
+    if (picker.busy) {
+      setSaveError("사진을 다 올린 뒤 눌러 주세요");
+      return;
+    }
     const firstInvalid = (["title", "startsAt", "endsAt", "body"] as const).find(
       (key) => found[key],
     );
@@ -147,6 +153,7 @@ function NoticeForm({ detail }: { detail: ManagedBuildingDetail }) {
       const result = await create.mutateAsync({
         title,
         body: values.body.trim(),
+        photos: picker.keys,
         startsAt,
         endsAt,
       });
@@ -162,7 +169,12 @@ function NoticeForm({ detail }: { detail: ManagedBuildingDetail }) {
         return;
       }
       setErrors((old) => ({ ...old, ...serverErrors(error) }));
-      setSaveError(errorMessage(error));
+      setSaveError(
+        error.code === "VALIDATION_FAILED" &&
+          Object.keys(error.fields).some((field) => field.startsWith("photos"))
+          ? "찾을 수 없는 사진이 있어요. 사진을 빼고 다시 골라 주세요"
+          : errorMessage(error),
+      );
     } finally {
       inFlight.current = false;
     }
@@ -288,6 +300,11 @@ function NoticeForm({ detail }: { detail: ManagedBuildingDetail }) {
                 {errors.body}
               </p>
             ) : null}
+            <PhotoPicker
+              picker={picker}
+              label={values.title.trim() || "공지"}
+              disabled={create.isPending || checking}
+            />
           </div>
 
           <Audience

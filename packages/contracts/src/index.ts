@@ -8,6 +8,7 @@ export * from "./errors.ts";
 export * from "./guides.ts";
 export * from "./notices.ts";
 export * from "./occupancies.ts";
+export * from "./photos.ts";
 export * from "./reports.ts";
 export * from "./text.ts";
 export * from "./tips.ts";

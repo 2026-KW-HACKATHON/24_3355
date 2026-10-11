@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { and, eq, inArray, isNull, ne, sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { hashToken } from "../lib/auth.ts";
@@ -557,6 +558,26 @@ describe("demo mode API (LF-20, 29)", () => {
 
   beforeEach(async () => {
     await clearResetLimits();
+  });
+
+  it("deletes the photo files of the reset demo buildings only", async () => {
+    // Given
+    const photo = (buildingId: string) => `buildings/${buildingId}/${randomUUID()}.webp`;
+    const sunny = photo(DEMO_BUILDING_ID);
+    const spring = photo(DEMO_PREPARING_BUILDING_ID);
+    const e2e = photo(DEMO_E2E_BUILDING_ID);
+    for (const key of [sunny, spring, e2e]) {
+      await demo.photos?.put(key, new Uint8Array([1]), "image/webp");
+    }
+
+    // When
+    const response = await postReset({}, undefined, CLIENT_C);
+
+    // Then (발표 시연 건물 두 곳만 되돌리므로 e2e 건물 사진은 남음)
+    expect(response.status).toBe(200);
+    expect(await demo.photos?.exists(sunny)).toBe(false);
+    expect(await demo.photos?.exists(spring)).toBe(false);
+    expect(await demo.photos?.exists(e2e)).toBe(true);
   });
 
   it("has no demo routes unless DEMO_MODE is on", async () => {

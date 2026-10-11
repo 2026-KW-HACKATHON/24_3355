@@ -98,6 +98,7 @@ function RevisePreview({
     category: revision.data.category,
     title: revision.data.title,
     body: revision.data.body,
+    photos: revision.data.photos,
     updatedAt: now,
   };
   return (

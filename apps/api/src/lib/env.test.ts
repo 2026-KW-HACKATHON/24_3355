@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseEnv } from "./env.ts";
+import { parseEnv, photoStoreKind } from "./env.ts";
 
 const base = {
   DATABASE_URL: "postgres://user:secret-password@127.0.0.1:5432/db",
@@ -49,5 +49,36 @@ describe("parseEnv", () => {
     expect(partial).not.toThrow(/public-key-value/);
     expect(complete.VAPID_SUBJECT).toBe("mailto:team@example.invalid");
     expect(parseEnv(base).TRUSTED_PROXY_HOPS).toBe(0);
+  });
+
+  it("stores photos locally outside production, and not at all in production unless configured", () => {
+    // When
+    const local = parseEnv(base);
+    const production = parseEnv({ ...base, NODE_ENV: "production" });
+    const s3 = parseEnv({
+      ...base,
+      NODE_ENV: "production",
+      PHOTO_STORE: "s3",
+      PHOTO_BUCKET: "wolgyeham-photos-123",
+      PHOTO_PREFIX: "prod/",
+    });
+    // Then
+    expect(photoStoreKind(local)).toBe("local");
+    expect(local).toMatchObject({ PHOTO_PREFIX: "", AWS_REGION: "ap-northeast-2" });
+    expect(photoStoreKind(production)).toBe("off");
+    expect(photoStoreKind(s3)).toBe("s3");
+    expect(() => parseEnv({ ...base, PHOTO_STORE: "s3" })).toThrow("PHOTO_BUCKET");
+    expect(() => parseEnv({ ...base, PHOTO_PREFIX: "../x" })).toThrow("PHOTO_PREFIX");
+    // s3는 버킷과 dev/·prod/ 접두사가 함께 있어야 합니다
+    expect(() =>
+      parseEnv({ ...base, PHOTO_STORE: "s3", PHOTO_BUCKET: "", PHOTO_PREFIX: "dev/" }),
+    ).toThrow("PHOTO_BUCKET");
+    expect(() => parseEnv({ ...base, PHOTO_STORE: "s3", PHOTO_BUCKET: "bucket-a" })).toThrow(
+      "PHOTO_PREFIX",
+    );
+    expect(() =>
+      parseEnv({ ...base, PHOTO_STORE: "s3", PHOTO_BUCKET: "bucket-a", PHOTO_PREFIX: "staging/" }),
+    ).toThrow("PHOTO_PREFIX");
+    expect(parseEnv({ ...base, PHOTO_STORE: "local", PHOTO_PREFIX: "" }).PHOTO_PREFIX).toBe("");
   });
 });
