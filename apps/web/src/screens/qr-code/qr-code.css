@@ -56,6 +56,11 @@
 .qc-download.seed-action-button {
   margin-top: var(--wh-space-2_5);
 }
+.qc-sign.seed-action-button {
+  min-height: 48px;
+  margin-top: var(--wh-space-3);
+  font-size: calc(0.96875rem * var(--wh-font-scale));
+}
 .qc-code-body {
   margin-top: var(--wh-space-3);
 }

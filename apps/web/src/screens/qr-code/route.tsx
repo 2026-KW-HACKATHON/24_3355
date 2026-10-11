@@ -85,6 +85,17 @@ function QrAndCode({ detail }: { detail: ManagedBuildingDetail }) {
               {downloadError}
             </p>
           ) : null}
+          <ActionButton
+            asChild
+            className="wh-btn wh-btn--secondary qc-sign"
+            size="large"
+            variant="neutralWeak"
+          >
+            <Link to={`${base}/sign`}>
+              <Icon name="printer" />
+              현관 안내문 인쇄
+            </Link>
+          </ActionButton>
         </section>
 
         <JoinCodeBlock buildingId={building.id} buildingName={building.name} base={base} />

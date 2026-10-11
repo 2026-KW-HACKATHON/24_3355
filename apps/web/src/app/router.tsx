@@ -56,6 +56,11 @@ export const router = createBrowserRouter([
       },
       { path: "manage/:buildingId/qr", lazy: () => import("../screens/qr-code/route") },
       { path: "manage/:buildingId/card", lazy: () => import("../screens/move-in-card/route") },
+      // 현관 안내문(A4 인쇄, 26에서 들어옴)
+      {
+        path: "manage/:buildingId/sign",
+        lazy: () => import("../screens/entrance-sign/route"),
+      },
       {
         path: "manage/:buildingId/guides/new",
         lazy: () => import("../screens/guide-write/route"),
