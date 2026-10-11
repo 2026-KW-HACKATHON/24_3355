@@ -115,7 +115,7 @@ export const PRIVACY_DOC: LegalDoc = {
             {
               term: "이번에 연 동안의 표시",
               detail:
-                "약관 다시 동의에서 ‘나중에’를 눌렀는지(wh.termsAsked)와 홈 화면 앱의 시작 화면을 보였는지(wh.splash)예요.",
+                "약관 다시 동의에서 ‘나중에’를 눌렀는지(wh.termsAsked), 홈 화면 앱의 시작 화면을 보였는지(wh.splash), 시연 주소에서 고른 시연 역할(wh.demoRole)이에요. 시연 역할은 로그아웃하면 지워요.",
             },
           ],
         },

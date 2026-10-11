@@ -1,5 +1,6 @@
 import { lazy, type RefObject, Suspense, useEffect, useRef, useState } from "react";
 import { Outlet, ScrollRestoration, useLocation, useNavigate } from "react-router";
+import { DemoBar } from "../components/DemoBar";
 import { useMe } from "../features/auth/queries";
 import { readConnectedState } from "../features/occupancy/connectedState";
 import { Splash } from "./Splash";
@@ -130,6 +131,8 @@ export function RootLayout() {
   const connected = readConnectedState(state);
   return (
     <div className="wh-app" ref={root}>
+      {/* 시연 역할로 둘러보는 탭에서만 보이는 막대. 화면 위에 자리를 차지해 상단 막대를 가리지 않습니다. */}
+      <DemoBar />
       <Outlet />
       {connected ? (
         <Suspense fallback={null}>

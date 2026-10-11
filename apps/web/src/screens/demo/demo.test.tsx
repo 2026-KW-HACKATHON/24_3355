@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { authKeys, demoLoginMutationOptions } from "../../features/auth/queries";
+import { buildingKeys } from "../../features/buildings/queries";
 import { getJson, postJson } from "../../lib/api";
 import { AppError } from "../../lib/errors";
 import { testUser } from "../../test/me";
@@ -12,6 +13,7 @@ import { memoryStorage } from "../../test/memoryStorage";
 import {
   demoDestination,
   demoKey,
+  demoNeedsReset,
   demoResetMutationOptions,
   demoRoles,
   fetchDemoOverview,
@@ -247,6 +249,83 @@ describe("demo roles (LF-20 29)", () => {
     ]);
     expect(queryClient.getQueryData(authKeys.me())).toEqual(next);
     expect(queryClient.getQueryData(["manage", "buildings"])).toBeUndefined();
+  });
+});
+
+describe("demo drift (시연 상태가 바뀌었어요)", () => {
+  function withResidentA(occ: MeOccupancy | null): DemoOverview {
+    return {
+      ...overview,
+      accounts: overview.accounts.map((account) =>
+        account.as === "demo-resident-a" && account.role === "resident"
+          ? { ...account, occupancy: occ }
+          : account,
+      ),
+    };
+  }
+
+  it("is fine while A is connected and the demo building has guides", () => {
+    expect(demoNeedsReset(overview)).toBe(false);
+    expect(demoNeedsReset(overview, 3)).toBe(false);
+  });
+
+  it("asks for a reset when A is no longer connected or the guides are gone", () => {
+    expect(demoNeedsReset(withResidentA(null))).toBe(true);
+    expect(demoNeedsReset(overview, 0)).toBe(true);
+    expect(
+      demoNeedsReset({
+        ...overview,
+        accounts: overview.accounts.filter((account) => account.as !== "demo-resident-a"),
+      }),
+    ).toBe(true);
+    expect(
+      demoNeedsReset({
+        ...overview,
+        buildings: overview.buildings.map((building) => ({
+          ...building,
+          status: "preparing" as const,
+        })),
+      }),
+    ).toBe(true);
+  });
+
+  function render(data: DemoOverview, guides?: number) {
+    const queryClient = new QueryClient();
+    queryClient.setQueryData(demoKey, data);
+    queryClient.setQueryData(authKeys.me(), null);
+    if (guides !== undefined) {
+      queryClient.setQueryData(buildingKeys.guides(SUNNY), {
+        guides: Array.from({ length: guides }, (_, index) => ({
+          id: `g-${index}`,
+          status: "published",
+        })),
+      });
+    }
+    return renderToStaticMarkup(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/demo"]}>
+          <DemoScreen />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+  }
+
+  it("shows the tour above the role cards and no warning in the seeded state", () => {
+    // When
+    const html = render(overview, 4);
+    // Then
+    expect(html).toContain("둘러보는 순서");
+    expect(html).toContain("가입 없이 보낸 제보의 상태");
+    expect(html).toContain("쓰기는 팀 기기에서 보여 드려요. 둘러보기만 해도 흐름이 이어져요.");
+    expect(html.indexOf("둘러보는 순서")).toBeLessThan(html.indexOf("dm-roles"));
+    expect(html).toContain('<p class="dm-drift" role="status"></p>');
+  });
+
+  it("warns near the reset box when the story cannot start from A", () => {
+    expect(render(withResidentA(null))).toContain(
+      "시연 상태가 바뀌었어요 · 운영자가 ‘시연 초기화’를 눌러 주세요",
+    );
+    expect(render(overview, 0)).toContain("시연 상태가 바뀌었어요");
   });
 });
 

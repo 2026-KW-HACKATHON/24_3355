@@ -85,6 +85,27 @@ export function demoHomeBuilding(overview: DemoOverview) {
   return demo.find((building) => building.status === "open") ?? demo[0];
 }
 
+/** 29 위 ‘둘러보는 순서’. 카드는 lofi 순서 그대로 두고, 이 글이 시연 이야기의 차례를 알려 줍니다. */
+export const DEMO_TOUR = [
+  { who: "입주자 A", what: "홈에서 안내 → 안내 상세의 ‘내용이 달라요’ 메모 상태 보기" },
+  { who: "옆 건물 주민", what: "가입 없이 보낸 제보의 상태" },
+  { who: "집주인", what: "‘확인할 것’에서 메모 검토·제보 확인" },
+  { who: "다음 입주자 B", what: "가입코드로 연결하면 같은 안내가 그대로" },
+] as const;
+
+/**
+ * 시연 이야기를 처음부터 보여 줄 수 없는 상태: 입주자 A가 연결돼 있지 않거나(시연 중 이사 나감 등) 시연 건물
+ * (햇살빌라)에 공개 안내가 없음. `publishedGuideCount`는 공개 안내 목록을 받았을 때만 줍니다(모르면 그 조건은
+ * 건물 상태로만 봅니다).
+ */
+export function demoNeedsReset(overview: DemoOverview, publishedGuideCount?: number): boolean {
+  const residentA = overview.accounts.find((account) => account.as === "demo-resident-a");
+  if (!residentA || (residentA.role === "resident" && residentA.occupancy === null)) return true;
+  const home = demoHomeBuilding(overview);
+  if (home?.status !== "open") return true;
+  return publishedGuideCount === 0;
+}
+
 function occupancyLabel(status: string, requested: boolean): string {
   if (status === "reconfirm_needed") return "거주 확인 필요";
   return requested ? "거주 확인 요청됨" : "거주 중";

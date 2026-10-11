@@ -107,6 +107,7 @@ apps/web/src/
 | `/manage/:buildingId/memos/:memoId` | `memo-review` | LF-17(25). 반영 → `…/guides/:guideId/edit?apply=<memoId>`, 유지 → 사유 시트 | 집주인 |
 | `/manage/:buildingId/qr` | `qr-code` | LF-18(26) QR 인쇄·가입코드 복사·바꾸기 | 집주인 |
 | `/manage/:buildingId/card` | `move-in-card` | LF-18(39) 입주 카드 인쇄·카카오톡 보내기 | 집주인 |
+| `/manage/:buildingId/sign` | `entrance-sign` | 현관 안내문 A4 인쇄(26의 ‘현관 안내문 인쇄’). 건물 이름·QR(`?via=qr`)·주소, 가입코드가 있으면 함께(화면에서 뺄 수 있음) | 집주인 |
 | `/demo` | `demo` | LF-20(29). `GET /api/dev/demo`가 404면(DEMO_MODE 아님) 없는 주소(22)와 같게 보임 | 시연자 |
 | `/terms`, `/privacy` | `legal` | 약관·개인정보 처리방침 초안(D-28, lofi 없음). 본문은 `content/terms/*.ts`(문단·목록·항목만, HTML 해석 없음), 맨 위 ‘초안 · 법률 검토 전’, 시행일은 contracts `TERMS_VERSION` | 누구나 |
 | 그 밖 | `not-found` | 건물 없음(22) | 누구나 |
@@ -119,6 +120,8 @@ apps/web/src/
 - 권한은 서버가 판정합니다. 라우트 guard는 로그인 이동과 권한 없음 표시에만 쓰고, 버튼 숨김으로 권한을 대신하지 않습니다.
 - lofi에 있지만 아직 만들지 않은 행동은 숨기지 않고 비활성으로 두며, `aria-describedby`로 “다음 업데이트에서 열려요”를 연결합니다.
 - `/demo`는 시연용 건물 데이터만 쓰고 실제 화면과 상태를 공유하지 않습니다. 실제 첫 화면에 `/demo` 링크를 두지 않습니다. 역할 카드는 `GET /api/dev/demo`의 계정(`purpose: "e2e"`는 숨김)과 비회원 제보(`guestReport`가 있을 때만 ‘옆 건물 주민’)이고, 카드의 숫자는 응답에서 셉니다. 고르면 시연 로그인(`consent` 포함)으로 바꾼 뒤 집주인은 관리 홈, 연결한 거주자는 `/b/:id`(거주자 홈), 연결 전 B는 시연 건물 공개 화면, 비회원은 로그아웃하고 `statusPath`(제보 상태)로 갑니다. 옆 건물 주민(비회원) 카드는 `statusPath`의 확인 토큰으로 그 제보를 읽어 “비회원 · 제보 1건 접수됨”(확인함·처리 완료)처럼 지금 상태를 적고, 읽기 전·실패면 “비회원 · 보낸 제보 1건”입니다. ‘시연 초기화’는 확인 대화상자 → `POST /api/dev/reset`(발표 시연 건물 두 곳, 햇살빌라·새봄하우스만 되돌림. e2e 건물 테스트빌라·준비빌라는 `db:seed -- --reset-demo`로만) → 응답에 담긴 되돌린 건물의 이 기기 흔적(`wh.visited.<id>`, 그 건물 제보 확인 링크·쓰던 안내)과 가입코드·초대·메모·팁 초안, `wh.reconfirmAsked`, `dev`·`me` 밖의 캐시를 지우고 시연 목록과 내 정보를 다시 받습니다. 429는 `Retry-After`로 기다릴 시간을 적습니다.
+- 29 위에는 ‘둘러보는 순서’(A → 옆 건물 주민 → 집주인 → B, `DEMO_TOUR`)를 두고, 입주자 A의 연결이 없거나 시연 건물에 공개 안내가 없으면(`demoNeedsReset`) 초기화 상자 위에 “시연 상태가 바뀌었어요 · 운영자가 ‘시연 초기화’를 눌러 주세요”(`role="status"`)를 띄웁니다.
+- 시연 중 막대(`components/DemoBar`, `RootLayout`이 화면 위에 붙임): 29에서 시연 계정을 고르면 `wh.demoRole`에 그 계정과 역할 이름을 남기고, 시연 모드(`GET /api/dev/login` 204)이고 로그인한 계정이 그 계정일 때만 “시연 중 · 역할”과 ‘역할 바꾸기’(→ `/demo`)를 보여줍니다. 고정하지 않은 36px 막대라 상단 막대를 가리지 않고, `/demo`·`/terms`·`/privacy`와 인쇄에서는 숨깁니다. e2e처럼 API로 로그인하면 표시가 없어 보이지 않습니다.
 
 ## 5. 데이터와 화면 상태
 
@@ -174,6 +177,7 @@ apps/web/src/
 | sessionStorage | `wh.tipDraft` | 로그인이 끝나 다시 로그인하러 갈 때의 쓰던 생활 팁(`buildingId`·`tipId`(새로 쓰기면 null)·`category`·`body`·`savedAt`). 같은 작성 화면에 한 번 채우면·30분 뒤·로그아웃 때 지움 |
 | localStorage | `wh.reconfirmAsked` | 재확인 시트(40)를 먼저 띄운 날(`{ value: 연결 id + 다음 확인 시각, at }`). 한국 날짜로 하루 한 번만 |
 | sessionStorage | `wh.termsAsked` | 다시 동의 시트에서 ‘나중에’를 누른 계정과 판(`<userId>:<TERMS_VERSION>`). 이번 실행에서 다시 띄우지 않음 |
+| sessionStorage | `wh.demoRole` | 시연 시작(29)에서 고른 시연 계정과 역할 이름(`{ userId, label }`). 시연 중 막대(`DemoBar`)가 읽음. 비회원 역할을 고르거나 로그아웃 때 지움 |
 | localStorage | `wh.pushSaved` | 서버 저장을 확인한 이 브라우저의 푸시 구독(`endpoint`·`userId`). 이것과 브라우저 구독이 맞아야 ‘켜짐’. 알림 끄기·로그아웃·건물 옮김 때 지움 |
 
 - 키는 `wh.`로 시작하고 새 키는 이 표에 추가합니다. 개인정보 처리방침 초안(`content/terms/privacy.ts` §2)에도 같은 키와 지우는 때를 적습니다. 코드에 있는 키가 방침에 빠지면 `screens/legal/legal.test.tsx`가 실패합니다. 읽기·쓰기는 모두 try/catch로 감쌉니다.

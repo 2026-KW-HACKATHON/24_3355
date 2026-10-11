@@ -15,6 +15,7 @@ import { clearMemoDraft } from "../guides/memoDraft";
 import { clearInviteToken } from "../invites/token";
 import { clearConnectDraft } from "../occupancy/connectDraft";
 import { clearTipDraft } from "../tips/tipDraft";
+import { clearDemoRole } from "./demoRole";
 
 export { safeReturnTo };
 
@@ -94,7 +95,7 @@ export function agreeToTerms(version: string) {
 /**
  * 로그아웃합니다. 이 브라우저에 알림 구독이 있으면 그 주소(`pushEndpoint`)를 함께 보내 서버가 같은 요청에서 내
  * 구독을 지웁니다(contracts `LogoutBody`). 서버 응답과 상관없이 이 기기에 남은 그 사용자의 쓰던 안내, 초대 토큰,
- * 연결 중이던 가입코드, 다시 로그인하려고 남긴 메모·팁을 지웁니다.
+ * 연결 중이던 가입코드, 다시 로그인하려고 남긴 메모·팁, 시연 중 표시(DemoBar)를 지웁니다.
  */
 export async function logout(userId: string | undefined, pushEndpoint?: string): Promise<void> {
   try {
@@ -110,5 +111,6 @@ export async function logout(userId: string | undefined, pushEndpoint?: string):
     clearConnectDraft();
     clearMemoDraft();
     clearTipDraft();
+    clearDemoRole();
   }
 }

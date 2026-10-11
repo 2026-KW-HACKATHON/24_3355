@@ -166,3 +166,74 @@
   margin-top: 0;
   padding-bottom: var(--wh-space-2);
 }
+/* 둘러보는 순서: 카드 위 짧은 안내(함이 없이) */
+.dm-tour {
+  margin-top: var(--wh-space-4);
+  padding: var(--wh-space-3) var(--wh-space-4);
+  border-radius: var(--wh-radius-l);
+  background: var(--wh-surface);
+}
+.dm-tour__title {
+  font-size: var(--wh-type-small);
+  font-weight: 700;
+  color: var(--wh-text);
+}
+.dm-tour__steps {
+  display: grid;
+  gap: var(--wh-space-1_5);
+  margin-top: var(--wh-space-2);
+}
+.dm-tour__step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--wh-space-2);
+  font-size: var(--wh-type-caption);
+  line-height: 1.45;
+  color: var(--wh-text-subtle);
+}
+.dm-tour__step strong {
+  font-weight: 700;
+  color: var(--wh-text-body);
+}
+.dm-tour__num {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: calc(18px * var(--wh-font-scale));
+  height: calc(18px * var(--wh-font-scale));
+  margin-top: 1px;
+  border-radius: 50%;
+  background: var(--wh-navy-50);
+  color: var(--wh-primary);
+  font-size: calc(0.6875rem * var(--wh-font-scale));
+  font-weight: 800;
+}
+.dm-tour__caption {
+  margin-top: var(--wh-space-2);
+  font-size: var(--wh-type-caption);
+  line-height: 1.45;
+  color: var(--wh-text-muted);
+}
+/* 시연 상태가 바뀌었을 때만 보이는 한 줄(알림 영역은 늘 둠) */
+.dm-drift {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--wh-space-1_5);
+  margin-top: var(--wh-space-5);
+  font-size: var(--wh-type-caption);
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--wh-st-hard);
+}
+.dm-drift:empty {
+  margin: 0;
+}
+.dm-drift svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+}
+.dm-drift:not(:empty) + .dm-reset {
+  margin-top: var(--wh-space-2);
+}

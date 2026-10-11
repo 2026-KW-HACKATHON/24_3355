@@ -30,11 +30,12 @@ export function usePublicBuilding(buildingId: string) {
 }
 
 /** 공개된 안내만, position 순서, 본문 전체. preparing 건물은 빈 목록입니다. */
-export function usePublicGuides(buildingId: string) {
+export function usePublicGuides(buildingId: string, enabled = true) {
   return useQuery({
     queryKey: buildingKeys.guides(buildingId),
     queryFn: () => getJson(`/api/buildings/${seg(buildingId)}/guides`, GuideList),
     select: (data) => data.guides.filter((guide) => guide.status === "published"),
+    enabled,
   });
 }
 

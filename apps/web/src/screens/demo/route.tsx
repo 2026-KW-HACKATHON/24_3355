@@ -9,19 +9,23 @@ import { Hami } from "../../components/Hami";
 import { Icon } from "../../components/Icon";
 import { Screen } from "../../components/Screen";
 import { Delayed, LoadError } from "../../components/ScreenState";
+import { clearDemoRole, saveDemoRole } from "../../features/auth/demoRole";
 import {
   demoLoginMutationOptions,
   logoutMutationOptions,
   useMe,
 } from "../../features/auth/queries";
 import { BuildingNotFound } from "../../features/buildings/BuildingNotFound";
+import { usePublicGuides } from "../../features/buildings/queries";
 import { useReport } from "../../features/reports/queries";
 import { errorMessage, toAppError } from "../../lib/errors";
 import {
+  DEMO_TOUR,
   type DemoRole,
   demoDestination,
   demoHomeBuilding,
   demoKey,
+  demoNeedsReset,
   demoResetMutationOptions,
   demoRoles,
   fetchDemoOverview,
@@ -73,6 +77,9 @@ function DemoStart({ overview }: { overview: DemoOverview }) {
   // 옆 건물 주민 카드에 그 제보의 지금 상태(접수됨·확인함·처리 완료)를 적습니다. 못 읽으면 상태 없이 둡니다.
   const guestRef = guestReportRef(overview);
   const guestReport = useReport(guestRef?.reportId ?? "", guestRef?.token, Boolean(guestRef));
+  // 시연 건물에 공개 안내가 남아 있는지(초기화가 필요한지) 봅니다. 못 읽으면 그 조건은 넘어갑니다.
+  const homeGuides = usePublicGuides(home?.id ?? "", Boolean(home));
+  const needsReset = demoNeedsReset(overview, homeGuides.data?.length);
   const demoNames = overview.buildings
     .filter((building) => building.purpose === "demo")
     .map((building) => building.name)
@@ -87,11 +94,14 @@ function DemoStart({ overview }: { overview: DemoOverview }) {
     try {
       if (role.kind === "guest") {
         if (me.data) await logout.mutateAsync();
+        clearDemoRole();
         void navigate(demoDestination(role, null, overview));
       } else {
         // 시연 계정이라 약관 판을 함께 남겨, 역할을 바꿀 때마다 다시 동의 시트가 뜨지 않게 합니다.
         const next = await login.mutateAsync({ as: role.account.as, consent: TERMS_VERSION });
         forgetDemoGuestLinks(overview);
+        // 다른 화면 위에 ‘시연 중 · 역할’ 막대(components/DemoBar)를 띄우려고 이 탭에 남깁니다.
+        saveDemoRole({ userId: next.user.id, label: role.account.label });
         void navigate(demoDestination(role, next, overview));
       }
     } catch {
@@ -127,6 +137,27 @@ function DemoStart({ overview }: { overview: DemoOverview }) {
         <p className="wh-small dm-lead">
           역할을 바꿔도 {home?.name ?? "시연 건물"}의 안내와 제보 상태는 그대로 이어져요.
         </p>
+
+        <section className="dm-tour" aria-labelledby="dm-tour-title">
+          <h2 id="dm-tour-title" className="dm-tour__title">
+            둘러보는 순서
+          </h2>
+          <ol className="dm-tour__steps">
+            {DEMO_TOUR.map((step, index) => (
+              <li key={step.who} className="dm-tour__step">
+                <span className="dm-tour__num" aria-hidden="true">
+                  {index + 1}
+                </span>
+                <span>
+                  <strong>{step.who}</strong>: {step.what}
+                </span>
+              </li>
+            ))}
+          </ol>
+          <p className="dm-tour__caption">
+            쓰기는 팀 기기에서 보여 드려요. 둘러보기만 해도 흐름이 이어져요.
+          </p>
+        </section>
 
         {chooseError ? (
           <p className="wh-dock__error dm-error" role="alert">
@@ -168,6 +199,14 @@ function DemoStart({ overview }: { overview: DemoOverview }) {
           })}
         </ul>
 
+        <p className="dm-drift" role="status">
+          {needsReset ? (
+            <>
+              <Icon name="triangle-alert" />
+              <span>시연 상태가 바뀌었어요 · 운영자가 ‘시연 초기화’를 눌러 주세요</span>
+            </>
+          ) : null}
+        </p>
         <ResetBox />
       </div>
     </Screen>
