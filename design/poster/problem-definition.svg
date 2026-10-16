@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2502" height="1428" viewBox="0 0 1251 714">
+  <defs>
+    <style>
+      text{font-family:'Apple SD Gothic Neo',sans-serif;fill:#18212e}
+      .headline{font-size:51px;font-weight:800;letter-spacing:-1.4px}
+      .blue{fill:#2165d6}
+      .muted{fill:#6e7887}
+      .chart-label{font-size:29px;font-weight:600}
+      .flow-title{font-size:28px;font-weight:700}
+      .flow-body{font-size:23px}
+    </style>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#2165d6"/></marker>
+  </defs>
+  <rect width="1251" height="714" fill="#fff"/>
+  <text x="0" y="53" class="headline">집주인은 이미 알려줬지만,</text>
+  <text x="0" y="114" class="headline blue">새 입주자에게는 처음입니다</text>
+  <text x="0" y="178" font-size="27" class="muted">이사 온 첫날, 쓰레기를 어디에 버릴지부터 다시 묻습니다</text>
+
+  <text x="0" y="235" font-size="28" font-weight="700">생활안내를 받은 경로</text>
+  <text x="770" y="235" text-anchor="end" font-size="22" class="muted">31명 중</text>
+
+  <text x="0" y="300" class="chart-label">개인 카톡·문자</text>
+  <rect x="328" y="267" width="440" height="42" rx="5" fill="#edf3fc"/>
+  <rect x="328" y="267" width="312.2580645161" height="42" rx="5" fill="#2165d6"/>
+  <text x="796" y="305" font-size="47" font-weight="800" class="blue">22<tspan font-size="25" font-weight="600">명</tspan></text>
+
+  <text x="0" y="391" class="chart-label">현관 안내문</text>
+  <rect x="328" y="358" width="440" height="42" rx="5" fill="#edf3fc"/>
+  <rect x="328" y="358" width="255.4838709677" height="42" rx="5" fill="#7eabed"/>
+  <text x="796" y="396" font-size="47" font-weight="800">18<tspan font-size="25" font-weight="600">명</tspan></text>
+  <text x="328" y="432" font-size="21" class="muted">0</text>
+  <text x="768" y="432" text-anchor="end" font-size="21" class="muted">31명</text>
+  <text x="0" y="470" font-size="20" class="muted">월계1동 세입자 31명 · 복수응답</text>
+
+  <line x1="917" y1="224" x2="917" y2="433" stroke="#dce5f3" stroke-width="2"/>
+  <text x="1085" y="337" text-anchor="middle" font-size="133" font-weight="800" class="blue">0<tspan font-size="39" font-weight="600">명</tspan></text>
+  <text x="1085" y="382" text-anchor="middle" font-size="26" font-weight="700">이전 세입자에게</text>
+  <text x="1085" y="416" text-anchor="middle" font-size="26" font-weight="700">안내받은 사람</text>
+
+  <rect x="1" y="507" width="275" height="99" rx="13" fill="#f3f6fc" stroke="#d8e4f8"/>
+  <text x="138" y="547" text-anchor="middle" class="flow-title">집주인</text>
+  <text x="138" y="580" text-anchor="middle" class="flow-body">한 사람씩 안내</text>
+  <path d="M290 556H327" fill="none" stroke="#2165d6" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <rect x="346" y="507" width="372" height="99" rx="13" fill="#f3f6fc" stroke="#d8e4f8"/>
+  <text x="532" y="547" text-anchor="middle" class="flow-title">세입자 A의 카톡</text>
+  <text x="532" y="580" text-anchor="middle" class="flow-body">안내는 개인 대화에 남음</text>
+
+  <text x="823" y="518" text-anchor="middle" font-size="23" class="muted">이사</text>
+  <path d="M734 556H795M849 556H909" fill="none" stroke="#a2aec1" stroke-width="3" stroke-dasharray="8 6"/>
+  <path d="M808 543L833 568M833 543L808 568" fill="none" stroke="#2165d6" stroke-width="4" stroke-linecap="round"/>
+
+  <rect x="930" y="507" width="320" height="99" rx="13" fill="#edf3ff" stroke="#2165d6" stroke-width="2"/>
+  <text x="1090" y="547" text-anchor="middle" class="flow-title">새 입주자 B</text>
+  <text x="1090" y="580" text-anchor="middle" font-size="25" font-weight="700" class="blue">“어디에 버리죠?”</text>
+
+  <text x="0" y="674" font-size="34" font-weight="800" class="blue" letter-spacing="-0.6px">다음 사람이 올 때마다, 같은 안내를 다시 전해야 합니다</text>
+</svg>

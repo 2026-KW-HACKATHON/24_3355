@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2956" height="648" viewBox="0 0 1478 324">
+<defs><style>text{font-family:'Apple SD Gothic Neo',sans-serif;fill:#18212e}.blue{fill:#2165d6}.gray{fill:#738096}.title{font-size:30px;font-weight:800}.label{font-size:26px;font-weight:700}.value{font-size:70px;font-weight:800}.caption{font-size:22px;fill:#748096}</style></defs>
+<rect width="1478" height="324" fill="white"/>
+<rect x="0" y="0" width="718" height="324" rx="30" fill="#edf3fc"/>
+<rect x="760" y="0" width="718" height="324" rx="30" fill="#edf3fc"/>
+
+<text x="36" y="51" class="title">비아파트 전월세 계약 비중</text>
+<text x="36" y="132" class="value blue">57<tspan font-size="32">%</tspan></text>
+<text x="36" y="170" class="label">월계1동</text>
+<rect x="280" y="104" width="386" height="41" rx="6" fill="white"/>
+<rect x="280" y="104" width="220.02" height="41" rx="6" fill="#2165d6"/>
+
+<text x="36" y="231" font-size="64" font-weight="800" class="gray">20<tspan font-size="30">%</tspan></text>
+<text x="36" y="268" font-size="25" font-weight="700" class="gray">월계동 전체</text>
+<rect x="280" y="203" width="386" height="41" rx="6" fill="white"/>
+<rect x="280" y="203" width="77.2" height="41" rx="6" fill="#95b6e5"/>
+<text x="36" y="307" class="caption">월계1동 비아파트 중 94%는 다가구·다세대</text>
+
+<text x="800" y="111" font-size="82" font-weight="800" class="blue">47<tspan font-size="36">%</tspan></text>
+<text x="1021" y="49" font-size="28" font-weight="800">비아파트 계약이</text>
+<text x="1021" y="84" font-size="28" font-weight="800">12~2월에 집중</text>
+<text x="1021" y="115" class="caption">1년 계약의 절반 가까이가 석 달에</text>
+
+<line x1="884" y1="252" x2="1434" y2="252" stroke="#b7cce8" stroke-width="2"/>
+<rect x="909" y="151" width="86" height="101" rx="5" fill="#2165d6"/>
+<rect x="1101" y="170.1081081081" width="86" height="81.8918918919" rx="5" fill="#2165d6"/>
+<rect x="1293" y="171.018018018" width="86" height="80.981981982" rx="5" fill="#2165d6"/>
+<text x="952" y="142" text-anchor="middle" font-size="23" font-weight="700">111</text>
+<text x="1144" y="161" text-anchor="middle" font-size="23" font-weight="700">90</text>
+<text x="1336" y="162" text-anchor="middle" font-size="23" font-weight="700">89</text>
+<text x="952" y="283" text-anchor="middle" font-size="25" font-weight="700">12월</text>
+<text x="1144" y="283" text-anchor="middle" font-size="25" font-weight="700">1월</text>
+<text x="1336" y="283" text-anchor="middle" font-size="25" font-weight="700">2월</text>
+<text x="800" y="312" font-size="19" class="gray">월별 연평균 비아파트 전월세 계약 건수</text>
+</svg>

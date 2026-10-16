@@ -5,5 +5,7 @@
 - [함이 캐릭터 가이드](characters/hami/README.md): 외형·사용·제작 순서
 - [함이 생성 프롬프트](characters/hami/PROMPTS.md): 현재 턴어라운드·변형 템플릿·실제 요청과 검토 상태
 - [로파이 제작 규칙](../lofi/README.md): 화면 비율, 상태, 검토 방법
+- [architecture/](architecture/): AWS 배포 구성도(`wolgyeham-architecture-aws.svg`·`.png`)와 그림에 쓴 AWS 아이콘
+- [poster/](poster/): 포스터의 문제 정의 그림(SVG 원본과 PNG)
 
 캐릭터 이미지는 보존할 원본입니다. 문서 정리나 빌드 파일 정리 대상에 포함하지 않습니다. 실제 앱에 사용하는 자산과 검토용 콘셉트 시트를 구분합니다.

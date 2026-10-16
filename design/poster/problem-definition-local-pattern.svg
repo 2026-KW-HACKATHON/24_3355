@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2502" height="1428" viewBox="0 0 1251 714">
+<defs><style>text{font-family:'Apple SD Gothic Neo',sans-serif;fill:#19222f}.headline{font-size:48px;font-weight:800;letter-spacing:-1px}.blue{fill:#2165d6}.muted{fill:#6e7887}.subtitle{font-size:28px;font-weight:700}</style></defs>
+<rect width="1251" height="714" fill="white"/>
+<text x="0" y="53" class="headline">월계1동은 비아파트 계약이 많고,</text>
+<text x="0" y="112" class="headline blue">겨울에 계약이 몰립니다</text>
+<text x="0" y="170" font-size="27" class="muted">집주인이 직접 안내를 맡고, 새 입주자를 계속 맞는 동네</text>
+
+<text x="0" y="229" class="subtitle">비아파트 임대주거에 주목했습니다</text>
+<circle cx="151" cy="357" r="84" fill="none" stroke="#e8eef8" stroke-width="26"/>
+<circle cx="151" cy="357" r="84" fill="none" stroke="#2165d6" stroke-width="26" stroke-dasharray="300.8389125118 226.9486532913" transform="rotate(-90 151 357)"/>
+<text x="151" y="352" text-anchor="middle" font-size="65" font-weight="800" class="blue">57<tspan font-size="31">%</tspan></text>
+<text x="151" y="386" text-anchor="middle" font-size="25" font-weight="700">월계1동</text>
+<text x="151" y="494" text-anchor="middle" font-size="23" class="muted">전월세 계약 중 비아파트</text>
+
+<text x="330" y="308" font-size="25" class="muted">월계동 전체는</text>
+<text x="330" y="380" font-size="62" font-weight="800">20<tspan font-size="30">%</tspan></text>
+<text x="330" y="421" font-size="23" class="muted">비아파트 전월세 계약</text>
+<line x1="632" y1="213" x2="632" y2="510" stroke="#dce5f3" stroke-width="2"/>
+
+<text x="680" y="229" class="subtitle">계약이 겨울 석 달에 집중됩니다</text>
+<text x="680" y="307" font-size="66" font-weight="800" class="blue">47<tspan font-size="32">%</tspan></text>
+<text x="917" y="269" font-size="25" font-weight="700">1년 비아파트 계약 중</text>
+<text x="917" y="303" font-size="25" font-weight="700">12~2월에 몰리는 비중</text>
+<line x1="699" y1="451" x2="1221" y2="451" stroke="#c9d4e4" stroke-width="2"/>
+<rect x="725" y="340" width="88" height="111" rx="5" fill="#2165d6"/>
+<rect x="885" y="361" width="88" height="90" rx="5" fill="#2165d6"/>
+<rect x="1045" y="362" width="88" height="89" rx="5" fill="#2165d6"/>
+<text x="769" y="331" text-anchor="middle" font-size="24" font-weight="700">111</text>
+<text x="929" y="352" text-anchor="middle" font-size="24" font-weight="700">90</text>
+<text x="1089" y="353" text-anchor="middle" font-size="24" font-weight="700">89</text>
+<text x="769" y="484" text-anchor="middle" font-size="24" font-weight="700">12월</text>
+<text x="929" y="484" text-anchor="middle" font-size="24" font-weight="700">1월</text>
+<text x="1089" y="484" text-anchor="middle" font-size="24" font-weight="700">2월</text>
+<text x="699" y="515" font-size="20" class="muted">월별 연평균 비아파트 전월세 계약 건수</text>
+
+<rect x="0" y="550" width="1251" height="118" rx="13" fill="#eef4ff"/>
+<text x="25" y="594" font-size="32" font-weight="800">계약은 바뀌지만, 안내는 개인 카톡에 남습니다</text>
+<text x="25" y="641" font-size="29" font-weight="700" class="blue">새 입주자가 올 때마다, 집주인은 같은 안내를 다시 보냅니다</text>
+<text x="0" y="703" font-size="18" class="muted">계약 패턴: 국토교통부 전월세 자료 분석 · 안내 전달 문제: 실제 건물 사례에서 관찰</text>
+</svg>
