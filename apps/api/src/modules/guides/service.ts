@@ -17,7 +17,10 @@ import type { SessionUser } from "../../lib/context.ts";
 import type { Database } from "../../lib/db.ts";
 import { AppError } from "../../lib/errors.ts";
 import type { PhotoStore } from "../../lib/photoStore.ts";
+import type { PushSender } from "../../lib/push.ts";
+import type { TaskRunner } from "../../lib/tasks.ts";
 import * as buildingService from "../buildings/service.ts";
+import * as noticeService from "../notices/service.ts";
 import * as photoService from "../photos/service.ts";
 import * as repo from "./repo.ts";
 
@@ -206,6 +209,7 @@ async function requirePublishedGuide(db: Database, guideId: string) {
  */
 export async function createMemo(
   db: Database,
+  deps: { push: PushSender; tasks: TaskRunner },
   userId: string,
   guideId: string,
   input: CreateCorrectionMemoBody,
@@ -213,7 +217,7 @@ export async function createMemo(
   const guide = await requirePublishedGuide(db, guideId);
   if (await isManager(db, userId, guide.buildingId)) throw new AppError(403, "FORBIDDEN");
   await requireOccupancy(db, userId, guide.buildingId, { allow: ["active"] });
-  return db.transaction(async (tx) => {
+  const memo = await db.transaction(async (tx) => {
     await repo.lockMemoWriter(tx, guide.id, userId);
     const last = await repo.findLastMemoAt(tx, guide.id, userId);
     const retryAt = last ? last.getTime() + CORRECTION_MEMO_REPEAT_SECONDS * 1000 : 0;
@@ -229,6 +233,15 @@ export async function createMemo(
     if (!row) throw new Error("correction memo insert returned no row");
     return { ...repo.toCorrectionMemo(row), mine: true };
   });
+  // 집주인에게 새 메모를 알립니다(커밋 뒤, 메모 하나에 한 번). 메모 내용은 담지 않습니다.
+  noticeService.notifyManagers(db, deps, {
+    type: "memo",
+    buildingId: guide.buildingId,
+    title: "새 수정 메모가 왔어요",
+    body: guide.title,
+    url: `/manage/${guide.buildingId}/memos/${memo.id}`,
+  });
+  return memo;
 }
 
 /**

@@ -450,6 +450,19 @@ describe("landlord home (LF-13 42·24)", () => {
     expect(html).not.toContain("받은 상황");
     expect(html).toContain("아직 확인할 것은 없어요");
   });
+
+  it("lets the landlord turn on new memo and report alerts instead of a placeholder", () => {
+    // Given
+    const queryClient = landlordClient([]);
+    // When
+    const html = render(path, route, <LandlordHomeScreen />, queryClient);
+    // Then
+    expect(html).toContain("새 메모·제보 알림 받기");
+    expect(html).toContain("메모나 제보가 오면 바로 알려 드려요");
+    expect(html).not.toContain("다음 업데이트에서 열려요");
+    const row = html.slice(html.lastIndexOf("<button", html.indexOf("새 메모·제보 알림 받기")));
+    expect(row.slice(0, row.indexOf(">"))).not.toContain("disabled");
+  });
 });
 
 describe("memo review (LF-17 25)", () => {

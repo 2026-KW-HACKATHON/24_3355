@@ -3,6 +3,7 @@ import { sendJsonEmpty } from "../../lib/api";
 import { AppError } from "../../lib/errors";
 import { memoryStorage } from "../../test/memoryStorage";
 import {
+  disableManagerPush,
   disablePush,
   enablePush,
   forgetSubscription,
@@ -183,6 +184,67 @@ describe("turning notifications off (disablePush)", () => {
     // Then
     expect(existing.unsubscribe).toHaveBeenCalledOnce();
     expect(sendJsonEmpty).not.toHaveBeenCalled();
+    expect(loadSavedPush()).toBeUndefined();
+  });
+});
+
+describe("landlord memo and report alerts", () => {
+  it("saves the browser for manager alerts and marks it for both notices and alerts", async () => {
+    // Given
+    fakeBrowser();
+    vi.mocked(sendJsonEmpty).mockResolvedValueOnce(undefined);
+    // When
+    const result = await enablePush(KEY, USER, undefined, "manager");
+    // Then
+    expect(result).toBe("enabled");
+    expect(sendJsonEmpty).toHaveBeenCalledWith("post", "/api/manage/push-subscriptions", {
+      endpoint: ENDPOINT,
+      keys: { p256dh: "p256dh-key", auth: "auth-key" },
+    });
+    expect(isConfirmedSubscription(ENDPOINT, USER, loadSavedPush(), "manager")).toBe(true);
+    expect(isConfirmedSubscription(ENDPOINT, USER)).toBe(true);
+  });
+
+  it("does not count a notice-only subscription as manager alerts on", () => {
+    // Given
+    localStorage.setItem("wh.pushSaved", JSON.stringify({ endpoint: ENDPOINT, userId: USER }));
+    // Then
+    expect(isConfirmedSubscription(ENDPOINT, USER)).toBe(true);
+    expect(isConfirmedSubscription(ENDPOINT, USER, loadSavedPush(), "manager")).toBe(false);
+  });
+
+  it("keeps the browser subscription of a landlord who is also a resident", async () => {
+    // Given
+    const existing = fakeSubscription();
+    fakeBrowser({ existing });
+    localStorage.setItem(
+      "wh.pushSaved",
+      JSON.stringify({ endpoint: ENDPOINT, userId: USER, manager: true }),
+    );
+    vi.mocked(sendJsonEmpty).mockResolvedValueOnce(undefined);
+    // When
+    await disableManagerPush(true);
+    // Then
+    expect(sendJsonEmpty).toHaveBeenCalledWith("delete", "/api/manage/push-subscriptions", {
+      endpoint: ENDPOINT,
+    });
+    expect(existing.unsubscribe).not.toHaveBeenCalled();
+    expect(loadSavedPush()).toEqual({ endpoint: ENDPOINT, userId: USER, manager: false });
+  });
+
+  it("drops the browser subscription of a landlord who is not a resident", async () => {
+    // Given
+    const existing = fakeSubscription();
+    fakeBrowser({ existing });
+    localStorage.setItem(
+      "wh.pushSaved",
+      JSON.stringify({ endpoint: ENDPOINT, userId: USER, manager: true }),
+    );
+    vi.mocked(sendJsonEmpty).mockResolvedValueOnce(undefined);
+    // When
+    await disableManagerPush(false);
+    // Then
+    expect(existing.unsubscribe).toHaveBeenCalledOnce();
     expect(loadSavedPush()).toBeUndefined();
   });
 });

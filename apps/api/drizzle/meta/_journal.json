@@ -78,6 +78,20 @@
       "when": 1791690842315,
       "tag": "0010_photos",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792129418016,
+      "tag": "0011_manager_push_alerts",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792130326278,
+      "tag": "0012_content_translations",
+      "breakpoints": true
     }
   ]
 }

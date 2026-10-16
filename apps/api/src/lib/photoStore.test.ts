@@ -1,11 +1,14 @@
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { Readable } from "node:stream";
 import { NotFound, type S3Client } from "@aws-sdk/client-s3";
+import type { Bucket } from "@google-cloud/storage";
 import { describe, expect, it } from "vitest";
 import { parseEnv } from "./env.ts";
 import {
   buildingPhotoPrefix,
+  createGcsPhotoStore,
   createLocalPhotoStore,
   createMemoryPhotoStore,
   createPhotoStore,
@@ -162,5 +165,121 @@ describe("photo prefix delete", () => {
     ]);
     expect(sent[0]?.input["Prefix"]).toBe("dev/buildings/5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f01/");
     expect(sent[2]?.input["ContinuationToken"]).toBe("t");
+  });
+});
+
+/** 객체 이름 → 내용을 기억하는 가짜 GCS 버킷. 받은 호출을 `calls`에 남깁니다. */
+function fakeBucket(pageSize = 1000) {
+  const objects = new Map<string, { bytes: Buffer; contentType: string | undefined }>();
+  const calls: { name: string; target: string; options?: unknown }[] = [];
+  const notFound = () => Object.assign(new Error("No such object"), { code: 404 });
+  const file = (target: string) => ({
+    name: target,
+    async save(bytes: Buffer, options: { contentType?: string }) {
+      calls.push({ name: "save", target, options });
+      objects.set(target, { bytes: Buffer.from(bytes), contentType: options.contentType });
+    },
+    async getMetadata() {
+      calls.push({ name: "getMetadata", target });
+      const object = objects.get(target);
+      if (!object) throw notFound();
+      return [{ contentType: object.contentType, size: String(object.bytes.length) }];
+    },
+    createReadStream() {
+      calls.push({ name: "createReadStream", target });
+      return Readable.from([objects.get(target)?.bytes ?? Buffer.alloc(0)]);
+    },
+    async exists() {
+      calls.push({ name: "exists", target });
+      return [objects.has(target)];
+    },
+    async delete(options: { ignoreNotFound?: boolean }) {
+      calls.push({ name: "delete", target, options });
+      if (!objects.delete(target) && !options.ignoreNotFound) throw notFound();
+      return [{}];
+    },
+  });
+  const bucket = {
+    file,
+    async getFiles(query: { prefix: string; maxResults: number; pageToken?: string }) {
+      calls.push({ name: "getFiles", target: query.prefix, options: query });
+      // 실제 GCS처럼 이름 순으로, 다음 쪽은 마지막 이름 뒤부터 줍니다(지우는 중이어도 건너뛰지 않음).
+      const after = query.pageToken ?? "";
+      const names = [...objects.keys()]
+        .filter((name) => name.startsWith(query.prefix) && name > after)
+        .sort();
+      const page = names.slice(0, Math.min(pageSize, query.maxResults));
+      return [
+        page.map(file),
+        names.length > page.length ? { ...query, pageToken: page.at(-1) } : null,
+        {},
+      ];
+    },
+  };
+  return { bucket: bucket as unknown as Bucket, objects, calls };
+}
+
+describe("GCS photo store", () => {
+  it("prefixes object names, streams the body back, and maps missing objects to null/false", async () => {
+    // Given
+    const { bucket, objects, calls } = fakeBucket();
+    const store = createGcsPhotoStore({ bucket: "b", prefix: "gcp/", client: bucket });
+
+    // When
+    const before = await store.get(KEY);
+    await store.put(KEY, new Uint8Array([1, 2, 3]), "image/webp");
+    const exists = await store.exists(KEY);
+    const got = await store.get(KEY);
+    const body = got ? Buffer.from(await new Response(got.body).arrayBuffer()) : null;
+    await store.delete(KEY);
+    await store.delete(KEY);
+
+    // Then
+    expect(before).toBeNull();
+    expect(exists).toBe(true);
+    expect(got).toMatchObject({ contentType: "image/webp", size: 3 });
+    expect(body).toEqual(Buffer.from([1, 2, 3]));
+    expect(objects.size).toBe(0);
+    expect(await store.exists(KEY)).toBe(false);
+    expect(calls.every((call) => call.target === `gcp/${KEY}`)).toBe(true);
+    expect(calls.find((call) => call.name === "save")?.options).toMatchObject({
+      resumable: false,
+      contentType: "image/webp",
+    });
+    await expect(store.put("../../etc/passwd", new Uint8Array(), "x")).rejects.toThrow();
+    await expect(store.get("gcp/../x.webp")).rejects.toThrow();
+  });
+
+  it("deletes only the building's objects page by page", async () => {
+    // Given
+    const { bucket, objects, calls } = fakeBucket(2);
+    const store = createGcsPhotoStore({ bucket: "b", prefix: "gcp/", client: bucket });
+    const other = KEY.replace("4f01/", "4f09/");
+    for (const id of ["a", "b", "c"]) {
+      await store.put(KEY.replace("4f02", `4f0${id}`), new Uint8Array([1]), "image/webp");
+    }
+    await store.put(other, new Uint8Array([1]), "image/webp");
+    objects.set(`dev/${KEY}`, { bytes: Buffer.from([1]), contentType: "image/webp" });
+
+    // When
+    const count = await store.deletePrefix(
+      buildingPhotoPrefix("5A3E1C9D-2B47-4F86-9D10-7C2E5B8A4F01"),
+    );
+
+    // Then
+    expect(count).toBe(3);
+    expect([...objects.keys()].sort()).toEqual([`dev/${KEY}`, `gcp/${other}`]);
+    const pages = calls.filter((call) => call.name === "getFiles");
+    expect(pages).toHaveLength(2);
+    expect(pages[0]?.target).toBe("gcp/buildings/5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f01/");
+    await expect(store.deletePrefix("buildings/")).rejects.toThrow();
+  });
+
+  it("is created from the environment with a bucket and prefix", () => {
+    expect(
+      createPhotoStore(
+        parseEnv({ ...base, PHOTO_STORE: "gcs", PHOTO_BUCKET: "bucket-a", PHOTO_PREFIX: "gcp/" }),
+      )?.kind,
+    ).toBe("gcs");
   });
 });

@@ -129,6 +129,37 @@ describe("service worker push", () => {
       }),
     );
   });
+
+  it("shows a landlord memo or report alert with its own title and review path", async () => {
+    // Given
+    const { self, handlers } = loadWorker();
+    let done: Promise<unknown> = Promise.resolve();
+    // When
+    handlers["push"]?.({
+      data: {
+        json: () => ({
+          type: "memo",
+          buildingId: "b-1",
+          title: "새 수정 메모가 왔어요",
+          body: "분리수거 요일",
+          url: "/manage/b-1/memos/m-1",
+        }),
+      },
+      waitUntil: (promise: Promise<unknown>) => {
+        done = promise;
+      },
+    });
+    await done;
+    // Then
+    expect(self.registration.showNotification).toHaveBeenCalledWith(
+      "새 수정 메모가 왔어요",
+      expect.objectContaining({
+        body: "분리수거 요일",
+        tag: undefined,
+        data: { url: "/manage/b-1/memos/m-1" },
+      }),
+    );
+  });
 });
 
 describe("service worker notification click", () => {

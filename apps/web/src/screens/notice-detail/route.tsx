@@ -6,6 +6,9 @@ import { Link, Navigate, useParams } from "react-router";
 import { Icon } from "../../components/Icon";
 import { BackButton, Dock, Screen, TopBar } from "../../components/Screen";
 import { Delayed, EmptyState, LoadError, SkeletonLines } from "../../components/ScreenState";
+import { htmlLang, speechLang } from "../../features/assist/contentLang";
+import { LanguageBar } from "../../features/assist/LanguageBar";
+import { useTranslatedContent } from "../../features/assist/translated";
 import { useEndDemoOn } from "../../features/auth/endDemo";
 import { useMe } from "../../features/auth/queries";
 import { usePublicBuilding } from "../../features/buildings/queries";
@@ -89,6 +92,8 @@ function BackHomeDock({ home, label }: { home: string; label: string }) {
 
 function NoticeDetail({ notice, home }: { notice: Notice; home: string }) {
   const speech = useSpeech();
+  // 보기 언어(D-37). 번역은 제목·본문만이고 기간·대상 줄은 한국어 그대로예요.
+  const shown = useTranslatedContent("notice", notice.id, notice.publishedAt, notice);
   const building = usePublicBuilding(notice.buildingId);
   const target = building.data ? `${building.data.name} 전 세대` : "이 건물 전 세대";
   const period = formatPeriod(notice.startsAt, notice.endsAt);
@@ -105,6 +110,7 @@ function NoticeDetail({ notice, home }: { notice: Notice; home: string }) {
 
   function toggleSpeech() {
     if (speech.speaking) speech.stop();
+    else if (shown.lang) speech.speak(`${shown.title}.\n${shown.body}`, speechLang(shown.lang));
     else speech.speak(`${notice.title}.\n적용 기간, ${period}.\n${notice.body}`);
   }
 
@@ -153,8 +159,9 @@ function NoticeDetail({ notice, home }: { notice: Notice; home: string }) {
             {noticeTiming(notice.startsAt, notice.endsAt, Date.now())}
           </span>
         </div>
-        <h1 className="wh-h-title nd-title" tabIndex={-1}>
-          {notice.title}
+        <LanguageBar content={shown} />
+        <h1 className="wh-h-title nd-title" tabIndex={-1} lang={htmlLang(shown.lang)}>
+          {shown.title}
         </h1>
         <p className="wh-caption nd-meta">집주인 · {formatDay(notice.publishedAt)} 게시</p>
 
@@ -169,8 +176,10 @@ function NoticeDetail({ notice, home }: { notice: Notice; home: string }) {
           </div>
         </dl>
 
-        <PhotoList photos={notice.photos} label={notice.title} className="nd-photo" />
-        <p className="nd-body">{notice.body}</p>
+        <PhotoList photos={notice.photos} label={shown.title} className="nd-photo" />
+        <p className="nd-body" lang={htmlLang(shown.lang)}>
+          {shown.body}
+        </p>
 
         <p className="wh-note nd-note">
           <Icon name="info" />

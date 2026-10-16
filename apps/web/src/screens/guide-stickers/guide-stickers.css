@@ -1,0 +1,178 @@
+/* 안내 스티커(5×5cm, A4에 3칸 × 5줄). 크기는 모두 --st-mm(1mm)의 배수입니다. 화면에서는 종이 폭(cqi)에 맞춰
+   줄여 보이고(210mm = 100cqi), 인쇄하면 1mm 그대로라 화면·인쇄·내려받은 PNG(stickerImage.ts)가 같은 배치입니다. */
+.st-lead {
+  padding-top: var(--wh-space-2);
+  color: var(--wh-text-body);
+}
+.st-go.seed-action-button {
+  margin-top: var(--wh-space-5);
+}
+.st-pages {
+  container-type: inline-size;
+  display: grid;
+  gap: var(--wh-space-3);
+  margin: var(--wh-space-2) var(--wh-gutter) 0;
+}
+.st-sheet {
+  --st-mm: calc(100cqi / 210);
+  display: grid;
+  grid-template-columns: repeat(3, calc(var(--st-mm) * 50));
+  grid-auto-rows: calc(var(--st-mm) * 50);
+  column-gap: calc(var(--st-mm) * 10);
+  row-gap: calc(var(--st-mm) * 6);
+  align-content: start;
+  justify-content: center;
+  aspect-ratio: 210 / 297;
+  padding: calc(var(--st-mm) * 11.5) 0;
+  border: 1px solid var(--wh-border);
+  border-radius: var(--wh-radius-frame);
+  background: var(--wh-gray-0);
+  box-shadow: var(--wh-shadow-paper);
+  color: var(--wh-navy-600);
+  print-color-adjust: exact;
+}
+/* 점선이 오릴 자리입니다(스티커 가장자리). */
+.st-sticker {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: calc(var(--st-mm) * 0.8);
+  min-width: 0;
+  padding: calc(var(--st-mm) * 3);
+  outline: calc(var(--st-mm) * 0.25) dashed var(--wh-gray-400);
+  background: var(--wh-gray-0);
+  overflow: hidden;
+}
+.st-sticker__cat {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--st-mm) * 1);
+  font-size: calc(var(--st-mm) * 2.5);
+  font-weight: 700;
+  line-height: 1;
+}
+.st-sticker__cat svg {
+  flex: none;
+  width: calc(var(--st-mm) * 4);
+  height: calc(var(--st-mm) * 4);
+}
+.st-sticker__title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  min-height: calc(var(--st-mm) * 3.3 * 1.25 * 2);
+  overflow: hidden;
+  font-size: calc(var(--st-mm) * 3.3);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.st-sticker__qr {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+}
+.st-sticker__qr > * {
+  height: 100%;
+  width: auto;
+  aspect-ratio: 1;
+  max-width: 100%;
+}
+.st-sticker__foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: calc(var(--st-mm) * 1);
+  font-size: calc(var(--st-mm) * 1.8);
+  color: var(--wh-text-subtle);
+  white-space: nowrap;
+}
+.st-sticker__brand {
+  font-size: calc(var(--st-mm) * 2.5);
+  font-weight: 800;
+  color: var(--wh-navy-600);
+}
+.st-controls {
+  margin-top: var(--wh-space-4);
+}
+.st-one-title {
+  padding: 0;
+}
+.st-one-list {
+  display: grid;
+  gap: var(--wh-space-2);
+  margin-top: var(--wh-space-2);
+}
+.st-one {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-3);
+  padding: var(--wh-space-3) var(--wh-space-4);
+  border: 1px solid var(--wh-border);
+  border-radius: var(--wh-radius-l);
+  background: var(--wh-surface);
+}
+.st-one__text {
+  display: grid;
+  gap: var(--wh-space-0_5);
+  flex: 1;
+  min-width: 0;
+}
+.st-one__cat {
+  font-size: var(--wh-type-caption);
+  color: var(--wh-text-subtle);
+}
+.st-one__title {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 인쇄: 이 화면이 있는 동안만 A4 쪽 설정과 앱 틀 숨기기를 씁니다(현관 안내문·입주 카드 인쇄와 섞이지 않게) */
+@page guide-stickers {
+  size: A4;
+  margin: 0;
+}
+@media print {
+  .st-pages {
+    page: guide-stickers;
+    display: block;
+    width: 210mm;
+    margin: 0;
+  }
+  .st-sheet {
+    --st-mm: 1mm;
+    width: 210mm;
+    height: 297mm;
+    aspect-ratio: auto;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    break-after: page;
+    break-inside: avoid;
+  }
+  .st-sheet:last-child {
+    break-after: auto;
+  }
+  html:has(.st-pages),
+  html:has(.st-pages) body,
+  .wh-app:has(.st-pages),
+  .wh-screen:has(.st-pages) {
+    max-width: none;
+    min-height: 0;
+    padding: 0;
+    background: var(--wh-gray-0);
+  }
+  .wh-screen:has(.st-pages) > :not(main),
+  .wh-app:has(.st-pages) > :not(.wh-screen),
+  .st-screen-only {
+    display: none;
+  }
+  .wh-screen:has(.st-pages) > main {
+    padding: 0;
+    animation: none;
+  }
+}

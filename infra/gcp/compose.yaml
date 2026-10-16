@@ -1,0 +1,76 @@
+# GCP(Compute Engine e2-micro 한 대) 구성. AWS(infra/server)와 별개인 시험 환경입니다(docs/gcp.md, D-36).
+# caddy가 웹 파일과 /api를 한 주소로 받습니다. 밖에서 들어오는 입구는 caddy(80·443)뿐이고, API·DB 포트는 열지 않습니다.
+# 값은 같은 폴더의 .env(DB_PASSWORD·API_IMAGE·SITE_HOST)와 api.env(APP_ORIGIN·SESSION_SECRET·VAPID 등)에서 옵니다.
+# 두 파일은 배포 때 server.sh가 Secret Manager에서 받아 만듭니다(서버에만, 600 권한). 비밀이 아닌 설정은 여기 둡니다.
+name: wolgyeham
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wolgyeham
+      POSTGRES_DB: wolgyeham
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD}
+    command: >-
+      postgres -c shared_buffers=64MB -c max_connections=30 -c work_mem=4MB
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    mem_limit: 320m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wolgyeham"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    logging: &log
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  api:
+    image: ${API_IMAGE:?API_IMAGE}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: api.env
+    environment:
+      NODE_ENV: production
+      API_HOST: 0.0.0.0
+      API_PORT: "3001"
+      DATABASE_URL: postgres://wolgyeham:${DB_PASSWORD}@db:5432/wolgyeham
+      # 사진은 GCS 버킷의 gcp/ 아래에 둡니다. 자격 증명은 VM 서비스 계정(메타데이터 서버)에서 받습니다.
+      PHOTO_STORE: gcs
+      PHOTO_BUCKET: wolgyeham-kw2026-photos
+      PHOTO_PREFIX: gcp/
+      # caddy가 X-Forwarded-For 오른쪽에 접속 주소를 붙이므로 한 단계만 믿습니다.
+      TRUSTED_PROXY_HOPS: "1"
+      # 집주인 도우미(D-37): 안내 나누기(Vertex AI Gemini)와 번역(Cloud Translation). VM 계정 권한으로 부릅니다.
+      GCP_PROJECT: wolgyeham-kw2026
+      GEMINI_ENABLED: "true"
+      TRANSLATION_ENABLED: "true"
+    mem_limit: 256m
+    logging: *log
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      SITE_HOST: ${SITE_HOST:?SITE_HOST}
+      GOMEMLIMIT: 48MiB
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./web:/srv/web:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    mem_limit: 64m
+    logging: *log
+
+volumes:
+  postgres-data:
+  caddy-data:
+  caddy-config:

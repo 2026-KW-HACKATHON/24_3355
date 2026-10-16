@@ -21,6 +21,7 @@ export const ERROR_CODES = [
   "PAYLOAD_TOO_LARGE",
   "PHOTO_INVALID",
   "PHOTO_STORAGE_UNAVAILABLE",
+  "UPSTREAM_FAILED",
   "INTERNAL_ERROR",
 ] as const;
 export const ErrorCode = z.enum(ERROR_CODES);

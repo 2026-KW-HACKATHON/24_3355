@@ -93,15 +93,112 @@
   margin: var(--wh-space-3) var(--wh-gutter) 0;
 }
 
-/* 인쇄: 카드만 종이에 */
+.mc-size {
+  margin-top: var(--wh-space-4);
+}
+.mc-size__hint {
+  margin-top: var(--wh-space-2);
+}
+
+/* 명함 크기 카드(90×50mm). 크기는 모두 --mc-mm(1mm)의 배수입니다. 화면 미리 보기는 카드 폭(cqi)에 맞춰
+   줄이고(90mm = 100cqi), 인쇄하면 1mm 그대로입니다. */
+.mc-bizpreview {
+  container-type: inline-size;
+  margin: var(--wh-space-2) var(--wh-gutter) 0;
+}
+.mc-biz {
+  display: grid;
+  grid-template-columns: calc(var(--mc-mm) * 30) minmax(0, 1fr);
+  gap: calc(var(--mc-mm) * 4);
+  width: calc(var(--mc-mm) * 90);
+  height: calc(var(--mc-mm) * 50);
+  padding: calc(var(--mc-mm) * 4);
+  overflow: hidden;
+  border: calc(var(--mc-mm) * 0.25) dashed var(--wh-gray-400);
+  background: var(--wh-gray-0);
+  color: var(--wh-navy-600);
+  print-color-adjust: exact;
+}
+.mc-bizpreview .mc-biz {
+  --mc-mm: calc(100cqi / 90);
+  border-radius: var(--wh-radius-icon);
+  box-shadow: var(--wh-shadow-paper);
+}
+.mc-biz__qr {
+  display: grid;
+  align-content: center;
+  gap: calc(var(--mc-mm) * 1.2);
+  text-align: center;
+  font-size: calc(var(--mc-mm) * 2);
+  font-weight: 600;
+  color: var(--wh-text-subtle);
+  white-space: nowrap;
+}
+.mc-biz__qr .wh-qr {
+  width: 100%;
+  height: auto;
+}
+.mc-biz__side {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.mc-biz__brand {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--mc-mm) * 1.2);
+  font-size: calc(var(--mc-mm) * 2.6);
+  font-weight: 800;
+}
+.mc-biz__brand .mc-card__stamp {
+  width: calc(var(--mc-mm) * 2.6);
+  height: calc(var(--mc-mm) * 3);
+}
+.mc-biz__name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  margin-top: calc(var(--mc-mm) * 1.5);
+  overflow: hidden;
+  font-size: calc(var(--mc-mm) * 3.6);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  word-break: keep-all;
+}
+.mc-biz__label {
+  margin-top: auto;
+  font-size: calc(var(--mc-mm) * 2.2);
+  font-weight: 700;
+  color: var(--wh-text-body);
+}
+.mc-biz__code {
+  margin-top: calc(var(--mc-mm) * 0.6);
+  font-size: calc(var(--mc-mm) * 5.6);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: calc(var(--mc-mm) * 0.7);
+  font-variant-numeric: tabular-nums;
+}
+.mc-biz__how {
+  margin-top: calc(var(--mc-mm) * 0.6);
+  font-size: calc(var(--mc-mm) * 1.9);
+  color: var(--wh-text-subtle);
+  word-break: keep-all;
+}
+.mc-biz__host {
+  margin-top: calc(var(--mc-mm) * 1);
+  text-align: right;
+  font-size: calc(var(--mc-mm) * 1.8);
+  color: var(--wh-text-muted);
+}
+.mc-bizsheet {
+  display: none;
+}
+
+/* 인쇄: 기본 카드는 카드만 종이에. 이 화면이 있을 때만 적용합니다(다른 인쇄 화면과 섞이지 않게) */
 @media print {
-  body * {
-    visibility: hidden;
-  }
-  .mc-card,
-  .mc-card * {
-    visibility: visible;
-  }
   .mc-card {
     position: absolute;
     top: 0;
@@ -109,6 +206,53 @@
     width: 90mm;
     margin: 0;
     box-shadow: none;
+  }
+  body:has(.mc-card) * {
+    visibility: hidden;
+  }
+  body:has(.mc-card) .mc-card,
+  body:has(.mc-card) .mc-card * {
+    visibility: visible;
+  }
+}
+
+/* 인쇄: 명함 크기는 A4 한 장에 2칸 × 5줄, 카드끼리 붙여 절취선을 함께 씁니다 */
+@page move-in-bizcard {
+  size: A4;
+  margin: 0;
+}
+@media print {
+  .mc-bizsheet {
+    --mc-mm: 1mm;
+    page: move-in-bizcard;
+    display: grid;
+    grid-template-columns: repeat(2, 90mm);
+    grid-auto-rows: 50mm;
+    align-content: start;
+    justify-content: center;
+    width: 210mm;
+    height: 297mm;
+    padding-top: 23.5mm;
+    break-inside: avoid;
+  }
+  html:has(.mc-bizsheet),
+  html:has(.mc-bizsheet) body,
+  .wh-app:has(.mc-bizsheet),
+  .wh-screen:has(.mc-bizsheet) {
+    max-width: none;
+    min-height: 0;
+    padding: 0;
+    background: var(--wh-gray-0);
+  }
+  .wh-screen:has(.mc-bizsheet) > :not(main),
+  .wh-app:has(.mc-bizsheet) > :not(.wh-screen),
+  .mc-bizpreview,
+  .mc-screen-only {
+    display: none;
+  }
+  .wh-screen:has(.mc-bizsheet) > main {
+    padding: 0;
+    animation: none;
   }
 }
 /* 회색 화면에서 중립 버튼이 바탕과 섞이지 않게 */

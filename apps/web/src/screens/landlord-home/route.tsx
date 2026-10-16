@@ -10,8 +10,8 @@ import type {
 } from "@wolgyeham/contracts";
 import { useState } from "react";
 import { Link, useParams } from "react-router";
-import { Icon, type IconName } from "../../components/Icon";
-import { Screen, SoonNote, TopBar } from "../../components/Screen";
+import { Icon } from "../../components/Icon";
+import { Screen, TopBar } from "../../components/Screen";
 import { LandlordTabs } from "../../components/TabBar";
 import { useToast } from "../../components/useToast";
 import { ManagerGate } from "../../features/auth/ManagerGate";
@@ -19,6 +19,8 @@ import { useManagedBuildings } from "../../features/buildings/queries";
 import { CATEGORY, joinCategoryLabels, missingCategories } from "../../features/guides/categories";
 import { useBuildingMemos } from "../../features/guides/memos";
 import { useNoticeAudience, useNotices } from "../../features/notices/queries";
+import { NotifyChoiceSheet } from "../../features/push/NotifyChoiceSheet";
+import { usePushEnv } from "../../features/push/queries";
 import { formatReportTime, reportTitle } from "../../features/reports/labels";
 import { useBuildingReports } from "../../features/reports/queries";
 import { formatDate, formatDay } from "../../lib/format";
@@ -46,6 +48,10 @@ function LandlordHome({ detail }: { detail: ManagedBuildingDetail }) {
   const pendingMemos = useBuildingMemos(building.id, "pending", published.length > 0);
   const toast = useToast();
   const [shareError, setShareError] = useState<string>();
+  const [alertOpen, setAlertOpen] = useState(false);
+  // 이 휴대폰에서 새 메모·제보 알림을 켰는지(이어서 할 것의 첫 줄). 시트가 열린 동안은 시트가 확인합니다.
+  const alerts = usePushEnv(published.length > 0 && !alertOpen, "manager");
+  const alertsOn = alerts.env?.kind === "enabled";
 
   // 확인할 것: 확인 전 메모(pendingMemoCount)와 아직 ‘확인했어요’를 누르지 않은 제보(newReportCount).
   // 메모 목록이 오면 그 수를, 아니면 요약의 수를 씁니다. 둘 다 모르면 ‘없음’이라고 하지 않습니다.
@@ -240,7 +246,22 @@ function LandlordHome({ detail }: { detail: ManagedBuildingDetail }) {
         </div>
         <ul className="lh-list">
           <li>
-            <SoonRow id="lh-soon-alert" icon="bell-off" title="새 메모·제보 알림 받기" warn />
+            <button
+              type="button"
+              className={alertsOn ? "lh-row" : "lh-row lh-row--warn"}
+              onClick={() => setAlertOpen(true)}
+            >
+              <span className="lh-row__ic">
+                <Icon name={alertsOn ? "bell" : "bell-off"} />
+              </span>
+              <span className="lh-row__text">
+                <span className="lh-row__title">새 메모·제보 알림 받기</span>
+                <span className="lh-row__sub">
+                  {alertsOn ? "이 휴대폰으로 받고 있어요" : "메모나 제보가 오면 바로 알려 드려요"}
+                </span>
+              </span>
+              <Icon name="chevron-right" className="lh-row__chev" />
+            </button>
           </li>
           <li>
             <button type="button" className="lh-row" onClick={() => void shareBuildingLink()}>
@@ -366,6 +387,13 @@ function LandlordHome({ detail }: { detail: ManagedBuildingDetail }) {
           {guideSection}
         </>
       )}
+      <NotifyChoiceSheet
+        open={alertOpen}
+        onOpenChange={setAlertOpen}
+        context="settings"
+        audience="manager"
+        linkPath={`${base}/settings?notify=1`}
+      />
     </Screen>
   );
 }
@@ -615,34 +643,5 @@ function GuideRow({ guide, base, memoCount }: { guide: Guide; base: string; memo
       </span>
       <Icon name="chevron-right" className="lh-row__chev" />
     </Link>
-  );
-}
-
-function SoonRow({
-  id,
-  icon,
-  title,
-  warn = false,
-}: {
-  id: string;
-  icon: IconName;
-  title: string;
-  warn?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      className={warn ? "lh-row lh-row--warn" : "lh-row"}
-      disabled
-      aria-describedby={id}
-    >
-      <span className="lh-row__ic">
-        <Icon name={icon} />
-      </span>
-      <span className="lh-row__text">
-        <span className="lh-row__title">{title}</span>
-        <SoonNote id={id} />
-      </span>
-    </button>
   );
 }

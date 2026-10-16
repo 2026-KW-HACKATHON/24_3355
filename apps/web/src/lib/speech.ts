@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-// 읽어주기: Web Speech API speechSynthesis, ko-KR. 사용자가 누른 이벤트 안에서 시작합니다(iOS).
+// 읽어주기: Web Speech API speechSynthesis. 기본은 ko-KR이고, 기계 번역을 보고 있으면 그 언어로 읽습니다(D-37).
+// 사용자가 누른 이벤트 안에서 시작합니다(iOS).
 export function canSpeak(): boolean {
   return (
     typeof window !== "undefined" &&
@@ -9,10 +10,15 @@ export function canSpeak(): boolean {
   );
 }
 
-function koreanVoice(): SpeechSynthesisVoice | undefined {
-  return window.speechSynthesis
-    .getVoices()
-    .find((voice) => voice.lang.toLowerCase().startsWith("ko"));
+/** `lang`(예: zh-CN)과 같은 음성, 없으면 앞 언어(zh)가 같은 음성. 없으면 브라우저가 고릅니다. */
+function voiceFor(lang: string): SpeechSynthesisVoice | undefined {
+  const voices = window.speechSynthesis.getVoices();
+  const wanted = lang.toLowerCase();
+  const base = wanted.split("-")[0] ?? wanted;
+  return (
+    voices.find((voice) => voice.lang.toLowerCase().replace("_", "-") === wanted) ??
+    voices.find((voice) => voice.lang.toLowerCase().startsWith(base))
+  );
 }
 
 export function useSpeech() {
@@ -27,12 +33,12 @@ export function useSpeech() {
     setSpeaking(false);
   }, []);
 
-  const speak = useCallback((text: string) => {
+  const speak = useCallback((text: string, lang = "ko-KR") => {
     if (!canSpeak()) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "ko-KR";
-    const voice = koreanVoice();
+    utterance.lang = lang;
+    const voice = voiceFor(lang);
     if (voice) utterance.voice = voice;
     const finish = () => {
       if (current.current === utterance) {

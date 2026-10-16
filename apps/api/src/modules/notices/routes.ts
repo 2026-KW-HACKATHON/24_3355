@@ -168,4 +168,41 @@ export const noticeRoutes = new Hono<AppEnv>()
       await noticeService.unsubscribe(c.var.db, user.id, c.req.valid("json").endpoint);
       return c.body(null, 204);
     },
+  )
+  .post(
+    "/manage/push-subscriptions",
+    describeRoute({
+      tags: ["manage"],
+      summary:
+        "이 브라우저에서 새 수정 메모·제보 알림 켜기 (집주인). 공지 알림 구독과 같은 행, 10분에 10번, 사용자마다 최근 5개",
+      responses: {
+        204: { description: "저장함. 같은 브라우저면 덮어씀" },
+        ...errorResponses(400, 401, 403, 429),
+      },
+    }),
+    validator("json", PushSubscriptionBody, onInvalid),
+    async (c) => {
+      const user = requireUser(c);
+      // 시연 계정은 알림을 켤 수 없습니다(D-35).
+      if (await isDemoAccount(c.var.db, user.id)) {
+        throw new AppError(403, "FORBIDDEN", { account: "demo" });
+      }
+      await noticeService.subscribeManager(c.var.db, user.id, c.req.valid("json"));
+      return c.body(null, 204);
+    },
+  )
+  .delete(
+    "/manage/push-subscriptions",
+    describeRoute({
+      tags: ["manage"],
+      summary:
+        "이 브라우저에서 새 수정 메모·제보 알림 끄기 (로그인 필요, 없어도 204). 거주자로 연결돼 있으면 공지 알림 구독은 남김",
+      responses: { 204: { description: "껐음" }, ...errorResponses(400, 401) },
+    }),
+    validator("json", DeletePushSubscriptionBody, onInvalid),
+    async (c) => {
+      const user = requireUser(c);
+      await noticeService.unsubscribeManager(c.var.db, user.id, c.req.valid("json").endpoint);
+      return c.body(null, 204);
+    },
   );

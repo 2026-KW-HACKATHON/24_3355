@@ -230,6 +230,10 @@ done
 - [ ] 포스터 QR `/demo`는 둘러보기만 되고, 시연 중인 휴대폰으로 실제 건물(현관 QR)을 열면 시연이 끝나는지 확인 (D-35)
 - [ ] 예산 알림 메일이 오지 않았다
 
+## GCP 시험 환경
+
+AWS와 따로 도는 GCP 시험 환경(e2-micro 한 대, https://gcp.34-143-67-39.sslip.io)이 있습니다. 자동 배포가 없고 관리자가 `bash infra/gcp/deploy.sh`로 올립니다. 이 문서의 AWS 절차와 섞지 않습니다. 구성·비용·비밀·백업·내리기는 [gcp.md](gcp.md), 이유는 [decisions.md D-36](decisions.md#d-36-gcp-시험-환경을-aws와-따로-둔다)을 봅니다.
+
 ## 바꿀 때
 
 배포 방식을 바꾸면 이 문서, 워크플로, `infra/server/`를 같은 PR에서 고치고 [decisions.md](decisions.md)에 기록합니다.

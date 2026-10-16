@@ -2,6 +2,7 @@
 // (1240×1754px)를 두 배로 키운 것이라, 화면·인쇄·내려받은 이미지가 같은 모양입니다. 색은 --wh-* 토큰을 읽습니다.
 import { encode } from "uqr";
 import qrSignHami from "../../assets/hami/qr-sign.png";
+import { saveCanvasPng, cssToken as token } from "../../lib/canvasPng";
 import { SIGN_SCAN, SIGN_TITLE } from "./signContent";
 
 const W = 1240;
@@ -17,10 +18,6 @@ export type SignImageInput = {
   topics: string;
   joinCode?: string | undefined;
 };
-
-function token(name: string): string {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
 
 function loadImage(src: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
@@ -172,16 +169,5 @@ export async function downloadEntranceSignPng(
   fileName: string,
 ): Promise<boolean> {
   const canvas = await drawEntranceSign(input);
-  if (!canvas) return false;
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
-  if (!blob) return false;
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  document.body.append(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 10_000);
-  return true;
+  return canvas ? saveCanvasPng(canvas, fileName) : false;
 }

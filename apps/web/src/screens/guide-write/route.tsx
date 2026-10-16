@@ -1,6 +1,7 @@
 // LF-14 기본 안내 쓰기 · lofi 33 (미리 보기 43은 guide-preview)
 // 공개한 안내는 공개 내용을 두고 수정본에 저장합니다(D-12). 닫기는 수정본을 지우고(편집 취소) 공개 내용은 그대로입니다.
 // 메모 검토(25)에서 오면 `?apply=`로 반영할 메모를 들고 와 위에 보여줍니다.
+// 새 안내는 서버가 켰으면(D-37) ‘카톡 통째로 붙여넣기’(SplitPaste)로 여러 초안을 한 번에 만들 수 있습니다.
 import { ActionButton, Dialog, Portal, Skeleton } from "@seed-design/react";
 import {
   CreateGuideBody,
@@ -16,6 +17,7 @@ import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { Icon } from "../../components/Icon";
 import { BackButton, Dock, Screen, TopBar, useGoBack } from "../../components/Screen";
 import { Delayed, EmptyState, LoadError, SkeletonLines } from "../../components/ScreenState";
+import { useAssistConfig } from "../../features/assist/queries";
 import { ManagerGate } from "../../features/auth/ManagerGate";
 import { applySearch, readApplyIds } from "../../features/guides/applyMemos";
 import { CATEGORY, CATEGORY_ORDER } from "../../features/guides/categories";
@@ -36,6 +38,7 @@ import {
 import { PhotoPicker, usePhotoPicker } from "../../features/photos/PhotoPicker";
 import { sameKeys } from "../../features/photos/pickerState";
 import { type AppError, errorMessage, toAppError } from "../../lib/errors";
+import { SplitPaste } from "./SplitPaste";
 import "./guide-write.css";
 
 type Field = "title" | "body";
@@ -46,7 +49,7 @@ export function Component() {
   return (
     <ManagerGate buildingId={buildingId}>
       {(detail, me) => {
-        if (!guideId) return <GuideForm detail={detail} userId={me.user.id} />;
+        if (!guideId) return <NewGuide detail={detail} userId={me.user.id} />;
         const guide = detail.guides.find((item) => item.id === guideId);
         if (!guide) return <WriteMissing detail={detail} />;
         if (guide.status === "published") {
@@ -55,6 +58,22 @@ export function Component() {
         return <GuideForm key={guide.id} detail={detail} guide={guide} userId={me.user.id} />;
       }}
     </ManagerGate>
+  );
+}
+
+/** 새 안내: 직접 쓰기(폼) 또는 카톡 통째로 붙여넣기. 폼에 쓰던 값은 이 기기에 남아 돌아오면 이어집니다. */
+function NewGuide({ detail, userId }: { detail: ManagedBuildingDetail; userId: string }) {
+  const { guideSplit } = useAssistConfig();
+  const [splitting, setSplitting] = useState(false);
+  if (guideSplit && splitting) {
+    return <SplitPaste detail={detail} onClose={() => setSplitting(false)} />;
+  }
+  return (
+    <GuideForm
+      detail={detail}
+      userId={userId}
+      {...(guideSplit ? { onSplit: () => setSplitting(true) } : {})}
+    />
   );
 }
 
@@ -191,12 +210,15 @@ function GuideForm({
   guide,
   userId,
   revision,
+  onSplit,
 }: {
   detail: ManagedBuildingDetail;
   guide?: Guide;
   userId: string;
   /** 공개한 안내를 고칠 때만: 저장한 수정본(없으면 null). */
   revision?: GuideRevision | null;
+  /** 새 안내이고 서버가 켰을 때만: 카톡 통째로 붙여넣기 열기. */
+  onSplit?: () => void;
 }) {
   const revise = guide?.status === "published";
   const { search } = useLocation();
@@ -400,6 +422,18 @@ function GuideForm({
               붙여넣기
             </button>
           </div>
+          {onSplit ? (
+            <button type="button" className="gw-split-entry" onClick={onSplit}>
+              <Icon name="wand-sparkles" />
+              <span className="gw-split-entry__text">
+                <span className="gw-split-entry__title">카톡 통째로 붙여넣기</span>
+                <span className="gw-split-entry__sub">
+                  여러 안내를 한꺼번에 붙여넣으면 주제별 초안으로 나눠 드려요
+                </span>
+              </span>
+              <Icon name="chevron-right" />
+            </button>
+          ) : null}
 
           <fieldset className="gw-fieldset">
             <legend className="wh-field-label">종류</legend>

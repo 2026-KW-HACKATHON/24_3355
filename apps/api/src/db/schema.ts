@@ -22,10 +22,12 @@ import {
   REPORTER_KINDS,
   TIP_BODY_MAX,
   TIP_CATEGORIES,
+  TRANSLATION_LANGS,
 } from "@wolgyeham/contracts";
 import { type SQL, sql } from "drizzle-orm";
 import {
   type AnyPgColumn,
+  boolean,
   check,
   index,
   integer,
@@ -388,7 +390,8 @@ export const occupancies = pgTable(
 
 /**
  * 브라우저(기기)마다 한 행. `p256dh`·`auth`는 알림 암호화에 필요해서 원문으로 둡니다. 사용자마다 최근 5개만
- * 두고, 404·410이 아닌 실패가 3번 이어지면(`failure_count`) 지웁니다.
+ * 두고, 404·410이 아닌 실패가 3번 이어지면(`failure_count`) 지웁니다. `manager_alerts`는 집주인이 이 기기에서
+ * 새 메모·제보 알림을 켰는지입니다(거주자 공지 알림은 이 값과 상관없이 연결로 정합니다).
  */
 export const pushSubscriptions = pgTable(
   "push_subscriptions",
@@ -401,6 +404,7 @@ export const pushSubscriptions = pgTable(
     p256dh: text("p256dh").notNull(),
     auth: text("auth").notNull(),
     failureCount: integer("failure_count").notNull().default(0),
+    managerAlerts: boolean("manager_alerts").notNull().default(false),
     ...timestamps,
   },
   (t) => [
@@ -644,5 +648,30 @@ export const rateLimits = pgTable(
   (t) => [
     uniqueIndex("rate_limits_bucket_subject_key_key").on(t.bucket, t.subjectKey),
     index("rate_limits_updated_at_idx").on(t.updatedAt),
+  ],
+);
+
+/**
+ * 공개 안내·공지의 기계 번역 캐시(D-37, Cloud Translation). 원문(안내 또는 공지 하나)과 언어마다 한 행이고,
+ * `source_hash`는 번역한 때의 제목·본문 SHA-256입니다. 원문이 바뀌면 다음 요청이 다시 번역해 이 행을 덮어씁니다.
+ * 원문을 지우면 함께 지워집니다.
+ */
+export const contentTranslations = pgTable(
+  "content_translations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    guideId: uuid("guide_id").references(() => guides.id, { onDelete: "cascade" }),
+    noticeId: uuid("notice_id").references(() => notices.id, { onDelete: "cascade" }),
+    lang: text("lang", { enum: TRANSLATION_LANGS }).notNull(),
+    sourceHash: text("source_hash").notNull(),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    ...timestamps,
+  },
+  (t) => [
+    check("content_translations_lang_check", oneOf(t.lang, TRANSLATION_LANGS)),
+    check("content_translations_source_check", sql`num_nonnulls(${t.guideId}, ${t.noticeId}) = 1`),
+    uniqueIndex("content_translations_guide_id_lang_key").on(t.guideId, t.lang),
+    uniqueIndex("content_translations_notice_id_lang_key").on(t.noticeId, t.lang),
   ],
 );

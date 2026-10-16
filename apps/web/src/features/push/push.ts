@@ -8,52 +8,70 @@ const SW_URL = "/sw.js";
 
 /**
  * 서버가 저장을 확인한 구독(endpoint·계정). 브라우저 구독이 있어도 서버 저장이 확인되지 않았으면
- * ‘켜짐’으로 보이지 않습니다(저장 실패·다른 계정으로 로그인).
+ * ‘켜짐’으로 보이지 않습니다(저장 실패·다른 계정으로 로그인). `manager`는 집주인 새 메모·제보 알림까지
+ * 켠 것을 서버가 확인했는지입니다(서버 구독 행은 하나이고 `manager_alerts`로 나눕니다).
  */
 const SAVED_KEY = "wh.pushSaved";
 
-type SavedPush = { endpoint: string; userId: string };
+/** 알림을 받는 쪽. 거주자는 새 공지, 집주인은 새 수정 메모·제보입니다. */
+export type PushAudience = "resident" | "manager";
+
+type SavedPush = { endpoint: string; userId: string; manager: boolean };
 
 export function loadSavedPush(): SavedPush | undefined {
   try {
     const value: unknown = JSON.parse(localStorage.getItem(SAVED_KEY) ?? "null");
     if (typeof value !== "object" || value === null) return undefined;
-    const { endpoint, userId } = value as Record<string, unknown>;
+    const { endpoint, userId, manager } = value as Record<string, unknown>;
     return typeof endpoint === "string" && typeof userId === "string"
-      ? { endpoint, userId }
+      ? { endpoint, userId, manager: manager === true }
       : undefined;
   } catch {
     return undefined;
   }
 }
 
-function markSaved(endpoint: string, userId: string) {
+/**
+ * 저장을 기록합니다. `manager`를 주지 않으면(공지 알림 저장) 같은 구독·계정의 기록에 있던 값을 둡니다.
+ * 서버도 같은 계정이 다시 저장하면 메모·제보 알림을 그대로 둡니다.
+ */
+function markSaved(endpoint: string, userId: string, manager?: boolean) {
+  const before = loadSavedPush();
+  const same = before?.endpoint === endpoint && before.userId === userId;
+  const value = { endpoint, userId, manager: manager ?? (same && before.manager) };
   try {
-    localStorage.setItem(SAVED_KEY, JSON.stringify({ endpoint, userId }));
+    localStorage.setItem(SAVED_KEY, JSON.stringify(value));
   } catch {
     // 저장소가 막히면 다음에 열 때 다시 저장해 확인합니다.
   }
 }
 
-export function clearSavedPush() {
+/** 확인 기록을 지웁니다. `manager`면 공지 알림 기록은 두고 메모·제보 알림 표시만 지웁니다. */
+export function clearSavedPush(audience: PushAudience = "resident") {
   try {
-    localStorage.removeItem(SAVED_KEY);
+    const before = audience === "manager" ? loadSavedPush() : undefined;
+    if (before) localStorage.setItem(SAVED_KEY, JSON.stringify({ ...before, manager: false }));
+    else localStorage.removeItem(SAVED_KEY);
   } catch {
     // 무시
   }
 }
 
-/** 이 브라우저 구독이 지금 계정으로 서버에 저장된 것인지. */
+/**
+ * 이 브라우저 구독이 지금 계정으로 서버에 저장된 것인지. `audience`가 manager면 메모·제보 알림까지 켠 것인지.
+ */
 export function isConfirmedSubscription(
   endpoint: string | undefined,
   userId: string | undefined,
   saved: SavedPush | undefined = loadSavedPush(),
+  audience: PushAudience = "resident",
 ): boolean {
   return (
     endpoint !== undefined &&
     userId !== undefined &&
     saved?.endpoint === endpoint &&
-    saved.userId === userId
+    saved.userId === userId &&
+    (audience === "resident" || saved.manager)
   );
 }
 
@@ -117,13 +135,32 @@ function sameServerKey(subscription: PushSubscription, publicKey: string): boole
  * 오류를 그대로 던집니다. 남겨 두면 화면은 ‘켜짐’처럼 보이는데 알림은 오지 않거나, 이전 계정으로
  * 저장된 구독이 계속 알림을 받습니다.
  */
-async function saveOrUnsubscribe(subscription: PushSubscription, userId: string) {
+async function saveOrUnsubscribe(
+  subscription: PushSubscription,
+  userId: string,
+  audience: PushAudience = "resident",
+) {
+  // 집주인 알림 저장이 실패해도 공지 알림만 켜 둔 구독이면 끊지 않습니다(거주자이기도 한 집주인).
+  const saved = loadSavedPush();
+  const keep =
+    audience === "manager" &&
+    isConfirmedSubscription(subscription.endpoint, userId, saved) &&
+    saved?.manager === false;
   try {
     const parsed = PushSubscriptionBody.safeParse(subscription.toJSON());
     if (!parsed.success) throw new AppError("INTERNAL_ERROR");
-    await sendJsonEmpty("post", "/api/push-subscriptions", parsed.data);
-    markSaved(subscription.endpoint, userId);
+    await sendJsonEmpty(
+      "post",
+      audience === "manager" ? "/api/manage/push-subscriptions" : "/api/push-subscriptions",
+      parsed.data,
+    );
+    // 서버 구독 행은 하나라서, 집주인 알림을 켜도 거주자 공지 알림 기준으로는 저장된 구독입니다.
+    markSaved(subscription.endpoint, userId, audience === "manager" ? true : undefined);
   } catch (error) {
+    if (keep) {
+      clearSavedPush("manager");
+      throw error;
+    }
     clearSavedPush();
     await subscription.unsubscribe().catch(() => false);
     throw error;
@@ -141,6 +178,7 @@ export async function enablePush(
   publicKey: string,
   userId: string,
   onPermission?: () => void,
+  audience: PushAudience = "resident",
 ): Promise<EnableResult> {
   const permission = await Notification.requestPermission();
   onPermission?.();
@@ -156,7 +194,7 @@ export async function enablePush(
     userVisibleOnly: true,
     applicationServerKey: base64UrlToBytes(publicKey),
   });
-  await saveOrUnsubscribe(subscription, userId);
+  await saveOrUnsubscribe(subscription, userId, audience);
   return "enabled";
 }
 
@@ -185,6 +223,30 @@ export async function disablePush(): Promise<void> {
     await sendJsonEmpty("delete", "/api/push-subscriptions", { endpoint: subscription.endpoint });
   } catch (error) {
     serverError = error;
+  }
+  const unsubscribed = await subscription.unsubscribe().catch(() => false);
+  if (!unsubscribed) throw serverError ?? new AppError("INTERNAL_ERROR");
+}
+
+/**
+ * 이 휴대폰에서 집주인 메모·제보 알림만 끕니다. 서버는 거주자로 연결된 계정이면 공지 알림 구독을 남기고, 아니면
+ * 지웁니다. `keepBrowser`(지금 거주자로 연결됨)가 아니면 브라우저 구독도 끊습니다. 실패 처리는 disablePush와 같습니다.
+ */
+export async function disableManagerPush(keepBrowser: boolean): Promise<void> {
+  const subscription = await currentSubscription();
+  clearSavedPush(keepBrowser ? "manager" : "resident");
+  if (!subscription) return;
+  let serverError: unknown;
+  try {
+    await sendJsonEmpty("delete", "/api/manage/push-subscriptions", {
+      endpoint: subscription.endpoint,
+    });
+  } catch (error) {
+    serverError = error;
+  }
+  if (keepBrowser) {
+    if (serverError) throw serverError;
+    return;
   }
   const unsubscribed = await subscription.unsubscribe().catch(() => false);
   if (!unsubscribed) throw serverError ?? new AppError("INTERNAL_ERROR");

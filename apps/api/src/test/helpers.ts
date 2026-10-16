@@ -30,6 +30,7 @@ import {
 import { createToken, hashToken, SESSION_COOKIE } from "../lib/auth.ts";
 import { createDatabase, type Database } from "../lib/db.ts";
 import { parseEnv } from "../lib/env.ts";
+import type { GoogleAi } from "../lib/google.ts";
 import { createMemoryPhotoStore, type PhotoStore } from "../lib/photoStore.ts";
 import type { PushSender } from "../lib/push.ts";
 import { createTaskRunner, type TaskRunner } from "../lib/tasks.ts";
@@ -68,7 +69,7 @@ type TestContext = {
  */
 export function useTestApp(
   envOverrides: Record<string, string> = {},
-  options: { push?: PushSender; photos?: null } = {},
+  options: { push?: PushSender; photos?: null; ai?: GoogleAi } = {},
 ): TestContext {
   const context = {} as TestContext;
   let close: (() => Promise<void>) | undefined;
@@ -94,6 +95,7 @@ export function useTestApp(
       tasks: context.tasks,
       photos: context.photos,
       ...(options.push ? { push: options.push } : {}),
+      ...(options.ai ? { ai: options.ai } : {}),
     });
   });
   afterAll(async () => {

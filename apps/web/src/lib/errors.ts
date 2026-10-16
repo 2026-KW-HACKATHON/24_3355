@@ -80,6 +80,7 @@ const messages: Readonly<Record<AppErrorCode, string>> = {
   NOTICE_ENDED: "종료된 공지예요",
   INVITE_EXPIRED: "초대 링크의 기간이 지났어요. 월계함 팀에 새 링크를 요청해 주세요",
   RATE_LIMITED: "요청이 많아요. 잠시 뒤 다시 시도해 주세요",
+  UPSTREAM_FAILED: "잠시 문제가 생겼어요. 다시 시도해 주세요",
   REPORT_TOO_FREQUENT: "같은 내용을 방금 보냈어요. 잠시 뒤 다시 보내 주세요",
   KAKAO_NOT_CONFIGURED: "지금은 카카오 로그인을 쓸 수 없어요",
   ALREADY_CONNECTED: "이미 다른 건물에 연결되어 있어요. 연결을 옮길지 먼저 확인해 주세요",

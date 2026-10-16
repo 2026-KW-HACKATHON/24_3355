@@ -61,6 +61,11 @@ export const router = createBrowserRouter([
         path: "manage/:buildingId/sign",
         lazy: () => import("../screens/entrance-sign/route"),
       },
+      // 안내 스티커(안내마다 5cm QR, A4 인쇄, 26에서 들어옴)
+      {
+        path: "manage/:buildingId/stickers",
+        lazy: () => import("../screens/guide-stickers/route"),
+      },
       {
         path: "manage/:buildingId/guides/new",
         lazy: () => import("../screens/guide-write/route"),

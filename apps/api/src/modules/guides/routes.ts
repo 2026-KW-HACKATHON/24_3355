@@ -193,7 +193,13 @@ export const guideRoutes = new Hono<AppEnv>()
       const user = requireUser(c);
       const { guideId } = c.req.valid("param");
       return c.json(
-        await guideService.createMemo(c.var.db, user.id, guideId, c.req.valid("json")),
+        await guideService.createMemo(
+          c.var.db,
+          { push: c.var.push, tasks: c.var.tasks },
+          user.id,
+          guideId,
+          c.req.valid("json"),
+        ),
         201,
       );
     },

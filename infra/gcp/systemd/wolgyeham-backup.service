@@ -1,0 +1,10 @@
+# DB 백업 한 번(backup.sh). wolgyeham-backup.timer가 부릅니다. 로그: journalctl -u wolgyeham-backup
+[Unit]
+Description=wolgyeham DB backup to GCS
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+Environment=BACKUP_BUCKET=wolgyeham-kw2026-backups
+ExecStart=/bin/bash /opt/wolgyeham/backup.sh

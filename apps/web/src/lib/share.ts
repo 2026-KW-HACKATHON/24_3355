@@ -34,6 +34,18 @@ export function publicBuildingQrUrl(buildingId: string, origin = publicOrigin())
   return `${publicBuildingUrl(buildingId, origin)}?via=qr`;
 }
 
+/**
+ * 안내 스티커(분리수거장·택배함 옆에 붙이는 5cm QR)에 담는 주소. 그 안내 상세를 바로 엽니다. `?via=sticker`는
+ * 인쇄물로 들어온 것을 나타내고, 안내 상세가 첫 렌더에 주소에서 지웁니다(따로 보여주는 것은 없음).
+ */
+export function publicGuideStickerUrl(
+  buildingId: string,
+  guideId: string,
+  origin = publicOrigin(),
+): string {
+  return `${publicBuildingUrl(buildingId, origin)}/guides/${guideId}?via=sticker`;
+}
+
 export async function copyText(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text);

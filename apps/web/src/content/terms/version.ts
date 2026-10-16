@@ -7,9 +7,10 @@ import { TERMS_VERSION } from "@wolgyeham/contracts";
 export const TERMS_RELEASE: { readonly version: string; readonly changes: readonly string[] } = {
   version: TERMS_VERSION,
   changes: [
-    "집주인이 안내와 공지에 붙이는 사진을 저장하는 것으로 적었어요. 사진 속 위치·기기 정보는 지우고 저장해요.",
-    "공개한 안내와 기간 중인 공지의 사진은 건물 화면을 여는 누구나 볼 수 있고, 공개 전 사진은 집주인만 봐요.",
-    "사진을 지우는 때와, 사진 파일을 AWS 서울 리전(S3)에 둔다는 것을 적었어요.",
+    "집주인이 보내던 카톡 안내를 주제별 초안으로 나누는 기능(Google Vertex AI)과, 안내·공지를 영어·중국어·베트남어로 보는 기계 번역(Google Cloud Translation)을 적었어요. 기능을 켠 환경에서만 Google에 글을 보내요.",
+    "나누기 전에 전화번호·이메일·계좌번호는 가려서 보내고, 붙여넣은 글은 저장하지 않아요. 번역한 제목·본문은 같은 번역을 되풀이하지 않으려고 저장해요.",
+    "집주인이 새 메모·제보 알림을 켜면 그 사실을 알림 주소와 함께 저장하고, 알림에는 쓴 내용과 보낸 분을 담지 않는다고 적었어요.",
+    "시험 환경은 Google Cloud 미국(us-west1)에, 파일럿 서비스는 AWS 서울 리전에 둔다고 나눠 적었어요.",
   ],
 };
 

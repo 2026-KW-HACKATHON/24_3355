@@ -21,7 +21,7 @@ import { useMyTips } from "../../features/tips/queries";
 import { errorMessage } from "../../lib/errors";
 import { formatDay, formatMonth } from "../../lib/format";
 import { setLargeMode, useLargeMode } from "../../lib/largeMode";
-import type { PushEnv } from "../../lib/pushEnv";
+import { notifyValue } from "../../lib/pushEnv";
 import "./me.css";
 
 export function Component() {
@@ -104,24 +104,6 @@ function MeShell({
       {children}
     </Screen>
   );
-}
-
-function notifyValue(env: PushEnv | undefined): string {
-  if (!env) return "";
-  switch (env.kind) {
-    case "enabled":
-      return "켜짐";
-    case "available":
-      return "꺼짐";
-    case "blocked":
-      return "막힘";
-    case "ios-install":
-      return "홈 화면 추가 필요";
-    case "in-app":
-      return "이 앱에서는 못 켜요";
-    case "unsupported":
-      return "지원 안 됨";
-  }
 }
 
 function MyInfo({ me }: { me: Me }) {

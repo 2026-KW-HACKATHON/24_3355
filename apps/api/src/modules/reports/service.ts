@@ -24,7 +24,10 @@ import {
 import type { SessionUser } from "../../lib/context.ts";
 import type { Database } from "../../lib/db.ts";
 import { AppError } from "../../lib/errors.ts";
+import type { PushSender } from "../../lib/push.ts";
+import type { TaskRunner } from "../../lib/tasks.ts";
 import * as buildingService from "../buildings/service.ts";
+import * as noticeService from "../notices/service.ts";
 import * as repo from "./repo.ts";
 
 const MINUTE_MS = 60 * 1000;
@@ -102,6 +105,7 @@ async function reporterKindOf(db: Database, userId: string, buildingId: string) 
  */
 export async function createReport(
   db: Database,
+  deps: { push: PushSender; tasks: TaskRunner },
   user: SessionUser | null,
   clientKey: string,
   buildingId: string,
@@ -123,7 +127,7 @@ export async function createReport(
         }
       : { preset: null, kind: input.kind, location: input.location ?? null, body: input.body };
   const hash = contentHash(input);
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     if (!user) {
       // 비회원 제보는 건물 전체로도 셉니다(여러 IP로 나눠 보내는 스팸). 항상 이 잠금을 먼저 잡아 순서가 꼬이지 않게 합니다.
       await repo.lockSubmissions(tx, building.id, GUEST_LOCK_KEY);
@@ -165,6 +169,15 @@ export async function createReport(
       accessExpiresAt: accessExpiresAt?.toISOString() ?? null,
     };
   });
+  // 집주인에게 새 제보를 알립니다(커밋 뒤, 제보 하나에 한 번). 제보 내용·보낸 사람은 담지 않습니다.
+  noticeService.notifyManagers(db, deps, {
+    type: "report",
+    buildingId: building.id,
+    title: "새 제보가 왔어요",
+    body: building.name,
+    url: `/manage/${building.id}/reports/${result.report.id}`,
+  });
+  return result;
 }
 
 /**

@@ -11,9 +11,9 @@ export function hasNotifyParam(search: string): boolean {
   return new URLSearchParams(search).get(NOTIFY_PARAM) === "1";
 }
 
-/** 외부 브라우저로 열 주소(같은 출처의 내 정보 + 알림 선택). */
-export function notifyLinkUrl(origin = window.location.origin): string {
-  return `${origin}${NOTIFY_PATH}`;
+/** 외부 브라우저로 열 주소(같은 출처의 내 정보 + 알림 선택). 집주인 설정은 `path`로 그 화면을 넘깁니다. */
+export function notifyLinkUrl(origin = window.location.origin, path = NOTIFY_PATH): string {
+  return `${origin}${path}`;
 }
 
 /** `kakaotalk://web/openExternal`로 여는 주소. 실제 기기 동작은 확인 전입니다. */

@@ -135,3 +135,16 @@ export const NoticePushPayload = z.object({
   url: z.string(),
 });
 export type NoticePushPayload = z.infer<typeof NoticePushPayload>;
+
+/**
+ * 집주인에게 보내는 새 수정 메모·제보 알림. `body`는 안내 제목(메모)이나 건물 이름(제보)이고 메모·제보 내용은
+ * 담지 않습니다. service worker가 `url`(검토 화면, 같은 출처 경로)을 엽니다.
+ */
+export const ManagerPushPayload = z.object({
+  type: z.enum(["memo", "report"]),
+  buildingId: z.uuid(),
+  title: z.string(),
+  body: z.string(),
+  url: z.string(),
+});
+export type ManagerPushPayload = z.infer<typeof ManagerPushPayload>;

@@ -7,8 +7,12 @@ import { useAutoSheetTurn } from "../../components/autoSheet";
 import { Icon } from "../../components/Icon";
 import { BackButton, Screen, TopBar } from "../../components/Screen";
 import { Delayed, EmptyState, LoadError, SkeletonLines } from "../../components/ScreenState";
+import { htmlLang, speechLang } from "../../features/assist/contentLang";
+import { LanguageBar } from "../../features/assist/LanguageBar";
+import { useTranslatedContent } from "../../features/assist/translated";
 import { useEndDemoOn } from "../../features/auth/endDemo";
 import { useMe } from "../../features/auth/queries";
+import { searchWithoutVia } from "../../features/buildings/viaQr";
 import { CATEGORY } from "../../features/guides/categories";
 import { GuideBody } from "../../features/guides/GuideBody";
 import {
@@ -92,6 +96,8 @@ type Sheet = "memo" | "connect" | "reconfirm" | "moveOut";
 
 function GuideDetail({ guide, home }: { guide: Guide; home: string }) {
   const speech = useSpeech();
+  // 보기 언어(D-37). 번역을 고르면 제목·본문과 읽어주기가 그 언어를 따르고, 메모·버튼 문구는 한국어 그대로예요.
+  const shown = useTranslatedContent("guide", guide.id, guide.updatedAt, guide);
   const label = CATEGORY[guide.category].label;
   const location = useLocation();
   const navigate = useNavigate();
@@ -106,6 +112,16 @@ function GuideDetail({ guide, home }: { guide: Guide; home: string }) {
   // `?memo=write`로 돌아와 저절로 연 메모 시트는 다른 자동 시트(약관 등)와 차례를 맞춥니다.
   const [autoMemo, setAutoMemo] = useState(false);
   const memoTurn = useAutoSheetTurn("memo-return", autoMemo && sheet === "memo");
+
+  // 안내 스티커(`?via=sticker`)로 열었으면 주소에서만 지웁니다(공유·북마크에 남지 않게, 화면은 그대로).
+  useEffect(() => {
+    const search = searchWithoutVia(location.search);
+    if (search === undefined) return;
+    void navigate(
+      { pathname: location.pathname, search, hash: location.hash },
+      { replace: true, state: location.state, preventScrollReset: true },
+    );
+  }, [location, navigate]);
 
   // 연결(44)이나 다시 로그인을 마치고 `?memo=write`로 돌아오면 메모 시트를 엽니다. 내용은 보내지 않습니다.
   // 연결 직후라 알림 선택(17)이 떠 있으면 그 시트를 닫은 뒤에 엽니다.
@@ -134,7 +150,7 @@ function GuideDetail({ guide, home }: { guide: Guide; home: string }) {
 
   function toggleSpeech() {
     if (speech.speaking) speech.stop();
-    else speech.speak(`${guide.title}.\n${guide.body}`);
+    else speech.speak(`${shown.title}.\n${shown.body}`, speechLang(shown.lang));
   }
 
   function openMemo() {
@@ -204,8 +220,13 @@ function GuideDetail({ guide, home }: { guide: Guide; home: string }) {
         </p>
       )}
 
-      <article className="wh-pad gd-article">
-        <GuideBody guide={guide} caption="updated" />
+      {shown.enabled ? (
+        <div className="wh-pad">
+          <LanguageBar content={shown} />
+        </div>
+      ) : null}
+      <article className="wh-pad gd-article" lang={htmlLang(shown.lang)}>
+        <GuideBody guide={{ ...guide, title: shown.title, body: shown.body }} caption="updated" />
       </article>
 
       <div className="wh-pad">

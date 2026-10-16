@@ -1,8 +1,10 @@
 // LF-18 입주 카드 · lofi 39 (QR 칸과 가입코드 칸을 나눈 카드. 인쇄·카카오톡 보내기)
+// 인쇄 크기로 ‘명함 크기’를 고르면 부동산 중개사무소가 계약할 때 건넬 90×50mm 카드를 A4에 10장(절취선) 찍습니다.
 import { ActionButton, Skeleton } from "@seed-design/react";
 import type { ManagedBuildingDetail } from "@wolgyeham/contracts";
 import { useState } from "react";
 import { Link, useParams } from "react-router";
+import { ChoiceChips } from "../../components/ChoiceChips";
 import { CodeCells } from "../../components/CodeCells";
 import { Icon } from "../../components/Icon";
 import { QrCode } from "../../components/QrCode";
@@ -14,6 +16,16 @@ import { useJoinCode } from "../../features/buildings/queries";
 import { CATEGORY, CATEGORY_ORDER } from "../../features/guides/categories";
 import { publicBuildingQrUrl, publicBuildingUrl, publicOrigin, shareOrCopy } from "../../lib/share";
 import "./move-in-card.css";
+
+type PrintSize = "card" | "bizcard";
+
+const PRINT_SIZES: readonly { value: PrintSize; label: string }[] = [
+  { value: "card", label: "기본 카드" },
+  { value: "bizcard", label: "명함 크기(90×50mm, 절취선)" },
+];
+
+/** A4 한 장에 2칸 × 5줄. 카드끼리 붙어 있어 절취선 한 번에 두 장이 나뉩니다. */
+export const BIZCARDS_PER_SHEET = 10;
 
 export function Component() {
   const { buildingId = "" } = useParams();
@@ -45,6 +57,7 @@ function MoveInCard({ detail }: { detail: ManagedBuildingDetail }) {
   const toast = useToast();
   const [shareError, setShareError] = useState<string>();
   const code = joinCode.data?.code;
+  const [size, setSize] = useState<PrintSize>("card");
 
   async function send() {
     if (!code) return;
@@ -118,35 +131,95 @@ function MoveInCard({ detail }: { detail: ManagedBuildingDetail }) {
         </div>
       ) : (
         <>
-          <article className="mc-card" aria-label={`${building.name} 입주 카드`}>
-            <p className="mc-card__brand">
-              <span className="mc-card__stamp" aria-hidden="true" />
-              월계함
-            </p>
-            <h2 className="mc-card__title">{building.name} 생활 안내</h2>
-            <div className="mc-qrbox">
-              <div className="mc-qr">
-                <QrCode value={qrUrl} label={`${building.name} 건물 안내 QR`} />
+          {size === "bizcard" ? (
+            <>
+              <div className="mc-bizpreview">
+                <BizCard buildingName={building.name} qrUrl={qrUrl} code={code} host={host} />
               </div>
-              <div>
-                <p className="mc-qrbox__title">안내는 여기서 봐요</p>
-                <p className="mc-qrbox__sub">
-                  {coveredTopics(detail)}. 가입하지 않아도 볼 수 있어요.
-                </p>
+              <BizCardSheet buildingName={building.name} qrUrl={qrUrl} code={code} host={host} />
+            </>
+          ) : (
+            <article className="mc-card" aria-label={`${building.name} 입주 카드`}>
+              <p className="mc-card__brand">
+                <span className="mc-card__stamp" aria-hidden="true" />
+                월계함
+              </p>
+              <h2 className="mc-card__title">{building.name} 생활 안내</h2>
+              <div className="mc-qrbox">
+                <div className="mc-qr">
+                  <QrCode value={qrUrl} label={`${building.name} 건물 안내 QR`} />
+                </div>
+                <div>
+                  <p className="mc-qrbox__title">안내는 여기서 봐요</p>
+                  <p className="mc-qrbox__sub">
+                    {coveredTopics(detail)}. 가입하지 않아도 볼 수 있어요.
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="mc-cut" aria-hidden="true" />
-            <p className="mc-code-title">새 공지까지 받으려면 가입코드</p>
-            <p className="mc-code-sub">QR 화면의 ‘연결하기’에서 넣어 주세요</p>
-            <CodeCells value={code} label="가입코드" className="mc-code" />
-            <p className="mc-foot">{host}</p>
-          </article>
-          <p className="wh-note mc-note">
+              <div className="mc-cut" aria-hidden="true" />
+              <p className="mc-code-title">새 공지까지 받으려면 가입코드</p>
+              <p className="mc-code-sub">QR 화면의 ‘연결하기’에서 넣어 주세요</p>
+              <CodeCells value={code} label="가입코드" className="mc-code" />
+              <p className="mc-foot">{host}</p>
+            </article>
+          )}
+          <div className="wh-pad mc-size mc-screen-only">
+            <ChoiceChips
+              name="mc-size"
+              legend="인쇄 크기"
+              options={PRINT_SIZES}
+              value={size}
+              onChange={(next) => setSize(next ?? "card")}
+            />
+            {size === "bizcard" ? (
+              <p className="wh-caption mc-size__hint">
+                A4 한 장에 {BIZCARDS_PER_SHEET}장이 찍혀요. 점선을 따라 자르면 명함 크기예요.
+                부동산에서 계약할 때 함께 건네 주세요.
+              </p>
+            ) : null}
+          </div>
+          <p className="wh-note mc-note mc-screen-only">
             <Icon name="info" />
             <span>가입코드가 있으니 계약한 입주자에게만 전해 주세요.</span>
           </p>
         </>
       )}
     </Screen>
+  );
+}
+
+type BizCardProps = { buildingName: string; qrUrl: string; code: string; host: string };
+
+/** 명함 크기(90×50mm) 입주 카드. 왼쪽은 안내 QR, 오른쪽은 가입코드입니다. */
+function BizCard({ buildingName, qrUrl, code, host }: BizCardProps) {
+  return (
+    <article className="mc-biz" aria-label={`${buildingName} 명함 크기 입주 카드`}>
+      <div className="mc-biz__qr">
+        <QrCode value={qrUrl} label={`${buildingName} 건물 안내 QR`} />
+        <span>가입 없이 안내 보기</span>
+      </div>
+      <div className="mc-biz__side">
+        <p className="mc-biz__brand">
+          <span className="mc-card__stamp" aria-hidden="true" />
+          월계함
+        </p>
+        <p className="mc-biz__name">{buildingName} 생활 안내</p>
+        <p className="mc-biz__label">새 공지 받기 가입코드</p>
+        <p className="mc-biz__code">{code}</p>
+        <p className="mc-biz__how">건물 화면의 ‘연결하기’에서 넣어 주세요</p>
+        <p className="mc-biz__host">{host}</p>
+      </div>
+    </article>
+  );
+}
+
+/** 인쇄용 A4 한 장(명함 10장). 화면에서는 숨기고 인쇄할 때만 보입니다. */
+export function BizCardSheet(props: BizCardProps) {
+  return (
+    <div className="mc-bizsheet" aria-hidden="true">
+      {Array.from({ length: BIZCARDS_PER_SHEET }, (_, index) => `card-${index + 1}`).map((slot) => (
+        <BizCard key={slot} {...props} />
+      ))}
+    </div>
   );
 }

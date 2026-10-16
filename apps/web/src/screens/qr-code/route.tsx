@@ -103,6 +103,17 @@ function QrAndCode({ detail }: { detail: ManagedBuildingDetail }) {
               현관 안내문 인쇄
             </Link>
           </ActionButton>
+          <ActionButton
+            asChild
+            className="wh-btn wh-btn--secondary qc-sign"
+            size="large"
+            variant="neutralWeak"
+          >
+            <Link to={`${base}/stickers`}>
+              <Icon name="sticky-note" />
+              안내마다 붙이는 QR 스티커
+            </Link>
+          </ActionButton>
         </section>
 
         <JoinCodeBlock buildingId={building.id} buildingName={building.name} base={base} />

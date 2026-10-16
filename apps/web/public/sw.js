@@ -1,5 +1,6 @@
-// 월계함 service worker. 새 공지 알림을 보여주고, 누르면 그 공지를 엽니다(frontend.md §8).
-// 화면·API를 캐시하지 않습니다(오프라인 동작 없음). 알림 내용은 contracts NoticePushPayload입니다.
+// 월계함 service worker. 새 공지 알림(거주자)과 새 수정 메모·제보 알림(집주인)을 보여주고, 누르면 그 화면을 엽니다
+// (frontend.md §8). 화면·API를 캐시하지 않습니다(오프라인 동작 없음). 알림 내용은 contracts NoticePushPayload·
+// ManagerPushPayload입니다.
 
 /** 열려 있는 앱에 이동을 부탁하는 메시지. 앱(app/RootLayout.tsx)이 라우터로 옮기고 답합니다. */
 const NAVIGATE_MESSAGE = "wh:navigate";
@@ -37,9 +38,17 @@ self.addEventListener("push", (event) => {
     payload = {};
   }
   const isNotice = payload && payload.type === "notice";
-  const title = isNotice ? "새 공지" : "월계함";
-  const body = isNotice && typeof payload.title === "string" ? payload.title : "새 소식이 있어요";
-  const url = safePath(isNotice ? payload.url : "/");
+  const isManager = payload && (payload.type === "memo" || payload.type === "report");
+  let title = "월계함";
+  let body = "새 소식이 있어요";
+  if (isNotice) {
+    title = "새 공지";
+    if (typeof payload.title === "string") body = payload.title;
+  } else if (isManager) {
+    if (typeof payload.title === "string") title = payload.title;
+    if (typeof payload.body === "string") body = payload.body;
+  }
+  const url = safePath(isNotice || isManager ? payload.url : "/");
   event.waitUntil(
     self.registration.showNotification(title, {
       body,

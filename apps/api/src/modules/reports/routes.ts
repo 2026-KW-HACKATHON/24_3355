@@ -42,6 +42,7 @@ export const reportRoutes = new Hono<AppEnv>()
         c.var.user !== null && (await actsAsGuestHere(c.var.db, c.var.user.id, buildingId));
       const result = await reportService.createReport(
         c.var.db,
+        { push: c.var.push, tasks: c.var.tasks },
         asGuest ? null : c.var.user,
         asGuest ? ipKey(c) : reportClientKey(c),
         buildingId,

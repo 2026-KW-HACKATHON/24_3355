@@ -2,19 +2,20 @@ import type {
   CreateNoticeBody,
   CreateNoticeResult,
   CurrentNoticeResponse,
+  ManagerPushPayload,
   Notice,
   NoticeAudience,
   NoticePushPayload,
   PushPublicKey,
   PushSubscriptionBody,
 } from "@wolgyeham/contracts";
-import { requireManager, requireOccupancy } from "../../lib/auth.ts";
+import { findLiveOccupancy, requireManager, requireOccupancy } from "../../lib/auth.ts";
 import type { Database } from "../../lib/db.ts";
 import type { Env } from "../../lib/env.ts";
 import { AppError } from "../../lib/errors.ts";
 import { log } from "../../lib/log.ts";
 import type { PhotoStore } from "../../lib/photoStore.ts";
-import type { PushResult, PushSender } from "../../lib/push.ts";
+import type { PushResult, PushSender, PushTarget } from "../../lib/push.ts";
 import { hitRateLimit } from "../../lib/rate-limit.ts";
 import type { TaskRunner } from "../../lib/tasks.ts";
 import * as buildingService from "../buildings/service.ts";
@@ -129,7 +130,7 @@ export async function createNotice(
   return { notice: repo.toNotice(notice), attemptedCount };
 }
 
-async function sendSafely(push: PushSender, target: repo.DeliveryTarget, payload: string) {
+async function sendSafely(push: PushSender, target: PushTarget, payload: string) {
   try {
     return await push.send(target, payload);
   } catch {
@@ -138,6 +139,13 @@ async function sendSafely(push: PushSender, target: repo.DeliveryTarget, payload
 }
 
 /** 한 구독에 보내고 결과대로 구독을 정리합니다: 404·410이면 지우고, 실패가 3번 이어지면 지웁니다. */
+async function sendAndTidy(db: Database, push: PushSender, target: PushTarget, payload: string) {
+  const result = await sendSafely(push, target, payload);
+  if (result === "sent") await repo.resetPushFailures(db, target.endpoint);
+  else if (result === "gone") await repo.deletePushSubscriptions(db, [target.endpoint]);
+  else await repo.recordPushFailure(db, target.endpoint, PUSH_FAILURE_LIMIT);
+}
+
 async function deliverOne(
   db: Database,
   push: PushSender,
@@ -145,10 +153,7 @@ async function deliverOne(
   payload: string,
 ) {
   await repo.markDeliveryAttempted(db, target.deliveryId);
-  const result = await sendSafely(push, target, payload);
-  if (result === "sent") await repo.resetPushFailures(db, target.endpoint);
-  else if (result === "gone") await repo.deletePushSubscriptions(db, [target.endpoint]);
-  else await repo.recordPushFailure(db, target.endpoint, PUSH_FAILURE_LIMIT);
+  await sendAndTidy(db, push, target, payload);
 }
 
 /**
@@ -181,6 +186,37 @@ export async function sendNoticePush(db: Database, push: PushSender, notice: rep
   await Promise.all(Array.from({ length: Math.min(PUSH_CONCURRENCY, targets.length) }, worker));
 }
 
+/**
+ * 새 수정 메모·제보를 이 건물 집주인에게 알립니다(이 기기에서 메모·제보 알림을 켠 구독만). 일 하나에 한 번이고,
+ * 발송은 응답 뒤 `tasks`에서 합니다. 실패해도 메모·제보는 그대로이고 구독 정리는 공지 푸시와 같습니다.
+ */
+export function notifyManagers(
+  db: Database,
+  deps: { push: PushSender; tasks: TaskRunner },
+  payload: ManagerPushPayload,
+) {
+  const { push, tasks } = deps;
+  tasks.run("manager_push", async () => {
+    if (!(await push.isConfigured())) return;
+    const targets = await repo.listManagerAlertTargets(db, payload.buildingId);
+    const body = JSON.stringify(payload);
+    let next = 0;
+    const worker = async () => {
+      for (let target = targets[next++]; target; target = targets[next++]) {
+        try {
+          await sendAndTidy(db, push, target, body);
+        } catch (error) {
+          log("error", "manager_push_failed", {
+            type: payload.type,
+            name: error instanceof Error ? error.name : "unknown",
+          });
+        }
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(PUSH_CONCURRENCY, targets.length) }, worker));
+  });
+}
+
 /** 브라우저 구독에 쓰는 VAPID 공개키. 발송할 수 없는 환경이면 null(웹은 ‘지원 안 됨’으로 봅니다). */
 export async function getPushPublicKey(env: Env, push: PushSender): Promise<PushPublicKey> {
   const publicKey =
@@ -204,6 +240,36 @@ export async function subscribe(db: Database, userId: string, input: PushSubscri
     });
     await repo.trimUserPushSubscriptions(tx, userId, PUSH_SUBSCRIPTIONS_PER_USER);
   });
+}
+
+/**
+ * 집주인 메모·제보 알림 구독. 건물을 하나라도 관리하는 사람만 하고(아니면 403 `NOT_BUILDING_MANAGER`), 반복 제한과
+ * 최근 5개만 남기기는 공지 알림 구독과 같습니다(같은 브라우저면 한 행).
+ */
+export async function subscribeManager(db: Database, userId: string, input: PushSubscriptionBody) {
+  if (!(await repo.managesAnyBuilding(db, userId))) {
+    throw new AppError(403, "NOT_BUILDING_MANAGER");
+  }
+  await hitRateLimit(db, "push_subscribe", userId, PUSH_SUBSCRIBE_LIMIT);
+  await db.transaction(async (tx) => {
+    await repo.upsertPushSubscription(tx, {
+      userId,
+      endpoint: input.endpoint,
+      p256dh: input.keys.p256dh,
+      auth: input.keys.auth,
+      managerAlerts: true,
+    });
+    await repo.trimUserPushSubscriptions(tx, userId, PUSH_SUBSCRIPTIONS_PER_USER);
+  });
+}
+
+/**
+ * 이 브라우저에서 메모·제보 알림을 끕니다. 거주자로 연결돼 있으면 공지 알림 구독은 남기고, 아니면 구독을 지웁니다.
+ * 없어도 성공입니다.
+ */
+export async function unsubscribeManager(db: Database, userId: string, endpoint: string) {
+  if (await findLiveOccupancy(db, userId)) await repo.disableManagerAlerts(db, userId, endpoint);
+  else await repo.deleteUserPushSubscription(db, userId, endpoint);
 }
 
 /** 이 계정의 모든 브라우저 구독을 지웁니다(다른 건물로 연결을 옮길 때, 연결 트랜잭션 안에서). */

@@ -59,6 +59,15 @@ describe("terms and privacy drafts (D-28)", () => {
     expect(privacy).toContain("30일 동안 쓸 수 있어요");
     expect(privacy).toContain("해시만 저장해요");
     expect(privacy).toContain("AWS 서울 리전");
+    // 안내 나누기·번역(D-37): 맡기는 곳, 가리는 값, 저장하는 것
+    expect(privacy).toContain("Vertex AI(Gemini, 미국 us-west1)");
+    expect(privacy).toContain("Cloud Translation");
+    expect(privacy).toContain(
+      "전화번호·이메일·계좌번호처럼 보이는 긴 숫자, ‘비번’·‘현관’ 뒤에 적은 출입 비밀번호는 가렸다가",
+    );
+    expect(privacy).toContain("붙인 글은 저장하지 않고");
+    expect(privacy).toContain("wh.lang");
+    expect(privacy).toContain("미국 오리건 리전(us-west1)");
     expect(privacy).toContain("Apple, Google, Mozilla, Microsoft");
   });
 

@@ -8,14 +8,59 @@ import type { PushEnv } from "../../lib/pushEnv";
 import { copyText } from "../../lib/share";
 import { useMe } from "../auth/queries";
 import { kakaoOpenExternalUrl, notifyLinkUrl } from "./notifyLink";
-import { disablePush, enablePush, loadSavedPush, resaveSubscription } from "./push";
+import {
+  disableManagerPush,
+  disablePush,
+  enablePush,
+  loadSavedPush,
+  type PushAudience,
+  resaveSubscription,
+} from "./push";
 import { usePushEnv } from "./queries";
 import "./notify-choice.css";
 
 // LF-04 연결 뒤 알림 선택 · lofi 17, 환경별 분기는 screens.md §6. 내 정보(45)의 ‘공지 알림’도 같은 시트를 엽니다.
 // 알림을 켜지 않아도 연결은 끝난 상태이고, 이 시트는 한 번만 먼저 보여줍니다.
+// 집주인 설정·홈의 ‘새 메모·제보 알림’도 같은 시트를 `audience="manager"`로 엽니다(문구와 저장 주소만 다름).
 
 export type NotifyContext = "connected" | "settings";
+
+/** 받는 쪽마다 다른 문구. 환경 판정·버튼 차례는 같습니다. */
+const COPY = {
+  resident: {
+    demoLead: "카카오로 로그인한 계정에서 공지 알림을 받을 수 있어요.",
+    availableTitle: "새 공지를 알림으로 받을까요?",
+    availableLead:
+      "공지가 올라오면 이 휴대폰으로 알려 드려요.\n알림은 언제든 내 정보에서 끌 수 있어요.",
+    enabledTitle: "공지 알림이 켜져 있어요",
+    enabledLead: "새 공지가 올라오면 이 휴대폰으로 알려 드려요.",
+    iosTitle: "새 공지를 알림으로 받으려면",
+    inAppLead:
+      "Safari나 Chrome에서 월계함 내 정보를 열고\n로그인하면 알림을 켤 수 있어요. 연결은 그대로예요.",
+    blockedLead:
+      "이 브라우저에서 월계함 알림을 막아 두었어요.\n설정에서 허용하면 새 공지를 받을 수 있어요.",
+    unsupportedTitle: "공지는 우리 건물 화면에서 볼 수 있어요",
+    unsupportedRest: "새 공지는 건물 화면과 집주인이 보내는 링크로 확인해요.",
+    enabledToast: "공지 알림을 켰어요",
+    disabledToast: "이 휴대폰에서 공지 알림을 껐어요",
+  },
+  manager: {
+    demoLead: "카카오로 로그인한 계정에서 새 메모·제보 알림을 받을 수 있어요.",
+    availableTitle: "새 메모·제보를 알림으로 받을까요?",
+    availableLead:
+      "거주자가 수정 메모를 남기거나 제보가 오면\n이 휴대폰으로 알려 드려요. 언제든 설정에서 끌 수 있어요.",
+    enabledTitle: "메모·제보 알림이 켜져 있어요",
+    enabledLead: "새 수정 메모나 제보가 오면 이 휴대폰으로 알려 드려요.",
+    iosTitle: "새 메모·제보를 알림으로 받으려면",
+    inAppLead: "Safari나 Chrome에서 월계함 설정을 열고\n로그인하면 알림을 켤 수 있어요.",
+    blockedLead:
+      "이 브라우저에서 월계함 알림을 막아 두었어요.\n설정에서 허용하면 새 메모·제보를 받을 수 있어요.",
+    unsupportedTitle: "받은 내용은 집주인 홈에서 볼 수 있어요",
+    unsupportedRest: "새 메모·제보는 집주인 홈의 받은 내용에서 확인해요.",
+    enabledToast: "메모·제보 알림을 켰어요",
+    disabledToast: "이 휴대폰에서 메모·제보 알림을 껐어요",
+  },
+} as const satisfies Record<PushAudience, Record<string, string>>;
 
 type Step = { text: string; icon: IconName };
 
@@ -52,6 +97,7 @@ export function NotifyChoiceBody({
   context,
   actions,
   demo = false,
+  audience = "resident",
   renderTitle = (text) => <h2 className="wh-sheet__title">{text}</h2>,
 }: {
   env: PushEnv | undefined;
@@ -59,8 +105,10 @@ export function NotifyChoiceBody({
   actions: NotifyActions;
   /** 시연 계정이면 알림을 켤 수 없다고만 알립니다(D-35, 서버도 403). */
   demo?: boolean;
+  audience?: PushAudience;
   renderTitle?: (text: string) => ReactNode;
 }) {
+  const copy = COPY[audience];
   const close = (label: string, variant: "primary" | "neutral" = "primary") => (
     <ActionButton
       className={variant === "primary" ? "wh-btn" : "wh-btn wh-btn--neutral"}
@@ -80,7 +128,7 @@ export function NotifyChoiceBody({
 
   if (demo) {
     title = "시연 계정에서는 알림을 켤 수 없어요";
-    lead = "카카오로 로그인한 계정에서 공지 알림을 받을 수 있어요.";
+    lead = copy.demoLead;
     buttons = close("닫기");
   } else if (!env) {
     // 공개키·구독 확인이 끝나기 전에는 누를 수 없는 ‘알림 받기’ 대신 자리만 보여줍니다.
@@ -94,8 +142,8 @@ export function NotifyChoiceBody({
       </>
     );
   } else if (env.kind === "available") {
-    title = "새 공지를 알림으로 받을까요?";
-    lead = "공지가 올라오면 이 휴대폰으로 알려 드려요.\n알림은 언제든 내 정보에서 끌 수 있어요.";
+    title = copy.availableTitle;
+    lead = copy.availableLead;
     buttons = (
       <>
         <ActionButton
@@ -112,8 +160,8 @@ export function NotifyChoiceBody({
       </>
     );
   } else if (env.kind === "enabled") {
-    title = "공지 알림이 켜져 있어요";
-    lead = "새 공지가 올라오면 이 휴대폰으로 알려 드려요.";
+    title = copy.enabledTitle;
+    lead = copy.enabledLead;
     buttons =
       context === "settings" ? (
         <>
@@ -133,7 +181,7 @@ export function NotifyChoiceBody({
         close("알겠어요")
       );
   } else if (env.kind === "ios-install") {
-    title = "새 공지를 알림으로 받으려면";
+    title = copy.iosTitle;
     lead = "iPhone은 월계함을 홈 화면에 추가한 뒤\n알림을 켤 수 있어요.";
     extra = (
       <>
@@ -154,8 +202,7 @@ export function NotifyChoiceBody({
   } else if (env.kind === "in-app") {
     const kakao = env.app === "kakao";
     title = kakao ? "카카오톡 안에서는 알림을 켤 수 없어요" : "이 앱 안에서는 알림을 켤 수 없어요";
-    lead =
-      "Safari나 Chrome에서 월계함 내 정보를 열고\n로그인하면 알림을 켤 수 있어요. 연결은 그대로예요.";
+    lead = copy.inAppLead;
     buttons = (
       <>
         {kakao ? (
@@ -184,8 +231,7 @@ export function NotifyChoiceBody({
     );
   } else if (env.kind === "blocked") {
     title = "지금 알림이 꺼져 있어요";
-    lead =
-      "이 브라우저에서 월계함 알림을 막아 두었어요.\n설정에서 허용하면 새 공지를 받을 수 있어요.";
+    lead = copy.blockedLead;
     extra = (
       <Steps
         steps={
@@ -205,11 +251,12 @@ export function NotifyChoiceBody({
     );
     buttons = close("알겠어요");
   } else {
-    title = "공지는 우리 건물 화면에서 볼 수 있어요";
-    lead =
+    title = copy.unsupportedTitle;
+    lead = `${
       env.reason === "server"
-        ? "지금은 월계함이 알림을 보내지 않고 있어요.\n새 공지는 건물 화면과 집주인이 보내는 링크로 확인해요."
-        : "이 브라우저는 알림을 지원하지 않아요.\n새 공지는 건물 화면과 집주인이 보내는 링크로 확인해요.";
+        ? "지금은 월계함이 알림을 보내지 않고 있어요."
+        : "이 브라우저는 알림을 지원하지 않아요."
+    }\n${copy.unsupportedRest}`;
     buttons = close("알겠어요");
   }
 
@@ -237,6 +284,9 @@ export function NotifyChoiceBody({
 }
 
 function pushErrorMessage(error: AppError): string {
+  if (error.code === "NOT_BUILDING_MANAGER") {
+    return "건물을 관리하는 집주인만 메모·제보 알림을 켤 수 있어요";
+  }
   if (error.code === "NOT_CONNECTED" || error.code === "RECONFIRM_NEEDED") {
     return "이 건물에 연결된 거주자만 공지 알림을 켤 수 있어요";
   }
@@ -274,14 +324,22 @@ export function NotifyChoiceSheet({
   open,
   onOpenChange,
   context,
+  audience = "resident",
+  linkPath,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   context: NotifyContext;
+  audience?: PushAudience;
+  /** 앱 안 브라우저에서 Safari·Chrome으로 열 경로. 없으면 내 정보의 알림 선택(`/me?notify=1`). */
+  linkPath?: string;
 }) {
   const toast = useToast();
-  const push = usePushEnv(open);
-  const demo = Boolean(useMe().data?.user.demo);
+  const push = usePushEnv(open, audience);
+  const me = useMe().data;
+  const demo = Boolean(me?.user.demo);
+  const copy = COPY[audience];
+  const link = () => notifyLinkUrl(undefined, linkPath);
   const [phase, setPhase] = useState<Phase>("idle");
   const [resaving, setResaving] = useState(false);
   const [error, setError] = useState<string>();
@@ -295,6 +353,7 @@ export function NotifyChoiceSheet({
   const resaveNeeded =
     open &&
     !demo &&
+    audience === "resident" &&
     context === "settings" &&
     push.unconfirmed &&
     push.userId !== undefined &&
@@ -370,9 +429,9 @@ export function NotifyChoiceSheet({
       void run(async () => {
         try {
           // 권한 창이 떠 있는 동안에는 ‘나중에’로 닫을 수 있고, 권한을 고른 뒤 저장하는 동안만 막습니다.
-          const result = await enablePush(key, owner, () => setPhase("saving"));
+          const result = await enablePush(key, owner, () => setPhase("saving"), audience);
           if (result === "enabled") {
-            toast("공지 알림을 켰어요");
+            toast(copy.enabledToast);
             close();
           } else if (result === "dismissed") {
             setError("알림 권한을 고르지 않았어요. 다시 누르면 한 번 더 물어봐요");
@@ -393,8 +452,10 @@ export function NotifyChoiceSheet({
     onDisable: () => {
       void run(async () => {
         try {
-          await disablePush();
-          toast("이 휴대폰에서 공지 알림을 껐어요");
+          // 거주자로도 연결돼 있으면 공지 알림 구독은 남기고 메모·제보 알림만 끕니다.
+          if (audience === "manager") await disableManagerPush(Boolean(me?.occupancy));
+          else await disablePush();
+          toast(copy.disabledToast);
           close();
         } catch (caught) {
           setError(`알림을 끄지 못했어요. ${errorMessage(caught)}`);
@@ -405,10 +466,10 @@ export function NotifyChoiceSheet({
     },
     onOpenExternal: () => {
       // 외부 브라우저는 로그인·저장소가 따로라서 내 정보(로그인 후 알림 선택 17)를 엽니다.
-      window.location.href = kakaoOpenExternalUrl(notifyLinkUrl());
+      window.location.href = kakaoOpenExternalUrl(link());
     },
     onCopyLink: () => {
-      void copyText(notifyLinkUrl()).then((copied) => {
+      void copyText(link()).then((copied) => {
         if (copied) toast("주소를 복사했어요. Safari·Chrome에 붙여넣어 주세요");
         else setError("복사하지 못했어요. 주소창의 주소를 길게 눌러 복사해 주세요");
       });
@@ -439,6 +500,7 @@ export function NotifyChoiceSheet({
                 context={context}
                 actions={actions}
                 demo={demo}
+                audience={audience}
                 renderTitle={(text) => (
                   <BottomSheet.Title className="wh-sheet__title">{text}</BottomSheet.Title>
                 )}

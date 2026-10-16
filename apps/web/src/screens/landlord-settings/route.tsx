@@ -1,14 +1,18 @@
-// 집주인 설정 탭. lofi에 아직 없는 화면이라 지금 쓸 수 있는 것(건물 정보·크게 보기·약관·로그아웃)만 둡니다.
+// 집주인 설정 탭. lofi에 아직 없는 화면이라 지금 쓸 수 있는 것(건물 정보·크게 보기·새 메모·제보 알림·약관·로그아웃)만 둡니다.
 import { ActionButton } from "@seed-design/react";
 import type { ManagedBuildingDetail } from "@wolgyeham/contracts";
 import { Link, useNavigate, useParams } from "react-router";
 import { Icon } from "../../components/Icon";
-import { Screen, SoonNote, TopBar } from "../../components/Screen";
+import { Screen, TopBar } from "../../components/Screen";
 import { LandlordTabs } from "../../components/TabBar";
 import { ManagerGate } from "../../features/auth/ManagerGate";
 import { useLogout } from "../../features/auth/queries";
+import { NotifyChoiceSheet } from "../../features/push/NotifyChoiceSheet";
+import { NOTIFY_PARAM, useNotifySheetState } from "../../features/push/notifyLink";
+import { usePushEnv } from "../../features/push/queries";
 import { errorMessage } from "../../lib/errors";
 import { setLargeMode, useLargeMode } from "../../lib/largeMode";
+import { notifyValue } from "../../lib/pushEnv";
 import "./landlord-settings.css";
 
 export function Component() {
@@ -23,6 +27,9 @@ function Settings({ detail }: { detail: ManagedBuildingDetail }) {
   const navigate = useNavigate();
   const large = useLargeMode();
   const logout = useLogout();
+  // `?notify=1`(카카오톡 안에서 Safari·Chrome으로 다시 연 주소)이면 차례가 오면 알림 시트를 엽니다.
+  const [notifyOpen, setNotifyOpen] = useNotifySheetState();
+  const push = usePushEnv(!notifyOpen, "manager");
 
   return (
     <Screen
@@ -58,13 +65,18 @@ function Settings({ detail }: { detail: ManagedBuildingDetail }) {
         </span>
         <span className="wh-list-row__value">{large ? "켜짐" : "꺼짐"}</span>
       </button>
-      <button type="button" className="wh-list-row" disabled aria-describedby="ls-alert-soon">
+      <button type="button" className="wh-list-row" onClick={() => setNotifyOpen(true)}>
         <span className="wh-list-row__text">
           <span className="wh-list-row__title">새 메모·제보 알림</span>
           <span className="wh-list-row__sub">
-            파일럿 동안은 월계함 팀이 받은 내용을 카카오톡으로 전해요
+            {push.env?.kind === "enabled"
+              ? "이 휴대폰에서 새 수정 메모·제보를 받아요"
+              : "새 수정 메모·제보를 이 휴대폰으로 받을지 골라요"}
           </span>
-          <SoonNote id="ls-alert-soon" />
+        </span>
+        <span className="wh-list-row__value">
+          {notifyValue(push.env)}
+          <Icon name="chevron-right" />
         </span>
       </button>
 
@@ -110,6 +122,13 @@ function Settings({ detail }: { detail: ManagedBuildingDetail }) {
           로그아웃
         </ActionButton>
       </div>
+      <NotifyChoiceSheet
+        open={notifyOpen}
+        onOpenChange={setNotifyOpen}
+        context="settings"
+        audience="manager"
+        linkPath={`/manage/${building.id}/settings?${NOTIFY_PARAM}=1`}
+      />
     </Screen>
   );
 }

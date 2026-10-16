@@ -21,6 +21,8 @@
 | 보안 보강(`0007_security_hardening`) | 있음: `moderation_actions`(운영 기록), `rate_limits`(고정 창 횟수 제한), `push_subscriptions.failure_count`, `tips.deleted_at`(소프트 삭제), `content_reports.tip_body`(신고할 때 내용), 정리용 인덱스(`join_code_attempts.updated_at`, `report_access_tokens.expires_at`, `report_submissions.created_at`) |
 | 푸시 구독 주소 정리(`0008_push_endpoint_cleanup`, 직접 쓴 SQL) | 있음: contracts `isAllowedPushEndpoint`와 같은 규칙에 맞지 않는 `push_subscriptions` 행을 지움 |
 | 건물 확인·약관 동의(`0009_building_confirm_terms_consent`) | 있음: `buildings.confirmed_at`(LF-12·23 건물 확인), `users.terms_version`·`terms_agreed_at`(D-28, CHECK 둘 다 null이거나 둘 다 있음·판 64자 이하). 이미 관리자가 있던 건물은 첫 관리자가 생긴 시각으로 채움(생성 SQL 뒤에 직접 붙인 UPDATE) |
+| 집주인 메모·제보 알림(`0011_manager_push_alerts`) | 있음: `push_subscriptions.manager_alerts` (D-38) |
+| 기계 번역 캐시(`0012_content_translations`) | 있음: `content_translations` (D-37) |
 | 안내·공지 사진(`0010_photos`) | 있음: `guides`·`guide_revisions`·`notices`의 `photos jsonb`(기본 `[]`)와 CHECK `<테이블>_photos_check`(배열, 4개 이하). D-34 |
 | 사용자 외래 키 인덱스(`0005_user_fk_indexes`) | 있음: `guides`·`guide_revisions`·`notices`의 작성자, `join_codes.created_by_user_id`, `manager_invites.accepted_by_user_id`, `content_reports.reporter_user_id` |
 | 스크립트 `db:generate`, `db:migrate`, `db:seed`, `db:invite`, `db:moderate` | 있음. `apps/api/package.json`, 루트는 `db:migrate`·`db:seed` |
@@ -135,7 +137,7 @@ erDiagram
 |---|---|---|
 | `users` | `kakao_user_id text`, `terms_version`·`terms_agreed_at`(마지막으로 동의한 약관 판과 시각, 없으면 둘 다 null) | `users_kakao_user_id_key`, CHECK `users_terms_check`. 닉네임·프로필 사진·실명은 저장하지 않음 |
 | `sessions` | `user_id`(cascade), `token_hash`, `expires_at`, `last_seen_at` | `sessions_token_hash_key`, `sessions_user_id_idx` |
-| `push_subscriptions` | `user_id`(cascade), `endpoint`, `p256dh`, `auth`, `failure_count`(404·410이 아닌 이어진 실패 수, 3이면 지움) | `push_subscriptions_endpoint_key`, `push_subscriptions_user_id_idx`. 브라우저마다 한 행. 사용자마다 최근 `updated_at` 5개만 남김(저장 트랜잭션에서) |
+| `push_subscriptions` | `user_id`(cascade), `endpoint`, `p256dh`, `auth`, `failure_count`(404·410이 아닌 이어진 실패 수, 3이면 지움), `manager_alerts`(집주인이 이 브라우저에서 새 메모·제보 알림을 켰는지, 기본 false, `0011_manager_push_alerts`. 거주자 공지 알림은 이 값과 상관없이 연결로 정함) | `push_subscriptions_endpoint_key`, `push_subscriptions_user_id_idx`. 브라우저마다 한 행. 사용자마다 최근 `updated_at` 5개만 남김(저장 트랜잭션에서) |
 
 **건물·관리·연결**
 
@@ -157,6 +159,7 @@ erDiagram
 | `correction_memos` | `guide_id`(cascade), `author_user_id`(set null), `body` ≤200, `status` pending·applied·kept, `kept_reason` ≤200, `resolved_at` | CHECK 글자 수·`status`, CHECK `status <> 'kept' or kept_reason is not null`, CHECK `(status = 'pending') = (resolved_at is null)`, `correction_memos_guide_id_status_idx`, `correction_memos_author_user_id_idx` |
 | `notices` | `building_id`(cascade), `title` ≤80, `body` ≤1000, `starts_at`, `ends_at`, `status` published·expired, `author_user_id`(set null), `published_at` | CHECK `ends_at >= starts_at`·글자 수, `notices_building_id_ends_at_idx` |
 | `notice_deliveries` | `notice_id`(cascade), `occupancy_id`(cascade), `attempted_at`, `opened_at` | `notice_deliveries_notice_id_occupancy_id_key`, `notice_deliveries_occupancy_id_idx`. 행 하나가 알림 대상 한 명. `opened_at`은 그 사람이 공지를 처음 열 때 한 번(`POST /notices/:noticeId/opened`) |
+| `content_translations` | `guide_id`·`notice_id`(둘 중 하나만, cascade), `lang` en·zh-CN·vi, `source_hash`(번역한 때 원문 제목·본문의 SHA-256), `title`, `body` | `content_translations_guide_id_lang_key`, `content_translations_notice_id_lang_key`, CHECK `num_nonnulls(guide_id, notice_id) = 1`. 원문이 바뀌면 다음 요청이 덮어씀(D-37) |
 
 **제보·팁**
 

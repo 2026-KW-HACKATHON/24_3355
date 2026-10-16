@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { publicBuildingQrUrl, publicBuildingUrl, publicOrigin } from "./share";
+import {
+  publicBuildingQrUrl,
+  publicBuildingUrl,
+  publicGuideStickerUrl,
+  publicOrigin,
+} from "./share";
 
 const HERE = "https://pr-12.preview.example";
 
@@ -24,5 +29,12 @@ describe("QR contents", () => {
     const origin = "https://wolgyeham.example";
     expect(publicBuildingQrUrl("b-1", origin)).toBe("https://wolgyeham.example/b/b-1?via=qr");
     expect(publicBuildingUrl("b-1", origin)).toBe("https://wolgyeham.example/b/b-1");
+  });
+
+  it("opens the guide itself from a guide sticker, marked as a sticker entry", () => {
+    const origin = "https://wolgyeham.example";
+    expect(publicGuideStickerUrl("b-1", "g-9", origin)).toBe(
+      "https://wolgyeham.example/b/b-1/guides/g-9?via=sticker",
+    );
   });
 });

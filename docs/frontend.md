@@ -106,7 +106,8 @@ apps/web/src/
 | `/manage/:buildingId/settings` | `landlord-settings` | 설정 탭(lofi 없음): 건물 정보·크게 보기·약관·로그아웃 | 집주인 |
 | `/manage/:buildingId/memos/:memoId` | `memo-review` | LF-17(25). 반영 → `…/guides/:guideId/edit?apply=<memoId>`, 유지 → 사유 시트 | 집주인 |
 | `/manage/:buildingId/qr` | `qr-code` | LF-18(26) QR 인쇄·가입코드 복사·바꾸기. ‘인쇄용 내려받기’는 현관 안내문과 같은 모양의 PNG(가입코드 없음) | 집주인 |
-| `/manage/:buildingId/card` | `move-in-card` | LF-18(39) 입주 카드 인쇄·카카오톡 보내기 | 집주인 |
+| `/manage/:buildingId/card` | `move-in-card` | LF-18(39) 입주 카드 인쇄·카카오톡 보내기. 인쇄 크기 ‘명함 크기(90×50mm, 절취선)’를 고르면 A4에 10장(2칸 × 5줄)을 찍음(부동산 중개사무소용, 기본은 그대로) | 집주인 |
+| `/manage/:buildingId/stickers` | `guide-stickers` | 안내 스티커(26의 ‘안내마다 붙이는 QR 스티커’). 공개한 안내마다 5×5cm(종류·제목·그 안내 QR `?via=sticker`·월계함), A4에 15장(3칸 × 5줄, 점선이 오릴 자리), 한 장씩 PNG(600×600) | 집주인 |
 | `/manage/:buildingId/sign` | `entrance-sign` | 현관 안내문 A4 인쇄(26의 ‘현관 안내문 인쇄’). 건물 이름·QR(`?via=qr`)·주소. 가입코드는 처음엔 빼 두고 켤 수 있음. ‘이미지로 내려받기’는 화면 그대로의 PNG | 집주인 |
 | `/demo` | `demo` | LF-20(29). `GET /api/dev/demo`가 404면(DEMO_MODE 아님) 없는 주소(22)와 같게 보임 | 시연자 |
 | `/terms`, `/privacy` | `legal` | 약관·개인정보 처리방침 초안(D-28, lofi 없음). 본문은 `content/terms/*.ts`(문단·목록·항목만, HTML 해석 없음), 맨 위 ‘초안 · 법률 검토 전’, 시행일은 contracts `TERMS_VERSION` | 누구나 |
@@ -182,6 +183,7 @@ apps/web/src/
 | localStorage | `wh.reconfirmAsked` | 재확인 시트(40)를 먼저 띄운 날(`{ value: 연결 id + 다음 확인 시각, at }`). 한국 날짜로 하루 한 번만 |
 | sessionStorage | `wh.termsAsked` | 다시 동의 시트에서 ‘나중에’를 누른 계정과 판(`<userId>:<TERMS_VERSION>`). 이번 실행에서 다시 띄우지 않음 |
 | localStorage | `wh.pushSaved` | 서버 저장을 확인한 이 브라우저의 푸시 구독(`endpoint`·`userId`). 이것과 브라우저 구독이 맞아야 ‘켜짐’. 알림 끄기·로그아웃·건물 옮김 때 지움 |
+| localStorage | `wh.lang` | 공개 안내·공지의 보기 언어(`en`·`zh-CN`·`vi`, D-37). 한국어(원문)로 돌아가면 지움. 다른 안내·공지에도 이어짐 |
 
 - 키는 `wh.`로 시작하고 새 키는 이 표에 추가합니다. 개인정보 처리방침 초안(`content/terms/privacy.ts` §2)에도 같은 키와 지우는 때를 적습니다. 코드에 있는 키가 방침에 빠지면 `screens/legal/legal.test.tsx`가 실패합니다. 읽기·쓰기는 모두 try/catch로 감쌉니다.
 - 이미 로그인했으면 16을 건너뜁니다. 연결 뒤 알림 선택(17)은 한 번만 보여주고, 환영·첫날 안내를 연달아 띄우지 않습니다.
@@ -220,6 +222,7 @@ apps/web/src/
 
 **안내와 숫자는 데이터 그대로 보여줍니다.**
 
+- **집주인 도우미(D-37):** `GET /api/assist/config`(`features/assist/queries.ts`의 `useAssistConfig`, 실패·로딩 중이면 모두 꺼짐)로 입구를 정합니다. 새 안내 쓰기(33)는 `guideSplit`이 true일 때만 ‘카톡 통째로 붙여넣기’ 입구를 두고, 누르면 같은 주소 안에서 `screens/guide-write/SplitPaste.tsx`로 바꿉니다(직접 쓰던 값은 기기 초안에 남음). 붙여넣기(4000자, “정리를 위해 글을 Google(Gemini)에 보내요. 전화번호·이메일·계좌번호는 가리고 보내요.”) → ‘나눠 보기’(30초 제한, 다시 시도하지 않음) → 초안 카드(종류 칩·제목·내용 고치기, ‘빼기’) → ‘초안 N개 저장’은 카드마다 기존 초안 만들기를 차례로 부르고 저장한 카드는 목록에서 빼서 일부 실패 뒤 다시 눌러도 겹쳐 만들지 않습니다. 다 저장하면 토스트와 함께 관리 홈으로 가고, 공개는 기존 미리 보기(43)에서 하나씩 합니다. 넣지 못한 가린 번호(`unplacedCount`)가 있으면 카드 위에 알리고, 결과가 없으면 빈 상태와 ‘직접 쓰기’를 둡니다. 상태는 `features/assist/splitDrafts.ts`(순수 함수)입니다. 안내 상세(11)·공지 상세(15)는 `translation`이 true일 때만 `LanguageBar`(한국어·English·中文(简体)·Tiếng Việt, 네이티브 select 44px)를 그리고, 고른 언어는 `wh.lang`에 둡니다. 번역 중·실패면 원문을 보여 주며(빈 글 없음) 실패에는 ‘다시 시도’, 번역에는 ‘기계 번역’ 표시와 ‘원문 보기’를 둡니다. 제목·본문에 `lang`을 붙이고, 읽어주기는 보이는 언어로 읽습니다(`speechLang`, 그 언어 음성이 없으면 브라우저 기본 음성; 공지의 기간·대상 줄은 한국어 그대로라 번역 중에는 읽지 않음). 첫날 카드(36)·미리 보기(43)에는 번역을 두지 않았습니다.
 - **사진(D-34):** 안내 쓰기(33)와 공지 올리기(34)는 `features/photos/PhotoPicker.tsx`로 최대 4장을 고릅니다. 고르는 즉시 브라우저에서 긴 변 2048px JPEG로 줄여(`downscale.ts`, `createImageBitmap` → 안 되면 `<img>`, iOS의 HEIC도 여기서 JPEG가 됨) 올리고, 폼에는 올린 사진의 키만 순서대로 둡니다(`pickerState.ts`, 순수 함수). 올리는 중에는 저장 버튼이 “사진을 다 올린 뒤 눌러 주세요”로 막습니다. 칸마다 44px 빼기 버튼(“사진 n 빼기”), 실패한 칸은 지우고 다시 고릅니다. 사진 아래에 “사람 얼굴·호수·차량번호가 보이지 않게 찍어 주세요. 사진 위치 정보는 지워져요.”를 둡니다. `GET /api/photos/config`의 `uploadsEnabled`가 false면 고르기를 그리지 않습니다. 쓰던 안내(localStorage)에는 사진 키도 들어갑니다. 상세(11)·미리 보기(43)·공지 상세(15)는 `PhotoList`로 4:3 칸(`aspect-ratio`, `width`·`height`)에 `loading="lazy"`로 그리고, 누르면 원본을 새 탭에서 엽니다(첫날 카드 36은 1장, 누르지 않음). 대체 텍스트는 “<제목> 사진 n”입니다.
 - 안내는 집주인이 입력한 제목·본문·사진만 보여주고, 상세(11)·첫날 카드(36)·미리 보기(43)가 같은 본문 컴포넌트를 씁니다. 줄바꿈은 `white-space: pre-line`으로 살리고 본문을 HTML로 해석하지 않습니다(`dangerouslySetInnerHTML` 금지). 요일표처럼 입력하지 않은 구조를 만들지 않습니다.
 - 1/4, 안내 N개, ‘월계함에 연결된 거주자 N명’ 같은 숫자는 응답에서 셉니다. 화면에 숫자를 적어 두지 않습니다.
@@ -270,10 +273,11 @@ html[data-size="large"] {
 ## 8. PWA와 웹 푸시
 
 - manifest(`/manifest.webmanifest`)와 service worker(`/sw.js`)는 `public/`에 둡니다. Amplify rewrite가 `.js`·`.webmanifest`는 파일로 내보내므로 SPA fallback에 걸리지 않습니다. 아이콘(`public/icons/`)은 favicon과 같은 브랜드 우표(남색·점선·달)이고 maskable은 여백을 더 둡니다.
-- service worker는 푸시를 받아 “새 공지 · {제목}” 알림을 띄우고, 누르면 `url`을 엽니다. 주소는 `new URL(url, 출처)`로 풀어 같은 출처일 때만 쓰고(`//x`·`/\x`·탭이 섞인 주소는 `/`), 알림 막대 아이콘은 흰 우표 모양 `icons/badge-72.png`(투명 바탕)입니다. 이미 열린 창이 있으면 새로 읽지 않고 `postMessage`로 경로를 보내 앱 라우터가 옮깁니다(`app/RootLayout.tsx`, 쓰던 입력은 나가기 확인을 거침). 앱이 1.5초 안에 답하지 않으면 창 주소를 바꾸고, 그것도 안 되면 새 창을 엽니다. 화면·API를 캐시하지 않습니다. `main.tsx`가 앱을 열 때 등록합니다.
+- service worker는 푸시를 받아 “새 공지 · {제목}” 알림을 띄우고, 누르면 `url`을 엽니다. 집주인 알림(`type: "memo" | "report"`)은 받은 `title`(“새 수정 메모가 왔어요” 등)·`body`(안내 제목·건물 이름)로 띄우고 검토 화면을 엽니다. 주소는 `new URL(url, 출처)`로 풀어 같은 출처일 때만 쓰고(`//x`·`/\x`·탭이 섞인 주소는 `/`), 알림 막대 아이콘은 흰 우표 모양 `icons/badge-72.png`(투명 바탕)입니다. 이미 열린 창이 있으면 새로 읽지 않고 `postMessage`로 경로를 보내 앱 라우터가 옮깁니다(`app/RootLayout.tsx`, 쓰던 입력은 나가기 확인을 거침). 앱이 1.5초 안에 답하지 않으면 창 주소를 바꾸고, 그것도 안 되면 새 창을 엽니다. 화면·API를 캐시하지 않습니다. `main.tsx`가 앱을 열 때 등록합니다.
 - 알림 환경은 [screens.md §6](../lofi/screens.md#6-알림-환경)을 따르고 `lib/pushEnv.ts`의 순수 함수로 판정합니다: 앱 안 브라우저(카카오톡) → iPhone·iPad 홈 화면 추가 전 → 브라우저 미지원 → 서버 공개키 없음(`publicKey: null`, “지금은 알림을 보내지 않고 있어요”) → 차단 → 켜짐 → 켤 수 있음.
 - 권한 요청(`Notification.requestPermission()`)은 ‘알림 받기’를 누른 이벤트의 첫 줄에서만 합니다. 알림을 켜지 않아도 연결은 끝난 상태이고, 같은 시트를 내 정보(45)·거주자 홈의 종 버튼에서 다시 엽니다.
 - ‘켜짐’은 서버 저장을 확인한 구독만입니다(`wh.pushSaved`). 구독을 만든 뒤 서버 저장이 실패하면(403 `RECONFIRM_NEEDED`, 연결 끊김, 받지 않는 endpoint) 브라우저 구독을 끊고 이유를 보여줘 ‘알림 받기’로 처음부터 다시 하게 합니다. 내 정보에서 시트를 열었는데 저장 확인 없는 구독이 남아 있으면(같은 계정 또는 기록 없음) 한 번 다시 저장해 봅니다. 다른 건물로 옮기면 서버가 구독을 지우므로(D-18) 브라우저 구독도 끊습니다.
+- 집주인 설정·관리 홈의 ‘새 메모·제보 알림’도 같은 시트(`NotifyChoiceSheet audience="manager"`)를 엽니다. 문구만 메모·제보로 바꾸고, 저장은 `POST /api/manage/push-subscriptions`입니다. 켜짐은 `wh.pushSaved`의 `manager: true`로 봅니다(서버 구독 행이 하나라 같은 기록에 둠). 끌 때 거주자로도 연결돼 있으면 브라우저 구독은 두고 메모·제보 알림만 끕니다. 카카오톡 안에서는 `/manage/:buildingId/settings?notify=1`을 외부 브라우저로 엽니다.
 - 공개키를 받는 동안은 ‘알림 받기’ 대신 확인 중 자리를 보여줍니다. 권한 창이 떠 있는 동안에는 ‘나중에’로 닫을 수 있고, 권한을 고른 뒤 서버에 저장하는 동안만 닫기를 막습니다.
 - 카카오톡 안 브라우저의 “Safari·Chrome으로 열기”·“주소 복사”는 지금 주소가 아니라 내 정보 `/me?notify=1`을 `kakaotalk://web/openExternal?url=`로 엽니다. 외부 브라우저는 로그인·저장소가 따로라서, 로그인하면 내 정보가 알림 선택(17)을 바로 엽니다(`features/push/notifyLink.ts`의 `useNotifySheetState`). 이 주소와 iOS·Android 실제 구독·수신은 아직 실제 기기에서 확인하지 않았습니다(로컬은 VAPID 키가 없어 ‘보내지 않고 있어요’ 상태).
 

@@ -1,0 +1,11 @@
+# 매일 03:30 KST(18:30 UTC, 디스크 스냅샷 30분 뒤). 서버가 꺼져 있었으면 켜진 뒤 한 번 돕니다.
+[Unit]
+Description=Daily wolgyeham DB backup
+
+[Timer]
+OnCalendar=*-*-* 18:30:00 UTC
+RandomizedDelaySec=5min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

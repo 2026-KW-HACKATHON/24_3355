@@ -1,5 +1,6 @@
 // 현관 QR에 인쇄한 주소는 `/b/:buildingId?via=qr`입니다(lib/share.ts의 publicBuildingQrUrl).
 // 주소 나누기(app/BuildingRoute)가 첫 렌더에 한 번 읽고 주소에서 지웁니다. 공유·북마크한 주소에는 남지 않습니다.
+// 안내 스티커는 `/b/:buildingId/guides/:guideId?via=sticker`(publicGuideStickerUrl)이고, 안내 상세가 같은 방법으로 지웁니다.
 const PARAM = "via";
 
 /** 인쇄한 현관 QR로 열었는지. */

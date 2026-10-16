@@ -1,0 +1,1 @@
+ALTER TABLE "push_subscriptions" ADD COLUMN "manager_alerts" boolean DEFAULT false NOT NULL;

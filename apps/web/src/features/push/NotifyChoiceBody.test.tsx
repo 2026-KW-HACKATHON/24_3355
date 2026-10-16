@@ -86,4 +86,41 @@ describe("notification choice (17) states", () => {
     const later = html.slice(html.lastIndexOf("<button", html.indexOf("나중에")));
     expect(later.slice(0, later.indexOf(">"))).toContain("disabled");
   });
+
+  it("speaks about memos and reports when a landlord opens it", () => {
+    // When
+    const offer = renderToStaticMarkup(
+      <NotifyChoiceBody
+        env={{ kind: "available" }}
+        context="settings"
+        actions={actions}
+        audience="manager"
+      />,
+    );
+    const on = renderToStaticMarkup(
+      <NotifyChoiceBody
+        env={{ kind: "enabled" }}
+        context="settings"
+        actions={actions}
+        audience="manager"
+      />,
+    );
+    const demo = renderToStaticMarkup(
+      <NotifyChoiceBody
+        env={{ kind: "available" }}
+        context="settings"
+        actions={actions}
+        audience="manager"
+        demo
+      />,
+    );
+    // Then
+    expect(offer).toContain("새 메모·제보를 알림으로 받을까요?");
+    expect(offer).toContain("알림 받기");
+    expect(offer).not.toContain("공지");
+    expect(on).toContain("메모·제보 알림이 켜져 있어요");
+    expect(on).toContain("이 휴대폰에서 알림 끄기");
+    expect(demo).toContain("시연 계정에서는 알림을 켤 수 없어요");
+    expect(demo).not.toContain("알림 받기");
+  });
 });

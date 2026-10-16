@@ -13,8 +13,15 @@ import {
   notInArray,
   sql,
 } from "drizzle-orm";
-import { noticeDeliveries, notices, occupancies, pushSubscriptions } from "../../db/schema.ts";
+import {
+  buildingManagers,
+  noticeDeliveries,
+  notices,
+  occupancies,
+  pushSubscriptions,
+} from "../../db/schema.ts";
 import type { Database } from "../../lib/db.ts";
+import type { PushTarget } from "../../lib/push.ts";
 import { activeNow } from "../../lib/reconfirm.ts";
 import { toPhotos } from "../photos/service.ts";
 
@@ -182,9 +189,19 @@ export async function countAudience(db: Database, buildingId: string) {
  * 비밀)가 같을 때만 바꾸므로, endpoint만 아는 다른 사람이 남의 구독을 가져가지 못합니다(그때는 아무것도 바꾸지 않음).
  * 다시 저장하면 `updated_at`을 지금으로, 실패 횟수를 0으로 둡니다.
  */
+/**
+ * `managerAlerts`를 주면(집주인이 메모·제보 알림을 켬) 그 값으로 저장합니다. 주지 않으면(거주자 공지 알림) 같은
+ * 계정의 구독은 이전 값을 두고, 다른 계정이 쓰던 구독을 가져오면 false로 시작합니다.
+ */
 export async function upsertPushSubscription(
   db: Database,
-  values: { userId: string; endpoint: string; p256dh: string; auth: string },
+  values: {
+    userId: string;
+    endpoint: string;
+    p256dh: string;
+    auth: string;
+    managerAlerts?: boolean;
+  },
 ) {
   await db
     .insert(pushSubscriptions)
@@ -196,6 +213,9 @@ export async function upsertPushSubscription(
         p256dh: values.p256dh,
         auth: values.auth,
         failureCount: 0,
+        managerAlerts:
+          values.managerAlerts ??
+          sql`${pushSubscriptions.managerAlerts} and ${pushSubscriptions.userId} = excluded.user_id`,
         updatedAt: sql`now()`,
       },
       setWhere: sql`${pushSubscriptions.auth} = excluded.auth`,
@@ -243,6 +263,39 @@ export async function deleteUserPushSubscription(db: Database, userId: string, e
   await db
     .delete(pushSubscriptions)
     .where(and(eq(pushSubscriptions.userId, userId), eq(pushSubscriptions.endpoint, endpoint)));
+}
+
+/** 이 계정의 이 브라우저 구독에서 집주인 메모·제보 알림만 끕니다(공지 알림 구독은 남김). */
+export async function disableManagerAlerts(db: Database, userId: string, endpoint: string) {
+  await db
+    .update(pushSubscriptions)
+    .set({ managerAlerts: false })
+    .where(and(eq(pushSubscriptions.userId, userId), eq(pushSubscriptions.endpoint, endpoint)));
+}
+
+/** 건물을 하나라도 관리하는 사람인지. */
+export async function managesAnyBuilding(db: Database, userId: string) {
+  const [row] = await db
+    .select({ id: buildingManagers.id })
+    .from(buildingManagers)
+    .where(eq(buildingManagers.userId, userId))
+    .limit(1);
+  return row !== undefined;
+}
+
+/** 이 건물을 관리하는 사람의 구독 중 메모·제보 알림을 켠 것. */
+export function listManagerAlertTargets(db: Database, buildingId: string): Promise<PushTarget[]> {
+  return db
+    .select({
+      endpoint: pushSubscriptions.endpoint,
+      p256dh: pushSubscriptions.p256dh,
+      auth: pushSubscriptions.auth,
+    })
+    .from(pushSubscriptions)
+    .innerJoin(buildingManagers, eq(buildingManagers.userId, pushSubscriptions.userId))
+    .where(
+      and(eq(buildingManagers.buildingId, buildingId), eq(pushSubscriptions.managerAlerts, true)),
+    );
 }
 
 export async function deleteAllUserPushSubscriptions(db: Database, userId: string) {

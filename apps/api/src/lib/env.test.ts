@@ -81,5 +81,46 @@ describe("parseEnv", () => {
       parseEnv({ ...base, PHOTO_STORE: "s3", PHOTO_BUCKET: "bucket-a", PHOTO_PREFIX: "staging/" }),
     ).toThrow("PHOTO_PREFIX");
     expect(parseEnv({ ...base, PHOTO_STORE: "local", PHOTO_PREFIX: "" }).PHOTO_PREFIX).toBe("");
+    // gcs(GCP 시험 환경)도 버킷과 접두사가 함께 있어야 합니다
+    const gcs = parseEnv({
+      ...base,
+      NODE_ENV: "production",
+      PHOTO_STORE: "gcs",
+      PHOTO_BUCKET: "wolgyeham-kw2026-photos",
+      PHOTO_PREFIX: "gcp/",
+    });
+    expect(photoStoreKind(gcs)).toBe("gcs");
+    expect(() => parseEnv({ ...base, PHOTO_STORE: "gcs", PHOTO_PREFIX: "gcp/" })).toThrow(
+      "PHOTO_BUCKET",
+    );
+    expect(() => parseEnv({ ...base, PHOTO_STORE: "gcs", PHOTO_BUCKET: "bucket-a" })).toThrow(
+      "PHOTO_PREFIX",
+    );
+    expect(() =>
+      parseEnv({ ...base, PHOTO_STORE: "gcs", PHOTO_BUCKET: "bucket-a", PHOTO_PREFIX: "../" }),
+    ).toThrow("PHOTO_PREFIX");
+  });
+
+  it("keeps the AI helpers off by default and needs GCP_PROJECT to turn them on", () => {
+    // When
+    const off = parseEnv(base);
+    const on = parseEnv({
+      ...base,
+      GEMINI_ENABLED: "true",
+      TRANSLATION_ENABLED: "true",
+      GCP_PROJECT: "wolgyeham-kw2026",
+    });
+    // Then
+    expect(off).toMatchObject({
+      GEMINI_ENABLED: false,
+      TRANSLATION_ENABLED: false,
+      GEMINI_LOCATION: "us-west1",
+      GEMINI_MODEL: "gemini-2.5-flash",
+    });
+    expect(off.GCP_PROJECT).toBeUndefined();
+    expect(on).toMatchObject({ GEMINI_ENABLED: true, TRANSLATION_ENABLED: true });
+    expect(() => parseEnv({ ...base, GEMINI_ENABLED: "true" })).toThrow("GCP_PROJECT");
+    expect(() => parseEnv({ ...base, TRANSLATION_ENABLED: "true" })).toThrow("GCP_PROJECT");
+    expect(() => parseEnv({ ...base, GCP_PROJECT: "Bad Project" })).toThrow("GCP_PROJECT");
   });
 });

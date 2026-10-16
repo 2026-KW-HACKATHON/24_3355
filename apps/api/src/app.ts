@@ -15,10 +15,12 @@ import type { Database } from "./lib/db.ts";
 import { demoReadOnly } from "./lib/demoScope.ts";
 import { apiDocsEnabled, type Env } from "./lib/env.ts";
 import { AppError } from "./lib/errors.ts";
+import { createGoogleAi, type GoogleAi } from "./lib/google.ts";
 import { log } from "./lib/log.ts";
 import { createPhotoStore, type PhotoStore } from "./lib/photoStore.ts";
 import { createWebPushSender, type PushSender } from "./lib/push.ts";
 import { createTaskRunner, type TaskRunner } from "./lib/tasks.ts";
+import { assistRoutes } from "./modules/assist/routes.ts";
 import { authRoutes, devRoutes } from "./modules/auth/routes.ts";
 import { buildingRoutes } from "./modules/buildings/routes.ts";
 import { demoRoutes } from "./modules/demo/routes.ts";
@@ -30,6 +32,7 @@ import { occupancyRoutes } from "./modules/occupancies/routes.ts";
 import { PHOTO_UPLOAD_PATH, photoRoutes } from "./modules/photos/routes.ts";
 import { reportRoutes } from "./modules/reports/routes.ts";
 import { tipRoutes } from "./modules/tips/routes.ts";
+import { translationRoutes } from "./modules/translations/routes.ts";
 
 /** 요청 본문 한도. 안내 본문(2000자)과 여유분을 넉넉히 넘습니다. */
 const MAX_BODY_BYTES = 64 * 1024;
@@ -43,7 +46,8 @@ const CACHEABLE_PATHS = new Set(["/api/docs", "/api/swagger", "/api/openapi.json
 /**
  * `push`를 넘기지 않으면 VAPID 키가 있을 때만 보내는 기본 발송기(web-push)를 씁니다. `tasks`는 응답 뒤에 이어서
  * 할 일(공지 푸시)을 돌리는 곳이고, 서버·테스트가 넘겨 `idle()`로 기다립니다. `photos`를 넘기지 않으면 환경 변수로
- * 사진 저장소를 만듭니다(null이면 사진을 받지 않음). 테스트는 메모리 저장소를 넘깁니다.
+ * 사진 저장소를 만듭니다(null이면 사진을 받지 않음). 테스트는 메모리 저장소를 넘깁니다. `ai`를 넘기지 않으면
+ * 환경 변수로 켠 Google API만 만듭니다(D-37). 테스트는 fetch를 바꾼 클라이언트를 넘깁니다.
  */
 export function createApp(deps: {
   env: Env;
@@ -51,11 +55,13 @@ export function createApp(deps: {
   push?: PushSender;
   tasks?: TaskRunner;
   photos?: PhotoStore | null;
+  ai?: GoogleAi;
 }) {
   const app = new Hono<AppEnv>();
   const push = deps.push ?? createWebPushSender(deps.env);
   const tasks = deps.tasks ?? createTaskRunner();
   const photos = deps.photos === undefined ? createPhotoStore(deps.env) : deps.photos;
+  const ai = deps.ai ?? createGoogleAi(deps.env);
 
   app.use(requestId());
   app.use(async (c, next) => {
@@ -65,6 +71,7 @@ export function createApp(deps: {
     c.set("push", push);
     c.set("tasks", tasks);
     c.set("photos", photos);
+    c.set("ai", ai);
     await next();
     const photoFile =
       c.req.path.startsWith(PHOTO_FILE_PREFIX) && (c.res.ok || c.res.status === 304);
@@ -137,6 +144,8 @@ export function createApp(deps: {
   app.route("/api", occupancyRoutes);
   app.route("/api", reportRoutes);
   app.route("/api", tipRoutes);
+  app.route("/api", assistRoutes);
+  app.route("/api", translationRoutes);
   app.route("/api", manageRoutes);
   app.route("/api", meRoutes);
   app.route("/api", authRoutes);

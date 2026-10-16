@@ -165,3 +165,112 @@
 .gw-apply__gone {
   margin-top: var(--wh-space-1_5);
 }
+
+/* 카톡 통째로 붙여넣기(D-37) */
+.gw-split-entry {
+  display: flex;
+  align-items: center;
+  gap: var(--wh-space-2_5);
+  width: 100%;
+  min-height: var(--wh-touch);
+  margin-top: var(--wh-space-2);
+  padding: var(--wh-space-2_5) var(--wh-space-3) var(--wh-space-2_5) var(--wh-space-3_5);
+  border: 1px solid var(--wh-primary-line);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface);
+  font: inherit;
+  text-align: left;
+  color: var(--wh-text);
+}
+.gw-split-entry:active {
+  background: var(--wh-primary-soft);
+}
+.gw-split-entry:focus-visible {
+  outline: 3px solid var(--wh-focus);
+  outline-offset: 2px;
+}
+.gw-split-entry > svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--wh-primary);
+}
+.gw-split-entry__text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: var(--wh-space-0_5);
+}
+.gw-split-entry__title {
+  font-size: var(--wh-type-label);
+  font-weight: 700;
+}
+.gw-split-entry__sub {
+  font-size: var(--wh-type-caption);
+  line-height: var(--wh-leading-snug);
+  color: var(--wh-text-strong-subtle);
+}
+.gw-split-note,
+.gw-split-warn {
+  display: flex;
+  gap: var(--wh-space-2);
+  margin: var(--wh-space-1) 0 var(--wh-space-3);
+  padding: var(--wh-space-2_5) var(--wh-space-3_5);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface-soft);
+  font-size: var(--wh-type-caption);
+  line-height: var(--wh-leading-snug);
+  color: var(--wh-text-body);
+}
+.gw-split-warn {
+  background: var(--wh-danger-soft);
+  color: var(--wh-text);
+}
+.gw-split-note > svg,
+.gw-split-warn > svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  color: var(--wh-text-subtle);
+}
+.gw-split-warn > svg {
+  color: var(--wh-danger);
+}
+.gw-split-text {
+  min-height: 14rem;
+}
+.gw-split-list {
+  display: grid;
+  gap: var(--wh-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gw-split-card {
+  padding: var(--wh-space-3) var(--wh-space-4) var(--wh-space-4);
+  border: 1px solid var(--wh-border);
+  border-radius: var(--wh-radius-card);
+  background: var(--wh-surface);
+}
+.gw-split-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.gw-split-card__index {
+  font-size: var(--wh-type-caption);
+  font-weight: 700;
+  color: var(--wh-primary);
+}
+.gw-split-card__remove {
+  gap: var(--wh-space-1);
+  color: var(--wh-text-subtle);
+}
+.gw-split-card__remove svg {
+  width: 16px;
+  height: 16px;
+}
+.gw-split-card__kind {
+  margin-top: var(--wh-space-1);
+}

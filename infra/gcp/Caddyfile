@@ -1,0 +1,20 @@
+# GCP 시험 환경의 입구. 웹(빌드한 apps/web/dist)과 API를 한 주소(SITE_HOST, 예: gcp.<a-b-c-d>.sslip.io)로 냅니다.
+# 같은 출처라 Amplify의 /api 프록시(infra/amplify/rewrites.*.json)와 같은 동작입니다. 접근 로그는 켜지 않습니다.
+{$SITE_HOST} {
+	encode zstd gzip
+
+	handle /api/* {
+		reverse_proxy api:3001
+	}
+
+	handle {
+		root * /srv/web
+		# 해시가 붙은 빌드 파일은 오래 캐시하고, 앱 셸·서비스 워커·매니페스트는 매번 확인합니다.
+		@hashed path /assets/*
+		header @hashed Cache-Control "public, max-age=31536000, immutable"
+		@shell path / /index.html /sw.js /manifest.webmanifest
+		header @shell Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}

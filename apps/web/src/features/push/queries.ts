@@ -4,7 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import { getJson } from "../../lib/api";
 import { detectPushEnv, type PushEnv, readPushEnvInput } from "../../lib/pushEnv";
 import { useMe } from "../auth/queries";
-import { currentSubscription, isConfirmedSubscription } from "./push";
+import {
+  currentSubscription,
+  isConfirmedSubscription,
+  loadSavedPush,
+  type PushAudience,
+} from "./push";
 
 export const pushKeys = {
   publicKey: () => ["push", "public-key"] as const,
@@ -22,12 +27,13 @@ export function usePushPublicKey(enabled = true) {
 }
 
 /**
- * 이 브라우저의 알림 환경(screens.md §6). `active`일 때만 구독 여부를 확인합니다.
+ * 이 브라우저의 알림 환경(screens.md §6). `active`일 때만 구독 여부를 확인합니다. `audience`가 manager면
+ * 집주인 새 메모·제보 알림을 켰는지로 ‘켜짐’을 봅니다.
  * ‘켜짐’은 브라우저 구독이 있고, 그 구독을 지금 계정으로 서버에 저장한 것을 확인했을 때만입니다.
  * 공개키를 받는 동안은 `env`가 없습니다(시트는 ‘확인하는 중’). `refresh()`는 권한·구독을 바꾼 뒤
  * 다시 판정할 때 씁니다.
  */
-export function usePushEnv(active: boolean) {
+export function usePushEnv(active: boolean, audience: PushAudience = "resident") {
   const key = usePushPublicKey(active);
   const userId = useMe().data?.user.id;
   // undefined: 아직 확인 전, null: 이 브라우저에 구독 없음
@@ -49,7 +55,12 @@ export function usePushEnv(active: boolean) {
 
   const refresh = useCallback(() => setVersion((value) => value + 1), []);
 
-  const confirmed = isConfirmedSubscription(endpoint ?? undefined, userId);
+  const confirmed = isConfirmedSubscription(
+    endpoint ?? undefined,
+    userId,
+    loadSavedPush(),
+    audience,
+  );
   const env: PushEnv | undefined =
     active && endpoint !== undefined && !key.isPending
       ? detectPushEnv(readPushEnvInput({ serverKey: key.data, subscribed: confirmed }))

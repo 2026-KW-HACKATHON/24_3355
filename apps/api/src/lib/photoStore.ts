@@ -1,5 +1,6 @@
 import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { Readable } from "node:stream";
 import {
   DeleteObjectCommand,
   DeleteObjectsCommand,
@@ -11,6 +12,7 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
+import type { Bucket } from "@google-cloud/storage";
 import { PHOTO_KEY_PATTERN } from "@wolgyeham/contracts";
 import { type Env, photoStoreKind } from "./env.ts";
 import { log } from "./log.ts";
@@ -26,7 +28,7 @@ export type StoredPhoto = {
  * (`PHOTO_PREFIX`)는 저장소가 붙입니다. 형식이 다른 키는 받지 않습니다(경로 탈출 방지).
  */
 export interface PhotoStore {
-  readonly kind: "local" | "s3" | "memory";
+  readonly kind: "local" | "s3" | "gcs" | "memory";
   put(key: string, bytes: Uint8Array, contentType: string): Promise<void>;
   /** 없으면 null. */
   get(key: string): Promise<StoredPhoto | null>;
@@ -274,6 +276,101 @@ export function createS3PhotoStore(options: {
   };
 }
 
+function isGcsNotFound(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code: unknown }).code === 404
+  );
+}
+
+/**
+ * GCS 버킷(`PHOTO_BUCKET`, 객체 이름은 `PHOTO_PREFIX` + 키). GCP 시험 환경(docs/gcp.md)에서 씁니다. 자격 증명은
+ * 애플리케이션 기본 사용자 인증 정보(VM 메타데이터 서버의 서비스 계정)에서 받고 환경 변수에 키를 두지 않습니다.
+ * 필요한 권한: 이 버킷의 `roles/storage.objectAdmin`(객체 쓰기·읽기·목록·삭제).
+ * 라이브러리는 처음 쓸 때 불러와, 다른 저장소를 쓰는 환경(AWS 등)에서는 읽지 않습니다.
+ */
+export function createGcsPhotoStore(options: {
+  bucket: string;
+  prefix: string;
+  client?: Bucket;
+}): PhotoStore {
+  let bucket: Promise<Bucket> | undefined = options.client
+    ? Promise.resolve(options.client)
+    : undefined;
+  const open = () => {
+    // 요청 10초, 다시 시도는 두 번까지(전체 20초). 키가 매번 새 이름이라 쓰기는 조건 없이도 겹치지 않습니다.
+    bucket ??= import("@google-cloud/storage").then(({ Storage }) =>
+      new Storage({
+        timeout: 10_000,
+        retryOptions: { maxRetries: 2, totalTimeout: 20, maxRetryDelay: 4 },
+      }).bucket(options.bucket),
+    );
+    return bucket;
+  };
+  const file = async (key: string) => {
+    checkKey(key);
+    return (await open()).file(`${options.prefix}${key}`);
+  };
+  return {
+    kind: "gcs",
+    async put(key, bytes, contentType) {
+      // 사진은 수백 KB라 한 번에 올립니다(이어 올리기는 로컬 설정 파일을 써서 끕니다).
+      await (await file(key)).save(Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength), {
+        resumable: false,
+        contentType,
+        metadata: { cacheControl: "public, max-age=31536000, immutable" },
+      });
+    },
+    async get(key) {
+      const object = await file(key);
+      try {
+        const [metadata] = await object.getMetadata();
+        const size = metadata.size === undefined ? undefined : Number(metadata.size);
+        return {
+          body: Readable.toWeb(object.createReadStream()) as ReadableStream<Uint8Array>,
+          contentType: metadata.contentType ?? "image/webp",
+          size: Number.isFinite(size) ? size : undefined,
+        };
+      } catch (error) {
+        if (isGcsNotFound(error)) return null;
+        throw error;
+      }
+    },
+    async exists(key) {
+      const [found] = await (await file(key)).exists();
+      return found;
+    },
+    async delete(key) {
+      await (await file(key)).delete({ ignoreNotFound: true });
+    },
+    // 목록(1000개씩)을 받아 하나씩 지웁니다(GCS JSON API에는 여러 개 지우기가 없음). 동시에 10개까지.
+    async deletePrefix(prefix) {
+      checkPrefix(prefix);
+      const target = await open();
+      let count = 0;
+      let pageToken: string | undefined;
+      do {
+        const [files, next] = await target.getFiles({
+          prefix: `${options.prefix}${prefix}`,
+          autoPaginate: false,
+          maxResults: 1000,
+          ...(pageToken ? { pageToken } : {}),
+        });
+        for (let i = 0; i < files.length; i += 10) {
+          await Promise.all(
+            files.slice(i, i + 10).map((item) => item.delete({ ignoreNotFound: true })),
+          );
+        }
+        count += files.length;
+        pageToken = next && "pageToken" in next ? next.pageToken : undefined;
+      } while (pageToken);
+      return count;
+    },
+  };
+}
+
 type PhotoEnv = Pick<
   Env,
   "NODE_ENV" | "PHOTO_STORE" | "PHOTO_BUCKET" | "PHOTO_PREFIX" | "PHOTO_LOCAL_DIR" | "AWS_REGION"
@@ -290,6 +387,10 @@ export function createPhotoStore(env: PhotoEnv): PhotoStore | null {
       prefix: env.PHOTO_PREFIX,
       region: env.AWS_REGION,
     });
+  }
+  if (kind === "gcs") {
+    if (!env.PHOTO_BUCKET) return null;
+    return createGcsPhotoStore({ bucket: env.PHOTO_BUCKET, prefix: env.PHOTO_PREFIX });
   }
   return createLocalPhotoStore(env.PHOTO_LOCAL_DIR, env.PHOTO_PREFIX);
 }
