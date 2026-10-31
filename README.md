@@ -9,11 +9,11 @@
 </p>
 
 <p align="center">
-  <a href="https://main.d3oykk6yk6i4p7.amplifyapp.com/demo"><strong>역할별 데모 체험</strong></a>
+  <a href="https://gcp.34-143-67-39.sslip.io/demo"><strong>역할별 데모 체험</strong></a>
   ·
-  <a href="https://main.d3oykk6yk6i4p7.amplifyapp.com/b/5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f01">공개 건물 화면</a>
+  <a href="https://gcp.34-143-67-39.sslip.io/b/5a3e1c9d-2b47-4f86-9d10-7c2e5b8a4f01">공개 건물 화면</a>
   ·
-  <a href="https://main.d3oykk6yk6i4p7.amplifyapp.com/api/docs">API 문서</a>
+  <a href="https://gcp.34-143-67-39.sslip.io/api/docs">API 문서</a>
 </p>
 
 월계함은 관리사무소 없이 집주인이 직접 안내를 맡는 월계1동 소규모 임대건물을 위한 모바일 웹 서비스입니다. 집주인이 한 번 남긴 생활안내는 건물의 현관 QR에 남고, 사람이 바뀌어도 다음 입주자가 같은 곳에서 이어서 읽습니다.
@@ -76,7 +76,7 @@
 
 ## 역할별 데모
 
-[시연 시작 화면](https://main.d3oykk6yk6i4p7.amplifyapp.com/demo)에서 같은 햇살빌라 데이터를 네 역할로 둘러볼 수 있습니다. 시연은 둘러보기 전용이고, 안내를 남기거나 연결하는 일은 실제 건물의 현관 QR에서 카카오 계정으로 해 봅니다.
+[시연 시작 화면](https://gcp.34-143-67-39.sslip.io/demo)에서 같은 햇살빌라 데이터를 네 역할로 둘러볼 수 있습니다. 시연은 둘러보기 전용이고, 안내를 남기거나 연결하는 일은 실제 건물의 현관 QR에서 카카오 계정으로 해 봅니다.
 
 | 역할 | 둘러볼 수 있는 흐름 |
 |---|---|
@@ -120,12 +120,10 @@ pnpm dev
 
 ## 배포
 
-- 시연·개발: https://main.d3oykk6yk6i4p7.amplifyapp.com/demo
-- 실제 서비스: https://release.dfldu21sxhojf.amplifyapp.com
-- dev API 상태: https://main.d3oykk6yk6i4p7.amplifyapp.com/api/health
-- prod API 상태: https://release.dfldu21sxhojf.amplifyapp.com/api/health
+- 서비스: https://gcp.34-143-67-39.sslip.io (시연: [/demo](https://gcp.34-143-67-39.sslip.io/demo))
+- API 상태: https://gcp.34-143-67-39.sslip.io/api/health
 
-`main`은 dev(시연 모드 켜짐), `release`는 prod(시연 모드 꺼짐)로 배포됩니다. API 배포는 검사·이미지 빌드·DB 마이그레이션·상태 확인을 거치며 실패하면 직전 이미지로 되돌립니다.
+2026-11-01부터 Google Cloud(us-west1) VM 한 대에서 웹·API·DB를 함께 돌립니다. 관리자가 `bash infra/gcp/deploy.sh`로 올리고, 방법은 [docs/gcp.md](docs/gcp.md)에 있습니다. 예전 AWS 주소(`main.d3oykk6yk6i4p7.amplifyapp.com`, `release.dfldu21sxhojf.amplifyapp.com`)는 같은 경로로 이 주소에 넘겨 주므로 인쇄한 QR도 그대로 열립니다. AWS 서버는 멈춰 두었고 dev 데이터는 GCP로 옮겼습니다.
 
 ## 파일럿 계획
 
@@ -142,7 +140,7 @@ pnpm dev
 | Web | React 19, TypeScript, Vite 8, React Router 8, TanStack Query 5, SEED Design, Pretendard(직접 호스팅) |
 | API | Node 24, Hono 4, Zod 4, Drizzle ORM, PostgreSQL 17, sharp(사진 WebP 변환) |
 | Auth·Notification | Kakao OAuth, 세션 쿠키, Web Push·VAPID |
-| Infrastructure | AWS Amplify, CloudFront, EC2(docker compose, Caddy), ECR, SSM Parameter Store, S3(백업·사진), CloudWatch Logs |
+| Infrastructure | Google Cloud Compute Engine(docker compose, Caddy), Artifact Registry, Secret Manager, Cloud Storage(사진·백업), Vertex AI·Cloud Translation. 2026-10까지는 AWS(Amplify, CloudFront, EC2, ECR, SSM, S3) |
 | Quality | Vitest, Playwright, Biome, GitHub Actions |
 
 프론트엔드와 백엔드는 [packages/contracts](packages/contracts)를 통해 요청·응답 스키마를 공유합니다. 브라우저에서 CloudFront를 거쳐 서버까지 HTTPS로 연결하고, dev와 prod 데이터베이스를 분리합니다. 구조는 [시스템 구조](docs/architecture.md), 구조를 정한 이유는 [결정 기록](docs/decisions.md)에 있습니다.

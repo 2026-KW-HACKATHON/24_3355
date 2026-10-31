@@ -50,6 +50,7 @@ services:
       GCP_PROJECT: wolgyeham-kw2026
       GEMINI_ENABLED: "true"
       TRANSLATION_ENABLED: "true"
+      API_DOCS: "true"
     mem_limit: 256m
     logging: *log
 

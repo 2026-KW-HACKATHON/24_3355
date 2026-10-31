@@ -1,5 +1,7 @@
 # 배포와 운영
 
+> **2026-11-01부터 서비스는 GCP 한 곳에서 돕니다([gcp.md](gcp.md), [D-39](decisions.md#d-39-aws를-내리고-gcp-한-곳으로-옮긴다)).** AWS EC2·탄력적 IP를 지웠고 CloudFront는 꺼 두었으며, 예전 Amplify 주소는 같은 경로로 GCP 주소에 301로 넘깁니다. `deploy-api.yml`은 push로 돌지 않습니다. 아래 AWS 절차는 다시 AWS에 올릴 때를 위한 기록입니다.
+
 팀원 모두가 자기 작업을 어디서 보고, 배포가 언제 일어나고, 문제가 생기면 어떻게 되돌리는지 정리합니다. 구조는 [architecture.md](architecture.md), AWS 준비는 [aws-setup.md](aws-setup.md)를 봅니다.
 
 - 기준: [CONTRIBUTING.md](../CONTRIBUTING.md)(브랜치·PR), [.github/workflows/deploy-api.yml](../.github/workflows/deploy-api.yml), [amplify.yml](../amplify.yml), [infra/server/](../infra/server/)
@@ -230,9 +232,9 @@ done
 - [ ] 포스터 QR `/demo`는 둘러보기만 되고, 시연 중인 휴대폰으로 실제 건물(현관 QR)을 열면 시연이 끝나는지 확인 (D-35)
 - [ ] 예산 알림 메일이 오지 않았다
 
-## GCP 시험 환경
+## GCP
 
-AWS와 따로 도는 GCP 시험 환경(e2-micro 한 대, https://gcp.34-143-67-39.sslip.io)이 있습니다. 자동 배포가 없고 관리자가 `bash infra/gcp/deploy.sh`로 올립니다. 이 문서의 AWS 절차와 섞지 않습니다. 구성·비용·비밀·백업·내리기는 [gcp.md](gcp.md), 이유는 [decisions.md D-36](decisions.md#d-36-gcp-시험-환경을-aws와-따로-둔다)을 봅니다.
+지금 서비스(e2-micro 한 대, https://gcp.34-143-67-39.sslip.io)입니다. 자동 배포가 없고 관리자가 `bash infra/gcp/deploy.sh`로 올립니다. 이 문서의 AWS 절차와 섞지 않습니다. 구성·비용·비밀·백업·내리기는 [gcp.md](gcp.md), 이유는 [decisions.md D-36](decisions.md#d-36-gcp-시험-환경을-aws와-따로-둔다)을 봅니다.
 
 ## 바꿀 때
 

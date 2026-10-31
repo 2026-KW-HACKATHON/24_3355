@@ -1,18 +1,9 @@
 name: Deploy API
 
-# main → dev, release → prod. 수동 실행으로 dev/prod를 고를 수도 있습니다.
-# AWS 자격증명은 OIDC로 받습니다(저장소에 액세스 키를 두지 않음). 설정: docs/aws-setup.md
+# AWS 배포. 2026-11-01에 AWS 서버를 내리고 GCP로 옮겨서(D-39) push로는 돌지 않고 수동 실행만 남깁니다.
+# 지금은 배포할 EC2가 없어 실행해도 실패합니다. 다시 쓰려면 docs/aws-setup.md로 자원을 만든 뒤 push 트리거를 되살립니다.
+# AWS 자격증명은 OIDC로 받습니다(저장소에 액세스 키를 두지 않음).
 on:
-  push:
-    branches: [main, release]
-    paths:
-      - apps/api/**
-      - apps/web/**
-      - packages/contracts/**
-      - infra/server/**
-      - pnpm-lock.yaml
-      - .github/workflows/deploy-api.yml
-      - infra/amplify/**
   workflow_dispatch:
     inputs:
       target:

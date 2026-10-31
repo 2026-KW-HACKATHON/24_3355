@@ -1,11 +1,11 @@
-# GCP 시험 환경
+# GCP 운영 환경
 
-AWS(dev·prod, [deploy.md](deploy.md))와 따로 도는 시험용 환경입니다. 같은 API 이미지와 웹 빌드를 GCP 프로젝트 하나에 올려 봅니다. 왜 두는지와 AWS와 다른 점은 [decisions.md D-36](decisions.md#d-36-gcp-시험-환경을-aws와-따로-둔다)에 있습니다.
+2026-11-01부터 월계함 서비스가 도는 곳입니다. 처음에는 AWS와 따로 둔 시험 환경([D-36](decisions.md#d-36-gcp-시험-환경을-aws와-따로-둔다))이었고, AWS를 내리면서 AWS dev 데이터를 옮겨 와 하나로 합쳤습니다([D-39](decisions.md#d-39-aws를-내리고-gcp-한-곳으로-옮긴다)).
 
 - 주소: https://gcp.34-143-67-39.sslip.io (고정 IP `wolgyeham-ip`에서 만든 sslip.io 이름)
 - 기준 파일: [infra/gcp/](../infra/gcp/) — `setup.sh`(클라우드 자원), `deploy.sh`(배포), `server.sh`(서버 쪽 배포 단계), `compose.yaml`, `Caddyfile`, `startup.sh`(VM 준비), `backup.sh`·`systemd/`(DB 백업)
 - 담당: 관리자. 자원을 만들거나 지우는 명령은 관리자가 자기 gcloud 로그인으로 실행합니다.
-- 시연 모드(`DEMO_MODE=true`)로 돌고 카카오 로그인 키는 넣지 않습니다. 실제 사용자 데이터를 넣지 않습니다.
+- 시연 모드(`DEMO_MODE=true`)로 돌고(시연 건물은 둘러보기 전용, 실제 건물은 그대로 씀), 카카오 로그인 키는 Secret Manager `wolgyeham-api-env`에 있습니다. AWS dev의 실제 데이터(전시관 건물 등)가 들어 있습니다. API 문서(`/api/docs`, `/api/swagger`)는 `API_DOCS=true`로 켭니다.
 
 ## 구성
 
