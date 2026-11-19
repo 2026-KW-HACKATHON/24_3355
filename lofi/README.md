@@ -3,6 +3,7 @@
 한 건물(햇살빌라, 가상)에서 집주인이 안내를 남기고, A가 입주해 살고, A가 떠난 뒤 B가 같은 정보를 이어받는 한 사이클의 모바일 화면 묶음입니다.
 
 - 전체 흐름: [board.html](board.html) (브라우저로 열기)
+- 바뀐 흐름 눌러 보기: [proto.html](proto.html) (제보 → 집주인 문자 답장 → 공지 게시, 11단계)
 - 흐름·화면 대응과 개발 계약 초안(권한·데이터·상태·작성자 정책): [screens.md](screens.md)
 - 함이 가이드와 생성 프롬프트: [design/characters/hami](../design/characters/hami/README.md)
 
@@ -12,6 +13,7 @@
 lofi/
 ├── README.md
 ├── board.html              전체 흐름 검토판 (흐름 8개 + 패널)
+├── proto.html              바뀐 흐름 11단계 클릭 프로토타입 (내보내기 대상 아님)
 ├── screens.md              흐름·화면 대응, 개발 계약 초안, 남은 상태
 ├── screens/NN-*.html       화면 1장 = 파일 1개 (390×844pt, 9:19.5), 00~46 (27번 없음)
 ├── src/

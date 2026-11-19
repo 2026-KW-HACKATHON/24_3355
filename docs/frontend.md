@@ -95,6 +95,7 @@ apps/web/src/
 | `/manage/:buildingId/inbox`, `…/reports/:reportId` | `report-inbox` | LF-16(07·35, 알림 32에서 진입) | 집주인 |
 | `/manage/:buildingId/memos/:memoId` | `memo-review` | LF-17(25) | 집주인 |
 | `/manage/:buildingId/qr` | `move-in-card` | LF-18(39·26) | 집주인 |
+| `/manage/:buildingId/phone` | `manager-phone` | LF-13의 알림 번호 등록. lofi에 없으므로 그린 뒤 확정 | 집주인 |
 | `/demo` | `demo` | LF-20(29) | 시연자 |
 | 그 밖 | `not-found` | 건물 없음(22) | 누구나 |
 
@@ -188,7 +189,9 @@ export function toAppError(error: unknown): AppError {
 |---|---|
 | 크게 보기 | `<html data-size="large">`. 글자·간격 토큰만 바꾸고 연결하기·내가 보낸 내용·관리하기·알리기는 그대로 둡니다. 3D는 정적 그림 |
 | 읽어주기 | Web Speech API `speechSynthesis`, `lang="ko-KR"`. 지원하지 않으면 버튼을 비활성으로 두고 이유를 적습니다. 화면을 떠나면 `cancel()` |
-| 터치 영역 | 44×44 이상. 주요 버튼은 `ActionButton size="large"` |
+| 기본 모양 | 거주자 화면은 문자 모양이 기본입니다(POL-015, [decisions.md D-14](decisions.md)). 목록은 한 줄에 보낸 사람·첫 줄·날짜, 상세는 보낸 사람·받은 시각·본문 말풍선, 보낸 내용은 내 말 오른쪽·상대 답 왼쪽. 말풍선은 `components/message/` 한 곳에서만 만들고 화면마다 다시 그리지 않습니다 |
+| 기본 글자 | 본문 17px 이상(최소 15px). 크게 보기를 끈 상태에서도 이 아래로 내려가지 않습니다 |
+| 터치 영역 | 주요 버튼 48×48 이상(그 밖 44×44 이상), 붙은 버튼 사이 8px 이상. 주요 버튼은 `ActionButton size="large"` |
 | 포커스·구조 | `:focus-visible` 윤곽선(global.css)을 지우지 않습니다. 화면마다 `h1` 하나, 구역은 `h2` |
 | 이미지 | 안내 사진은 `alt`를 채웁니다(예: “분리수거 안내 사진 1”). 함이는 옆 문장이 상태를 설명하므로 `alt=""` |
 | 색 | 색만으로 구분하지 않습니다. 상태 배지는 글자(접수됨·확인함·처리 완료·처리가 어려움)를 함께 씁니다 |
@@ -205,13 +208,16 @@ html[data-size="large"] {
 ```
 
 - 크게 보기 설정은 localStorage에 저장합니다(try/catch). 저장이 안 돼도 이번 방문에는 적용합니다.
+- 말풍선은 모양일 뿐입니다. 읽음·입력 중 표시를 만들지 않고, 스크롤을 맨 아래로 강제로 내리는 채팅 동작도 넣지 않습니다. 화면에 보였다고 ‘확인함’으로 바꾸지 않습니다(POL-010).
 - 읽어주기는 사용자가 누른 이벤트 안에서 시작합니다. iOS는 그 밖에서 소리를 내지 않습니다. 한국어 음성이 없는 기기의 동작은 실제 기기에서 확인합니다.
 
 ## 8. PWA와 웹 푸시 (아직 구현 전)
 
 - manifest(`/manifest.webmanifest`)와 service worker(`/sw.js`)는 `public/`에 둡니다. Amplify rewrite가 `.js`·`.webmanifest`는 파일로 내보내므로 SPA fallback에 걸리지 않습니다.
+- 웹 푸시는 거주자 화면에만 씁니다. 집주인은 문자로 받으므로(`/manage/:buildingId/phone`) 관리 화면에서 브라우저 알림 권한을 묻지 않습니다([screens.md §6](../lofi/screens.md#6-알림-환경), [decisions.md D-10](decisions.md)).
 - 알림 환경은 [screens.md §6](../lofi/screens.md#6-알림-환경)의 다섯 상태를 따르고 `lib/pushEnv.ts`에서 판정합니다. iPhone은 홈 화면에 추가한 뒤에만 알림을 켤 수 있습니다(17). 카카오톡 안 브라우저에서는 “Safari·Chrome으로 열기”를 안내합니다.
 - 권한 요청(`Notification.requestPermission()`)은 사용자가 ‘알림 받기’를 누른 뒤에만 합니다. 알림을 켜지 않아도 연결은 끝난 상태입니다.
+- 전화번호는 화면에 가운데를 가려서 보여주고(`010-****-1234`), 입력값을 URL·쿼리·localStorage에 두지 않습니다.
 - VAPID 개인키와 구독 저장은 서버가 맡습니다. 실제 기기(iOS·Android·카카오톡) 동작은 아직 확인하지 않았습니다.
 
 ## 9. 성능

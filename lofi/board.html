@@ -99,7 +99,7 @@
   <div class="story">
     <div class="beat" style="grid-column: span 2"><i>제품 한 문장</i><b>건물은 기억하고, 사람은 잠시 연결됩니다.</b><span>HMW: 사람을 위한 또 하나의 방을 만드는 대신, 건물 자체를 지속되는 생활정보 단위로. 가입하지 않아도 안내는 읽고, 연결하면 새 공지를 받습니다.</span></div>
     <div class="beat"><i>CORE 1~5</i><b>반드시 동작</b><span>남기 시작 → 첫날 → 닿음 → 최신성 → 이어짐</span></div>
-    <div class="beat"><i>SUPPORTING</i><b>보조 경로</b><span>건물에 생긴 일을 집주인에게. 검증 대상</span></div>
+    <div class="beat"><i>SUPPORTING</i><b>보조 경로</b><span>건물에 생긴 일을 집주인에게. 문자로 받고 답장으로 처리. 검증 대상</span></div>
     <div class="beat"><i>OPTIONAL · 공통 조건</i><b>선택과 전제</b><span>생활 팁은 선택. 크게 보기·읽어주기는 모든 화면의 조건</span></div>
   </div>
 
@@ -148,7 +148,7 @@
         <tr><td>진입</td><td><span class="ok">22 건물 없음</span><span class="ok">14 안내 없음</span></td><td><span class="todo">3D 실패</span><span class="todo">링크 만료</span></td></tr>
         <tr><td>가입</td><td><span class="ok">02 키보드</span><span class="ok">16 동의</span><span class="ok">17 iPhone 알림</span><span class="ok">44 연결 필요</span></td><td><span class="todo">코드 오류·10분 대기</span><span class="todo">로그인 취소 복귀</span><span class="todo">건물 전환 확인</span></td></tr>
         <tr><td>작성</td><td><span class="ok">12·19 키보드</span><span class="ok">18 팁 없음</span><span class="ok">43 공개 전 확인</span></td><td><span class="todo">저장 실패(입력 유지)</span><span class="todo">작성 중 닫기</span></td></tr>
-        <tr><td>집주인</td><td><span class="ok">41 초대 진입</span><span class="ok">23 건물 확인</span><span class="ok">42 처음 관리 홈</span></td><td><span class="todo">공개 전 ‘이어서 쓰기’</span><span class="todo">관리 권한 없음</span><span class="todo">알림 설정</span></td></tr>
+        <tr><td>집주인</td><td><span class="ok">41 초대 진입</span><span class="ok">23 건물 확인</span><span class="ok">42 처음 관리 홈</span></td><td><span class="todo">공개 전 ‘이어서 쓰기’</span><span class="todo">관리 권한 없음</span><span class="todo">알림 번호 등록·확인</span></td></tr>
         <tr><td>제보</td><td><span class="ok">20 확인</span><span class="ok">06·31 상태</span><span class="ok">30 재방문</span></td><td><span class="todo">중복 전송·반복 제한</span><span class="todo">전송 결과 불명</span><span class="todo">링크 잃음</span></td></tr>
         <tr><td>판단</td><td><span class="ok">35 처리 결과</span><span class="ok">25 메모 검토</span></td><td><span class="todo">‘기존 유지’ 사유</span><span class="todo">안내 저장 실패 시 메모 상태 유지</span></td></tr>
         <tr><td>관계</td><td><span class="ok">45 내 정보</span><span class="ok">08·09 이사</span><span class="ok">40 재확인</span></td><td><span class="todo">신고 접수·가림</span><span class="todo">팁 고치기·지우기</span></td></tr>
@@ -162,7 +162,8 @@
         <li><b>작성자 정책</b> — 팁·메모의 작성자는 내부에 저장하고 다른 거주자에게는 보이지 않음. 본인 글에만 ‘내 팁’ 표시와 고치기·지우기. 부적절한 글은 신고 → 운영팀이 가림<span class="assume">결정</span></li>
         <li><b>이웃의 재조회</b> — 같은 브라우저는 QR로 다시 보고, 다른 브라우저·기기는 확인 링크(30일). 링크는 복사하거나 카카오톡으로 공유<span class="assume">결정</span></li>
         <li><b>집주인의 한 줄</b> — 처리 결과와 함께 보낸 사람에게 보임<span class="assume">가정</span></li>
-        <li><b>집주인 알림 채널</b> — 시연은 앱 안 표시·웹 푸시, 상용화는 알림톡(건당 약 7~10원). 파일럿에서는 팀이 받은 내용을 보고 집주인에게 카톡으로 전함<span class="assume">추천</span></li>
+        <li><b>집주인 알림 채널</b> — 문자로 보낸다. 제보가 들어오면 등록한 번호로 문자를 보내고, 집주인은 답장으로 처리하거나 확인 링크를 연다. 답장 원문이 그대로 공지 초안이 되고, 확인 답장으로 게시한다. 번호는 알림 주소일 뿐이고 관리 권한은 초대·카카오 로그인으로만 생긴다. 수신 회선은 계약 전이라 시뮬레이터로 개발한다. 카카오 알림톡은 도착만 알리는 추가 채널이고, 답장은 문자·확인 링크로만 받는다<span class="assume">결정</span></li>
+        <li><b>화면의 기본 모양</b> — 60세 이상도 배우지 않고 쓸 수 있게 거주자 화면을 문자 모양으로 맞춘다. 목록은 보낸 사람·첫 줄·날짜, 상세는 받은 시각과 말풍선, 보낸 내용은 내 말 오른쪽·집주인 답 왼쪽. 본문 17px 이상, 주요 버튼 48×48 이상. 모양만 문자이고 실시간 대화는 아니다(읽음·입력 중 표시 없음, 다른 거주자의 말 안 보임). 아래 46장은 이 결정 전에 그린 것이라 screens.md의 ‘문자형으로 다시 그릴 화면’ 표대로 다시 그린다<span class="assume">결정</span></li>
         <li><b>이사 후 보낸 내용</b> — 로그인 사용자는 계속 조회<span class="assume">가정</span></li>
         <li><b>가입코드 변경</b> — 바꿔도 이미 연결된 거주자는 유지<span class="assume">가정</span></li>
         <li><b>재확인 주기</b> — 1년에 한 번, 14일 무응답 시 쓰기·알림만 멈춤 (Manyfast 정책 기준)</li>
@@ -180,7 +181,7 @@
     <div class="agrid" id="assets"></div>
   </div>
 </div>
-<footer>화면 원본: lofi/screens/*.html · 화면 PNG: lofi/out/screens/ (1170×2532) · 흐름별: lofi/out/flows/ · 다시 만들기: python3 lofi/scripts/export.py · 개발 계약 초안: lofi/screens.md</footer>
+<footer>화면 원본: lofi/screens/*.html · 화면 PNG: lofi/out/screens/ (1170×2532) · 흐름별: lofi/out/flows/ · 다시 만들기: python3 lofi/scripts/export.py · 개발 계약 초안: lofi/screens.md · 바뀐 흐름 눌러 보기: <a href="proto.html">proto.html</a></footer>
 
 <script>
 // 카드: C(파일, 화면 ID, 역할, 제목, [[항목, 내용]...], {new})
@@ -259,12 +260,12 @@ const CHAPTERS = [
     C("20-report-confirm", "LF-10", "누구나", "보내기 전 확인", [["구성", "받는 사람·공개 범위·보낼 말"], ["누르면", "2번째 탭 → 접수"]]),
     A("n"),
     C("06-report-status", "LF-11", "누구나", "접수됨", [["문구", "집주인은 아직 확인 전"], ["재진입", "같은 브라우저는 QR, 다른 브라우저·기기는 확인 링크(30일)"], ["보관", "링크 복사 · 카카오톡 공유(받을 곳은 본인이 고름)"], ["함이", "envelope"]]),
-    A("p", "쪽지\n집주인에게"),
-    C("32-landlord-alert", "알림", "집주인", "새 쪽지 알림", [["채널", "시연: 웹 푸시·앱 안 / 상용화: 알림톡"]]),
+    A("p", "문자\n집주인에게"),
+    C("32-landlord-alert", "문자", "집주인", "제보 문자 + 답장 안내", [["채널", "등록한 번호로 문자. 앱을 열지 않아도 도달"], ["답장", "문장으로 답하면 원문이 공지 초안 / 1·2·3 단축키 / 확인 링크 → 07"], ["게시", "확인 문자에 ‘1’ 답장 → 게시 + 되돌리는 방법 안내"], ["그린 범위", "잠금화면 문자 한 통까지. 번호 등록·발송 실패·문자 기록은 아직 없음"]]),
     A("n"),
-    C("07-landlord-report", "LF-16", "집주인", "받은 제보", [["원칙", "열어보기만으로 ‘확인함’ 아님"]]),
+    C("07-landlord-report", "LF-16", "집주인", "받은 제보", [["원칙", "열어보기만으로 ‘확인함’ 아님"], ["관계", "문자 답장으로도 같은 처리가 끝남. 둘은 같은 로직"]]),
     A("n"),
-    C("35-landlord-report-result", "LF-16", "집주인", "처리 결과", [["누르면", "처리 완료 / 처리가 어려움 + 한 줄"], ["공지로 알리기", "빈 공지 작성 화면. 제보 원문을 옮기지 않음"]]),
+    C("35-landlord-report-result", "LF-16", "집주인", "처리 결과", [["누르면", "처리 완료 / 처리가 어려움 + 한 줄"], ["공지로 알리기", "빈 공지 작성 화면. 제보 원문을 옮기지 않음"], ["문자 답장", "집주인이 쓴 문장이므로 원문 그대로 초안이 됨"]]),
     A("t", "다음 날\n같은 QR"),
     C("30-public-return", "LF-01", "누구나", "다시 찍었을 때", [["구성", "‘내가 보낸 내용’ 배너"]]),
     A("n"),

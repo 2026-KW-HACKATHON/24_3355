@@ -137,7 +137,7 @@ erDiagram
 |---|---|---|
 | `guides` | `building_id`(cascade), `category`, `title`, `body`, `photos jsonb`, `position`, `status` draft·published, `published_at`, `author_user_id`(set null) | CHECK `status`, CHECK `status = 'draft' or published_at is not null`, `guides_building_id_status_idx` |
 | `correction_memos` | `guide_id`(cascade), `author_user_id`(set null), `body` ≤200, `status` pending·applied·kept, `kept_reason`, `resolved_at` | CHECK 글자 수·`status`, CHECK `status <> 'kept' or kept_reason is not null`, `correction_memos_guide_id_status_idx` |
-| `notices` | `building_id`(cascade), `title`, `body`, `starts_at`, `ends_at`, `status` published·expired, `author_user_id`(set null), `published_at` | CHECK `ends_at >= starts_at`, `notices_building_id_ends_at_idx` |
+| `notices` | `building_id`(cascade), `title` null 허용, `body`, `starts_at` null 허용, `ends_at` null 허용, `status` draft·published·expired·discarded, `source` screen·sms, `reply_received_at`(문자 답장을 받은 시각), `author_user_id`(set null), `published_at` null 허용 | CHECK `status`·`source`, CHECK 기간은 둘 다 있거나 둘 다 없음, CHECK `ends_at >= starts_at`(둘 다 있을 때), CHECK `status = 'draft' or published_at is not null`, `notices_building_id_ends_at_idx` |
 | `notice_deliveries` | `notice_id`(cascade), `occupancy_id`(cascade), `attempted_at`, `opened_at` | `notice_deliveries_notice_id_occupancy_id_key`. 행 하나가 알림 대상 한 명 |
 
 **제보·팁**
@@ -148,6 +148,22 @@ erDiagram
 | `report_access_tokens` | `report_id`(cascade), `token_hash`, `expires_at`(발급 후 30일) | `report_access_tokens_token_hash_key`, `report_access_tokens_report_id_idx` |
 | `tips` | `building_id`(cascade), `author_user_id`(set null), `category`, `body` ≤200, `hidden_at` | CHECK 글자 수, `tips_building_id_idx`, `tips_author_user_id_idx` |
 | `content_reports` | `tip_id`(cascade), `reporter_user_id`(set null), `status` | `content_reports_tip_id_reporter_user_id_key`. `status` 값은 LF-19 설계 후 정할 것 |
+
+**집주인 문자** ([decisions.md D-10·D-11·D-13](decisions.md))
+
+| 테이블 | 주요 컬럼 | 제약·인덱스 |
+|---|---|---|
+| `manager_phones` | `building_id`(cascade), `user_id`(cascade), `phone`, `alimtalk_enabled`(기본 false), `status` pending·verified·disabled, `verify_code_hash`, `verify_expires_at`, `verified_at`, `disabled_at` | CHECK `status`, CHECK `status <> 'verified' or verified_at is not null`. 건물마다 살아 있는 번호 하나: 부분 유니크 `manager_phones_building_id_live_key` (`status <> 'disabled'`) |
+| `outbound_messages` | `building_id`(cascade), `report_id`(cascade, null 허용), `to_phone`, `channel` sms·alimtalk, `template_code`(알림톡 템플릿, null 허용), `fallback_of_id`(self, null 허용), `kind` verify·report·confirm·published, `body`, `status` queued·sent·failed, `provider_message_id`, `sent_at`, `failed_reason` | CHECK `channel`·`kind`·`status`, CHECK `channel = 'alimtalk' or template_code is null`, `outbound_messages_building_id_created_at_idx` |
+| `manager_prompts` | `building_id`(cascade), `report_id`(cascade), `outbound_message_id`(set null), `kind` handle·confirm, `options jsonb`, `status` waiting·answered·expired·superseded, `expires_at`(발송 후 24시간), `answered_at` | CHECK `kind`·`status`. 제보마다 대기 질문 하나: 부분 유니크 `manager_prompts_report_id_waiting_key` (`status = 'waiting'`) |
+| `inbound_messages` | `building_id`(cascade, null 허용), `prompt_id`(set null), `from_phone`, `body`(원문), `parsed_as`(해석 결과, null이면 알아볼 수 없음), `received_at` | `inbound_messages_from_phone_received_at_idx` |
+
+- 전화번호는 조회해서 맞춰 봐야 하므로 해시하지 않고 저장합니다. 대신 화면에는 가운데를 가려서 보여주고, 로그·오류 보고·응답 본문에 원문을 넣지 않습니다([decisions.md D-10](decisions.md)).
+- 등록되지 않은 번호에서 온 답장도 `inbound_messages`에 남기지만 `building_id`·`prompt_id`는 비우고 아무 상태도 바꾸지 않습니다.
+- 발송 대행 사업자 응답은 `provider_message_id`만 남깁니다. `sent`는 사업자가 접수했다는 뜻이고 집주인이 읽었다는 뜻이 아닙니다.
+- 시뮬레이터(`DEMO_MODE`의 `/api/dev/sms`)도 같은 테이블을 씁니다. 채널만 다르고 기록과 상태 전이는 같습니다.
+- 알림톡은 도착 알림에만 씁니다([decisions.md D-15](decisions.md)). `alimtalk`으로 보낸 행이 `failed`가 되면 같은 내용을 `sms`로 새 행에 넣고 `fallback_of_id`로 원래 행을 가리킵니다. 같은 내용을 두 번 세지 않도록 통계는 `fallback_of_id is null`만 셉니다.
+- `kind = 'confirm'`(공지 초안을 되읽어 주는 문자)은 `channel = 'sms'`만 허용합니다. 알림톡 본문은 심사받은 틀을 벗어날 수 없어서 집주인이 쓴 문장을 그대로 실을 수 없습니다.
 
 - 안내 `category`는 contracts `GUIDE_CATEGORIES`(`recycling`·`parcel`·`facility`·`common`·`contact` = 분리수거·택배·보일러·설비·공용공간·연락, 로파이 33)와 CHECK로 정했습니다. 안내 제목·본문은 80·2000자 이하입니다. 팁 `category`와 제보 `kind` 값 목록은 정할 것입니다. 정하면 contracts enum과 CHECK를 같은 PR에 넣습니다.
 - 사진 파일의 저장 위치는 정할 것입니다. DB에는 파일 키 목록(`photos jsonb`)만 둡니다.
@@ -167,11 +183,15 @@ erDiagram
 | `occupancies` | 연결·재확인·이사·건물 전환. `next_reconfirm_at`(연결·재확인 뒤 1년) + 14일 무응답이면 reconfirm_needed | CHECK 값, 살아 있는 연결 하나 |
 | `correction_memos` pending → applied·kept | applied는 안내 공개 트랜잭션 안에서만 | CHECK 값, kept면 `kept_reason` 필수 |
 | `reports` received → acknowledged → completed·unable | 버튼 요청으로만. 조회로 바뀌지 않음, 역방향 없음 | CHECK 값 |
-| `notices` published → expired | 만료 판단은 항상 `ends_at < now()` | CHECK `ends_at >= starts_at` |
+| `notices` draft → published → expired | 화면이든 문자든 초안을 만든 뒤 확인 단계를 거쳐 게시. 만료 판단은 `ends_at is not null and ends_at < now()`이므로 기간 없는 공지는 자동 만료되지 않음 | CHECK `status`, 기간 짝, `status = 'draft' or published_at is not null` |
 | `notice_deliveries` 대상 → 시도 → 열람 | 행 생성, `attempted_at`, `opened_at`을 따로 기록 | (notice, occupancy) 유니크 |
+| `manager_phones` pending → verified → disabled | 확인 문자의 코드가 맞을 때만 verified. 번호 변경은 기존 행을 disabled로 하고 새 행을 만듦 | CHECK 값, verified면 `verified_at` 필수, 살아 있는 번호 하나 |
+| `manager_prompts` waiting → answered·expired·superseded | 답장 처리와 같은 트랜잭션에서 waiting → answered. 만료·중복 답장은 상태를 바꾸지 않고 안내만 보냄 | CHECK 값, 제보마다 waiting 하나 |
+| `outbound_messages` queued → sent·failed | 채널 응답으로만. 실패는 관리 홈 ‘확인할 것’에 남김 | CHECK 값 |
 
 - 전이는 `UPDATE ... WHERE status = '<이전 상태>'`로 하고, 바뀐 행이 0이면 409 `CONFLICT`입니다([backend.md §7](backend.md#7-도메인-규칙)).
-- `reconfirm_needed` 전환과 `notices.status = 'expired'` 갱신을 요청 시점에 할지 주기 작업으로 할지는 정할 것입니다.
+- `reconfirm_needed` 전환, `notices.status = 'expired'` 갱신, `manager_prompts` 만료를 요청 시점에 할지 주기 작업으로 할지는 정할 것입니다.
+- 문자 답장 하나가 제보 상태와 공지를 함께 바꿉니다. 답장 처리는 대기 질문 소진(`waiting` → `answered`)까지 한 트랜잭션으로 묶어서, 같은 답장이 두 번 들어와도 두 번 반영되지 않게 합니다.
 
 ## 6. 마이그레이션
 

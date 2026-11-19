@@ -16,6 +16,7 @@
 | 환경 변수 파싱 (`lib/env.ts`), `lib/`, DB (Drizzle), 세션, 카카오 로그인 | 있음 (구현 순서 A) |
 | `modules/` buildings·guides·notices(현재 공지)·manage·me·auth | 있음 (구현 순서 A). 아래 표 |
 | 가입코드·연결·수정 메모·공지 작성·제보·팁, `requireOccupancy`, 웹 푸시 | 아직 구현 전 |
+| 집주인 알림 번호, 문자 발송·답장 처리, 문자 시뮬레이터 | 아직 구현 전 ([decisions.md D-10·D-13](decisions.md)) |
 
 구현 순서 A(초대 → 안내 작성·공개 → 비회원이 공개 화면에서 읽기)의 경로입니다. 요청·응답 스키마는 `packages/contracts`와 `/api/swagger`가 기준입니다.
 
@@ -53,6 +54,7 @@ apps/api/src/
 │  ├─ auth.ts           세션 읽기, requireUser·requireManager·requireOccupancy
 │  ├─ errors.ts         AppError, 검증 실패 변환, 오류 응답 문서화
 │  ├─ context.ts        Hono 환경 타입 AppEnv (db·env·user·requestId)
+│  ├─ sms.ts            문자 채널 인터페이스 + 시뮬레이터·실제 구현 선택
 │  └─ log.ts            JSON 한 줄 로거
 ├─ db/
 │  ├─ schema.ts         Drizzle 스키마
@@ -83,10 +85,11 @@ apps/api/src/
 | `me` | 내 정보, 보낸 내용, 내 팁 | `GET /me`, `GET /me/reports`, `GET /me/tips` |
 | `buildings` | 건물, 집주인 초대·관리자, 가입코드 | `GET·PATCH /buildings/:buildingId`, `POST /manager-invites/accept`, `GET·POST /buildings/:buildingId/join-code`, `POST /buildings/:buildingId/join-code/check` |
 | `guides` | 기본 안내, 수정 메모 | `GET·POST /buildings/:buildingId/guides`, `GET·PATCH /guides/:guideId`, `POST /guides/:guideId/publish`, `POST /guides/:guideId/correction-memos`, `GET /buildings/:buildingId/correction-memos`, `POST /correction-memos/:memoId/keep` |
-| `notices` | 공지, 발송 기록, 푸시 구독 | `POST /buildings/:buildingId/notices`, `GET /notices/:noticeId`, `POST·DELETE /push-subscriptions` |
+| `notices` | 공지, 발송 기록, 푸시 구독 | `POST /buildings/:buildingId/notices`, `GET /notices/:noticeId`, `POST /notices/:noticeId/publish`, `POST /notices/:noticeId/withdraw`, `POST·DELETE /push-subscriptions` |
 | `occupancies` | 연결, 재확인, 이사 | `POST /buildings/:buildingId/occupancies`, `POST /occupancies/:occupancyId/reconfirm`, `POST /occupancies/:occupancyId/move-out` |
 | `reports` | 제보, 비회원 조회 토큰 | `GET·POST /buildings/:buildingId/reports`, `GET /reports/:reportId`, `POST /reports/:reportId/acknowledge`, `POST /reports/:reportId/resolve` |
 | `tips` | 생활 팁, 콘텐츠 신고 | `GET·POST /buildings/:buildingId/tips`, `PATCH·DELETE /tips/:tipId`, `POST /tips/:tipId/content-reports` |
+| `sms` | 집주인 알림 번호, 문자 발송 기록, 답장 해석 | `GET·PUT·DELETE /buildings/:buildingId/manager-phone`, `POST /buildings/:buildingId/manager-phone/verify`, `POST /buildings/:buildingId/manager-phone/resend`, `POST /sms/inbound`(대행 사업자 웹훅) |
 
 - 경로는 복수형 명사로 씁니다. 상태 전이는 `POST /<자원>/:id/<동작>`으로 만듭니다(`publish`, `acknowledge`, `reconfirm`, `move-out`). 상태를 바꾸는 요청을 GET으로 만들지 않습니다.
 - 경로의 ID는 uuid이며 `z.uuid()`로 검증합니다. 공개 건물 URL도 `buildings.id`를 씁니다.
@@ -223,6 +226,7 @@ app.onError((error, c) => {
 - 집주인 권한은 팀이 발급한 `manager_invites`를 수락했을 때만 생깁니다. 지금은 팀이 스크립트로 발급합니다: `pnpm --filter @wolgyeham/api db:invite <buildingId> [유효 일수]`가 `${APP_ORIGIN}/invite#t=<토큰>`을 한 번만 출력하고 DB에는 해시만 저장합니다. 유효 기간(기본 7일), 건물 등록 방법, 운영자(LF-19) 권한 모델은 정할 것입니다.
 - 시연 모드(LF-20)는 dev·데모 데이터에서만 엽니다. 역할 전환은 시드된 시연 사용자로 바꾸는 것일 뿐 실제 권한을 만들지 않습니다.
 - **시연 로그인 (dev·시연 전용):** 환경 변수 `DEMO_MODE=true`일 때만 `app.ts`가 `GET /api/dev/login`(쓸 수 있으면 204, 부작용 없음)과 `POST /api/dev/login`(`{ "as": "demo-landlord" }` → 시드된 시연 집주인 세션)을 붙입니다. 꺼져 있으면 경로 자체가 없어 404입니다. 시연 집주인은 시연 건물(햇살빌라)만 관리합니다. prod는 `DEMO_MODE=false`로 둡니다.
+- **문자 시뮬레이터 (dev·시연 전용, 아직 구현 전):** 같은 `DEMO_MODE=true`에서 `GET /api/dev/sms`(그 건물로 보낸 문자 목록)와 `POST /api/dev/sms`(`{ "from": "010...", "body": "..." }` → 실제 웹훅과 같은 처리)를 붙입니다. 실제 회선 없이 제보 → 문자 → 답장 → 공지 게시를 끝까지 돌릴 수 있습니다([decisions.md D-13](decisions.md)). 시연용 번호만 쓰고 prod에서는 경로 자체가 없습니다.
 
 ## 7. 도메인 규칙
 
@@ -232,7 +236,12 @@ app.onError((error, c) => {
 - **안내 공개:** `POST /guides/:guideId/publish` 한 번이 트랜잭션 하나입니다. 안내를 `published`로 바꾸고, 건물의 첫 공개면 `buildings.status`를 `preparing` → `open`으로 바꾸고, `applyMemoIds`의 메모를 `pending` → `applied`로 바꿉니다. 하나라도 실패하면 모두 되돌려 메모는 `pending`으로 남습니다. 기존 유지는 `POST /correction-memos/:memoId/keep`에 사유를 필수로 받습니다.
 - **초대 수락:** `POST /manager-invites/accept`는 로그인이 필요하고, 본문의 토큰을 SHA-256으로 해시해 `manager_invites`에서 찾습니다. 만료는 410 `INVITE_EXPIRED`, 없거나 이미 수락된 초대는 404입니다. 수락과 `building_managers` 생성은 한 트랜잭션입니다. 이미 그 건물 관리자면 초대 상태를 바꾸지 않고 성공으로 응답합니다(웹은 관리 홈으로 이동, [screens.md §5](../lofi/screens.md#5-들어온-경로별-첫-화면)).
 - **연결:** 가입코드(1/2)는 로그인 전에 받으므로 `join-code/check`로 먼저 확인하고, 로그인 뒤 `POST /buildings/:buildingId/occupancies`에서 코드를 다시 확인하고 연결합니다. 5회 틀리면 10분 동안 429 `JOIN_CODE_LOCKED`입니다. 횟수를 세는 기준(사용자·브라우저·IP)과 코드 정규화 규칙은 정할 것입니다. 다른 건물로 옮길 때는 기존 연결 종료와 새 연결을 한 트랜잭션에서 처리하고, 실패하면 기존 연결을 유지합니다.
-- **공지:** 게시 트랜잭션에서 `notices`와 `notice_deliveries`(대상 = 발송 시점에 `active`이고 푸시 구독이 있는 거주자)를 만들고, 커밋한 뒤 발송을 시도해 `attempted_at`을 기록합니다. 응답은 `attemptedCount`만 돌려주고 도착·열람을 단정하지 않습니다. 기간이 끝난 공지는 공개 목록에서 빼고 상세는 410 `NOTICE_ENDED`입니다.
+- **공지:** 게시 트랜잭션에서 `notices`를 `published`로 바꾸고 `notice_deliveries`(대상 = 발송 시점에 `active`이고 푸시 구독이 있는 거주자)를 만들고, 커밋한 뒤 발송을 시도해 `attempted_at`을 기록합니다. 응답은 `attemptedCount`만 돌려주고 도착·열람을 단정하지 않습니다. 적용 기간은 선택이고 두 값은 함께 있거나 함께 없습니다. 기간이 끝난 공지는 공개 목록에서 빼고 상세는 410 `NOTICE_ENDED`입니다. 기간이 없는 공지는 자동으로 만료되지 않고 `POST /notices/:noticeId/withdraw`로만 내려갑니다([decisions.md D-12](decisions.md)).
+- **문자 알림 (아직 구현 전):** 발송·수신은 `lib/sms.ts`의 인터페이스 뒤에 둡니다. `DEMO_MODE=true`면 시뮬레이터 구현을 쓰고 `/api/dev/sms`로 보낸 문자를 읽고 답장을 넣습니다. 실제 회선은 같은 인터페이스의 다른 구현입니다. 상태 기계와 답장 해석은 채널을 모릅니다([decisions.md D-13](decisions.md)).
+- **알림톡 (아직 구현 전):** 같은 인터페이스에 `channel: "sms" | "alimtalk"`을 넘깁니다. `manager_phones.alimtalk_enabled`가 켜져 있고 `kind`가 `report`·`published`면 알림톡을 먼저 시도하고, `failed`가 되면 같은 내용을 문자로 다시 보내면서 새 행의 `fallback_of_id`에 원래 행을 적습니다. `kind = 'confirm'`은 언제나 문자입니다(심사받은 틀에 집주인이 쓴 문장을 실을 수 없음). 알림톡으로는 답장을 받지 않으므로 `POST /sms/inbound`만이 유일한 수신 경로입니다([decisions.md D-15](decisions.md)).
+- **답장 처리 (아직 구현 전):** `POST /sms/inbound`은 대행 사업자 웹훅이므로 세션이 없습니다. 사업자 서명으로 검증하고, 본문의 발신 번호로 `manager_phones`의 `verified` 행을 찾습니다. 찾지 못하면 `inbound_messages`에만 남기고 200을 돌려주며 아무것도 안내하지 않습니다(번호 존재를 알려주지 않기 위해). 대기 질문(`manager_prompts.status = 'waiting'`)이 없거나 만료면 상태를 바꾸지 않고 확인 링크만 보냅니다. 해석 실패도 상태를 바꾸지 않고 선택지를 다시 보냅니다. 답장 하나의 처리는 대기 질문 소진까지 한 트랜잭션입니다.
+- **답장에서 공지로 (아직 구현 전):** 답장 원문을 그대로 `notices.body`로 넣어 `draft`를 만들고(`source = 'sms'`, `reply_received_at` = 답장을 받은 시각), 확인 문자를 보냅니다. 요약·재작성하지 않고 날짜를 채우지 않습니다. 확인 답장을 받으면 화면 게시와 **같은 서비스 함수**로 게시하고, 되돌리는 방법을 같은 문자로 보냅니다([decisions.md D-11](decisions.md)).
+- **번호 등록 (아직 구현 전):** `PUT /buildings/:buildingId/manager-phone`은 그 건물 집주인만 호출할 수 있습니다(`requireManager`). 확인 코드는 해시로 저장하고 다시 보내기 횟수를 제한합니다. 번호는 신원 확인 수단이 아니므로 번호 변경·삭제와 관리자 추가는 문자로 하지 않고 로그인한 화면에서만 합니다([decisions.md D-10](decisions.md)).
 - **웹 푸시 (아직 구현 전):** VAPID와 `web-push` 라이브러리를 씁니다. 개인키는 서버 환경 변수에만 두고, 브라우저 구독에 필요한 공개키는 API가 내려줍니다(경로는 계약에서 정할 것). 푸시 서비스가 404·410을 돌려준 구독은 지웁니다.
 - **제보:** 생성할 때 32바이트 난수 토큰을 만들어 응답에 한 번만 담고(`accessToken`), DB에는 SHA-256 해시와 만료 시각(30일)만 저장합니다. 조회는 보낸 계정, 그 건물 집주인, 또는 `X-Report-Token` 헤더의 유효한 토큰으로(쿼리로는 받지 않음. 주소는 로그에 남기 때문) `GET /reports/:reportId`에서 합니다. 그 건물 집주인은 제보를 보낼 수 없습니다(403 `FORBIDDEN`). 만료는 410 `REPORT_LINK_EXPIRED`, 없거나 틀린 토큰은 404입니다. 공개 QR 주소만으로 제보한 사람을 식별하지 않고, 비회원 때 보낸 제보를 나중에 로그인한 계정에 붙이지 않습니다.
 - **반복 접수 제한:** 같은 클라이언트(토큰이 없으면 IP 기준)가 같은 건물에 같은 문구를 짧은 간격으로 다시 보내면 429 `REPORT_TOO_FREQUENT`입니다. 간격·횟수와 카운터 저장 위치는 정할 것입니다.
@@ -243,7 +252,7 @@ app.onError((error, c) => {
 - `app.use(requestId())`(`hono/request-id`)로 요청 ID를 정합니다. 들어온 `X-Request-Id`가 있으면 그대로 쓰고, 없으면 UUID를 만들며, 응답 헤더에도 붙입니다.
 - 요청 로그(`event: "request"`, 테스트에서는 끔)에는 등록된 경로 패턴(`hono/route`의 `routePath(c, -1)`, 예: `/api/reports/:reportId`)을 남깁니다. 실제 URL과 쿼리는 토큰이 섞일 수 있으므로 남기지 않습니다.
 - `/api` 응답에는 모두 `Cache-Control: no-store`를 붙입니다. 문서 경로(`/api/docs`, `/api/swagger`, `/api/openapi.json`)만 뺍니다.
-- **남기지 않는 것:** 이름·닉네임, 카카오 회원번호, 세션·초대·제보 토큰, 가입코드, 안내·제보·팁·메모 본문, 반복 제한 계산에 필요한 범위를 넘는 IP, DB 오류 메시지(값이 섞임. 오류 이름과 코드만).
+- **남기지 않는 것:** 이름·닉네임, 카카오 회원번호, 세션·초대·제보 토큰, 가입코드, 안내·제보·팁·메모 본문, 전화번호와 문자 본문(보낸 것도 받은 것도), 확인 코드, 반복 제한 계산에 필요한 범위를 넘는 IP, DB 오류 메시지(값이 섞임. 오류 이름과 코드만). 문자 로그는 `{ event: "sms_sent", kind, status }`처럼 종류와 결과만 남깁니다.
 
 ```ts
 // apps/api/src/lib/log.ts
@@ -267,8 +276,11 @@ export function log(level: Level, event: string, fields: Record<string, Field> =
 | `APP_ORIGIN` | 웹 주소. 로그인 후 이동, 초대·확인 링크, 푸시 URL, 쿠키 `Secure` 판단. 필수 |
 | `SESSION_SECRET` | 로그인 중에 쓰는 짧은 쿠키(`state`·`returnTo`) 서명. 세션 토큰 자체는 해시로 저장하므로 이 값과 무관. 32자 이상, 카카오 키가 있으면 필수 |
 | `KAKAO_REST_API_KEY`, `KAKAO_CLIENT_SECRET`, `KAKAO_REDIRECT_URI` | 카카오 로그인. 키가 없으면 503 `KAKAO_NOT_CONFIGURED`. `KAKAO_REDIRECT_URI`를 비우면 `${APP_ORIGIN}/api/auth/kakao/callback` |
-| `DEMO_MODE` | `true`면 시연 로그인(§6)을 엽니다. 기본 `false`. dev는 `true`, prod는 `false` |
+| `DEMO_MODE` | `true`면 시연 로그인과 문자 시뮬레이터(§6)를 엽니다. 기본 `false`. dev는 `true`, prod는 `false` |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | 웹 푸시 (아직 구현 전) |
+| `SMS_PROVIDER` | `simulator`(기본)·실제 사업자 이름. 문자 채널 구현 선택 (아직 구현 전) |
+| `SMS_API_KEY`, `SMS_API_SECRET`, `SMS_SENDER_NUMBER`, `SMS_WEBHOOK_SECRET` | 문자 발송·수신. 없으면 `SMS_PROVIDER=simulator`만 쓸 수 있음 (아직 구현 전) |
+| `ALIMTALK_SENDER_KEY`, `ALIMTALK_TEMPLATE_REPORT`, `ALIMTALK_TEMPLATE_PUBLISHED` | 카카오 알림톡 채널·템플릿 코드. 없으면 알림톡을 켤 수 없고 문자만 씁니다 (아직 구현 전) |
 
 - 로컬 값은 `apps/api/.env`(gitignore)에, 배포 값은 AWS SSM Parameter Store에 둡니다([deploy.md](deploy.md)).
 - 키를 추가하면 같은 PR에서 `.env.example`(샘플 값), `lib/env.ts`, deploy.md를 함께 고칩니다.

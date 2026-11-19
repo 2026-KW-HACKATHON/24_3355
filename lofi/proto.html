@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>월계함 · 문자형 화면 + 집주인 문자 흐름 프로토타입</title>
+<link rel="stylesheet" href="src/lofi.css" />
+<style>
+  html, body { background: #e9ebee; }
+  body { padding: 28px 24px 60px; }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+  .sub { font-size: 15px; color: var(--gray-600); margin-top: 6px; line-height: 1.6; }
+  .sub b { color: var(--gray-800); }
+
+  .bar { display: flex; align-items: center; gap: 10px; margin: 20px 0 8px; flex-wrap: wrap; }
+  .bar .btn-sm { border: 1px solid var(--gray-300); background: #fff; border-radius: 10px; height: 38px; font-weight: 600; }
+  .bar .btn-sm[disabled] { color: var(--gray-400); border-color: var(--gray-200); cursor: default; }
+  .bar .now { font-size: 14px; color: var(--gray-600); font-variant-numeric: tabular-nums; }
+  .dots { display: flex; gap: 5px; margin-left: auto; }
+  .dots i { width: 9px; height: 9px; border-radius: 5px; background: var(--gray-300); display: block; cursor: pointer; }
+  .dots i.on { background: var(--navy-600); }
+  .dots i.done { background: var(--navy-100); }
+
+  .stage { display: grid; grid-template-columns: 390px 390px 1fr; gap: 26px; align-items: start; }
+  @media (max-width: 1120px) { .stage { grid-template-columns: 390px 390px; } .side { grid-column: 1 / -1; } }
+
+  .col { position: relative; }
+  .col .cap { font-size: 13px; font-weight: 700; color: var(--gray-600); margin-bottom: 8px; display: flex; gap: 6px; align-items: center; }
+  .col .cap .who { background: var(--gray-200); color: var(--gray-700); border-radius: 6px; padding: 2px 7px; font-size: 12px; }
+  .phone { border-radius: 30px; box-shadow: 0 10px 30px rgba(25,31,40,.14); }
+  .col.off .phone { filter: grayscale(.55); opacity: .45; }
+  .col.off .cap { color: var(--gray-400); }
+
+  /* 직접 그리는 최소 크롬 */
+  .sbar { position: absolute; inset: 0 0 auto 0; height: 47px; display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 28px 0 34px; font-size: 15px; font-weight: 600; z-index: 50; }
+  .sbar .sys { display: flex; gap: 6px; align-items: center; }
+  .sbar .batt { width: 24px; height: 11px; border: 1.5px solid currentColor; border-radius: 4px; padding: 1.5px; opacity: .9; }
+  .sbar .batt::after { content: ""; display: block; width: 72%; height: 100%; background: currentColor; border-radius: 1.5px; }
+  .screen { position: absolute; left: 0; right: 0; top: 47px; bottom: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .hind { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 134px; height: 5px; border-radius: 3px; background: var(--gray-900); z-index: 60; }
+  .dark .hind { background: #fff; }
+  .urlbar { margin-top: auto; height: 60px; background: rgba(249,250,251,.96); border-top: 1px solid var(--gray-200);
+    display: flex; align-items: center; justify-content: center; flex: none; }
+  .urlbar span { width: 320px; height: 34px; border-radius: 10px; background: var(--gray-200); display: flex; align-items: center;
+    justify-content: center; gap: 6px; font-size: 14px; color: var(--gray-700); }
+
+  /* 문자형 공통 — 본문 17px, 버튼 48 이상 */
+  .navtop { height: 52px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; flex: none;
+    border-bottom: 1px solid var(--gray-100); }
+  .navtop .t { font-size: 17px; font-weight: 700; }
+  .navtop .r { font-size: 14px; color: var(--gray-500); }
+  .body-area { flex: 1; overflow-y: auto; padding-bottom: 8px; scrollbar-width: none; }
+  .body-area::-webkit-scrollbar { display: none; }
+
+  .mrow { display: flex; gap: 12px; padding: 15px 18px; align-items: flex-start; border-bottom: 1px solid var(--gray-100); }
+  .mrow .av { width: 42px; height: 42px; border-radius: 21px; background: var(--navy-50); color: var(--navy-600);
+    display: grid; place-items: center; font-size: 15px; font-weight: 700; flex: none; }
+  .mrow .av.gold { background: var(--moon-50); color: #8a6a24; }
+  .mrow .tx { flex: 1; min-width: 0; }
+  .mrow .who { font-size: 16px; font-weight: 700; display: flex; justify-content: space-between; gap: 8px; }
+  .mrow .who span { font-size: 13px; font-weight: 500; color: var(--gray-500); flex: none; }
+  .mrow .pv { font-size: 16px; color: var(--gray-700); margin-top: 3px; line-height: 1.45;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mrow.new { background: var(--moon-50); }
+  .mrow.new .pv { color: var(--gray-900); font-weight: 500; }
+
+  .thread { padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; }
+  .tline { text-align: center; font-size: 13px; color: var(--gray-500); }
+  .bub { max-width: 80%; padding: 13px 15px; font-size: 17px; line-height: 1.5; border-radius: 18px; white-space: pre-line; }
+  .bub.in { background: var(--gray-100); color: var(--gray-900); border-top-left-radius: 6px; }
+  .bub.out { background: var(--navy-600); color: #fff; border-top-right-radius: 6px; margin-left: auto; }
+  .bub.sys { background: var(--moon-50); color: #6d5313; border-radius: 14px; font-size: 16px; max-width: 100%; }
+  .bmeta { font-size: 13px; color: var(--gray-500); }
+  .bmeta.r { text-align: right; }
+  .bwrap { display: flex; flex-direction: column; gap: 4px; max-width: 100%; }
+  .bwrap.me { align-items: flex-end; }
+
+  .compose { border-top: 1px solid var(--gray-200); padding: 12px 16px 16px; flex: none; background: #fff; }
+  .quick { display: flex; gap: 8px; overflow: hidden; margin-bottom: 10px; }
+  .quick .q { height: 40px; padding: 0 13px; border-radius: 20px; border: 1px solid var(--gray-300); background: #fff;
+    font-size: 15px; color: var(--gray-700); display: inline-flex; align-items: center; white-space: nowrap; }
+  .inputrow { display: flex; gap: 8px; align-items: flex-end; }
+  .inputbox { flex: 1; min-height: 52px; border-radius: 16px; background: var(--gray-50); border: 1.5px solid var(--gray-200);
+    padding: 14px 15px; font-size: 17px; line-height: 1.45; color: var(--gray-900); }
+  .inputbox.on { border-color: var(--navy-500); background: #fff; }
+  .inputbox .ph { color: var(--gray-400); }
+  .sendbtn { width: 52px; height: 52px; border-radius: 26px; background: var(--navy-600); color: #fff; display: grid; place-items: center; flex: none; }
+  .sendbtn.off { background: var(--gray-200); color: var(--gray-400); }
+
+  .bigbtn { height: 56px; border-radius: 16px; background: var(--navy-600); color: #fff; font-size: 17px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 16px 16px; flex: none; }
+
+  /* 잠금화면 */
+  .lock { position: absolute; inset: 0; background: radial-gradient(120% 70% at 30% 20%, #3d5286 0%, #1c2945 55%, #121a2e 100%); color: #fff; }
+  .lock .clk { position: absolute; left: 0; right: 0; top: 92px; text-align: center; }
+  .lock .clk .d { font-size: 18px; font-weight: 600; opacity: .9; }
+  .lock .clk .t { font-size: 82px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; }
+  .lock .noti { position: absolute; left: 12px; right: 12px; top: 360px; background: rgba(245,247,251,.9); color: var(--gray-900);
+    border-radius: 22px; padding: 14px; display: flex; gap: 11px; }
+  .lock .noti .ic { width: 38px; height: 38px; border-radius: 10px; background: #34c759; color: #fff; display: grid; place-items: center; flex: none; }
+  .lock .noti .top { display: flex; justify-content: space-between; font-size: 13px; color: var(--gray-600); }
+  .lock .noti .h { font-size: 16px; font-weight: 700; margin-top: 1px; }
+  .lock .noti .b { font-size: 16px; color: var(--gray-800); margin-top: 3px; line-height: 1.45; }
+
+  /* 탭 지점 */
+  .bar .btn-sm.lead { border-color: var(--moon); color: var(--navy-700); box-shadow: 0 0 0 3px rgba(201, 164, 92, 0.22); }
+  .tap { position: relative; cursor: pointer; }
+  .tap::after { content: ""; position: absolute; inset: -4px; border-radius: 20px; border: 2.5px solid var(--moon);
+    box-shadow: 0 0 0 4px rgba(201,164,92,.22); animation: pulse 1.5s ease-in-out infinite; pointer-events: none; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+  .taphint { position: absolute; left: 50%; transform: translateX(-50%); bottom: -34px; white-space: nowrap;
+    background: var(--gray-900); color: #fff; font-size: 13px; font-weight: 600; padding: 5px 10px; border-radius: 8px; z-index: 70; }
+
+  /* 오른쪽 설명 */
+  .side { background: #fff; border-radius: 18px; padding: 22px; box-shadow: 0 6px 20px rgba(25,31,40,.07); }
+  .side .step { font-size: 13px; font-weight: 700; color: var(--moon); letter-spacing: .04em; }
+  .side h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin-top: 6px; }
+  .side p { font-size: 15px; line-height: 1.65; color: var(--gray-700); margin-top: 12px; }
+  .side .ba { margin-top: 16px; border-top: 1px solid var(--gray-200); padding-top: 14px; font-size: 14px; line-height: 1.6; }
+  .side .ba div + div { margin-top: 8px; }
+  .side .ba b { display: inline-block; min-width: 34px; color: var(--gray-500); font-weight: 700; }
+  .side .refs { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .side .refs span { font-size: 12px; font-weight: 700; background: var(--navy-50); color: var(--navy-600); border-radius: 6px; padding: 3px 8px; }
+  .side .no { margin-top: 16px; background: #fdf1e3; color: #7a4a00; border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.6; }
+  .foot { margin-top: 26px; font-size: 13px; color: var(--gray-500); line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>문자형 화면 + 집주인 문자 흐름</h1>
+  <p class="sub">
+    거주자가 제보하고 → 집주인이 <b>문자로 받아 답장</b>하고 → 그 답장이 <b>글자까지 그대로</b> 공지가 되는 한 바퀴입니다.
+    화면 모양은 60세 이상도 배우지 않고 쓸 수 있게 <b>문자</b>에 맞췄습니다(본문 17px, 주요 버튼 48×48 이상).
+    금색 테두리를 누르면 다음으로 넘어갑니다. ← → 키도 됩니다.
+  </p>
+
+  <div class="bar">
+    <button class="btn-sm" id="prev">← 이전</button>
+    <button class="btn-sm" id="next">다음 →</button>
+    <button class="btn-sm" id="reset">처음부터</button>
+    <span class="now" id="now"></span>
+    <span class="dots" id="dots"></span>
+  </div>
+
+  <div class="stage">
+    <div class="col" id="colR">
+      <div class="cap"><span class="who">거주자</span> 휴대폰 · 현관 QR로 들어온 웹</div>
+      <div class="phone" id="phR"></div>
+    </div>
+    <div class="col" id="colL">
+      <div class="cap"><span class="who">집주인</span> 휴대폰 · 기본 문자 앱</div>
+      <div class="phone dark" id="phL"></div>
+    </div>
+    <div class="side" id="side"></div>
+  </div>
+
+  <p class="foot">
+    기준 문서: <a href="screens.md">screens.md</a> ‘화면의 기본 모양은 문자’ · <a href="../docs/decisions.md">decisions.md</a> D-10·D-11·D-14·D-15 ·
+    <a href="../README.md">README.md</a> POL-011·POL-014·POL-015<br />
+    이 프로토타입은 흐름 확인용입니다. lofi 46장(<a href="board.html">board.html</a>)은 아직 이전 모양이고, 다시 그릴 화면은 screens.md의 표에 있습니다.
+  </p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script>
+const ic = (n) => `<i data-lucide="${n}"></i>`;
+const sbar = (dark) => `<div class="sbar" style="${dark ? "color:#fff" : ""}"><span>9:41</span>
+  <span class="sys">${ic("signal")}${ic("wifi")}<span class="batt"></span></span></div>`;
+
+/* ---------- 거주자 화면 ---------- */
+const NOTICE = "내일 오전에 기사님이 오세요.\n9시부터 11시 사이에는 엘리베이터를 못 쓰실 수 있어요.";
+
+function rHome({ fresh, tap }) {
+  const rows = [];
+  if (fresh) rows.push(`<div class="mrow new"><div class="av gold">집</div><div class="tx">
+      <div class="who">집주인 <span>방금</span></div><div class="pv">내일 오전에 기사님이 오세요.</div></div></div>`);
+  rows.push(`<div class="mrow"><div class="av gold">집</div><div class="tx">
+      <div class="who">집주인 <span>9월 20일</span></div><div class="pv">엘리베이터 점검은 3월 4일부터 5일까지예요</div></div></div>`);
+  rows.push(`<div class="mrow"><div class="av">안</div><div class="tx">
+      <div class="who">분리수거 안내 <span>9월 12일</span></div><div class="pv">화요일 저녁에 내놓으시면 돼요</div></div></div>`);
+  rows.push(`<div class="mrow"><div class="av">안</div><div class="tx">
+      <div class="who">택배 안내 <span>8월 30일</span></div><div class="pv">현관 안쪽 선반에 두고 가세요</div></div></div>`);
+  const first = tap === "notice";
+  return `<div class="navtop"><div class="t">햇살빌라</div><div class="r">월계동 광운로</div></div>
+    <div class="body-area">${rows.map((r, i) => (first && i === 0 ? `<div class="tap">${r}</div>` : r)).join("")}</div>
+    ${tap === "report" ? `<div class="tap"><div class="bigbtn">${ic("pencil-line")} 집주인에게 알리기</div></div>`
+      : `<div class="bigbtn" style="background:var(--gray-200);color:var(--gray-500)">${ic("pencil-line")} 집주인에게 알리기</div>`}`;
+}
+
+function rNotice() {
+  return `<div class="navtop"><div class="t">공지</div><div class="r">닫기</div></div>
+    <div class="body-area"><div class="thread">
+      <div class="tline">오늘 오후 3:14</div>
+      <div class="mrow" style="border:0;padding:0 0 10px"><div class="av gold">집</div><div class="tx">
+        <div class="who">집주인</div><div class="pv" style="color:var(--gray-500);font-size:14px">문자로 보내신 그대로예요</div></div></div>
+      <div class="bwrap"><div class="bub in">${NOTICE}</div>
+        <div class="bmeta">오후 3:14에 집주인이 보냄 · 적용 기간 없음</div></div>
+      <div class="bub sys">${ic("info")} ‘내일’이 언제인지는 시스템이 날짜로 바꾸지 않아요. 받은 시각을 같이 보여 드려요.</div>
+    </div></div>`;
+}
+
+function rCompose({ filled, tap }) {
+  const box = filled
+    ? `<div class="inputbox on">건물 앞 쓰레기가 넘쳤어요<span class="caret"></span></div>`
+    : `<div class="inputbox"><span class="ph">여기에 적어 주세요</span></div>`;
+  const send = `<div class="sendbtn ${filled ? "" : "off"}">${ic("arrow-up")}</div>`;
+  const quick = `<div class="quick">
+      ${wrapIf(tap === "quick", `<div class="q">건물 앞 쓰레기가 넘쳤어요</div>`)}
+      <div class="q">복도 전등이 안 켜져요</div><div class="q">물이 잘 안 빠져요</div></div>`;
+  return `<div class="navtop"><div class="t">집주인에게 알리기</div><div class="r">닫기</div></div>
+    <div class="body-area"><div class="thread">
+      <div class="bub sys">${ic("shield-check")} 이름과 호수는 집주인에게도 보이지 않아요. 급한 일은 119로 알려 주세요.</div>
+    </div></div>
+    <div class="compose">${quick}
+      <div class="inputrow">${box}${wrapIf(tap === "send", send)}</div></div>`;
+}
+
+function rThread({ answered }) {
+  const mine = `<div class="bwrap me"><div class="bub out">건물 앞 쓰레기가 넘쳤어요</div>
+      <div class="bmeta r">오후 2:58에 보냄 · 접수됨</div></div>`;
+  const reply = answered
+    ? `<div class="bwrap"><div class="bub in">확인했어요. 내일 오전에 기사님이 오세요.</div>
+        <div class="bmeta">오후 3:14 · <span style="color:var(--st-done);font-weight:600">처리 완료</span></div></div>`
+    : `<div class="bub sys">${ic("clock")} 집주인에게 문자로 전해 드렸어요. 답이 오면 여기에 쌓여요.</div>`;
+  return `<div class="navtop"><div class="t">보낸 내용</div><div class="r">링크 복사</div></div>
+    <div class="body-area"><div class="thread"><div class="tline">오늘</div>${mine}${reply}</div></div>`;
+}
+
+/* ---------- 집주인 화면 ---------- */
+function lIdle() {
+  return `<div class="navtop"><div class="t">문자</div><div class="r">편집</div></div>
+    <div class="body-area">
+      <div class="mrow"><div class="av">부</div><div class="tx"><div class="who">부동산 사장님 <span>어제</span></div>
+        <div class="pv">계약서 사진 보내 드렸습니다</div></div></div>
+      <div class="mrow"><div class="av">1</div><div class="tx"><div class="who">15881234 <span>9월 22일</span></div>
+        <div class="pv">[카드] 승인 12,000원</div></div></div>
+    </div>`;
+}
+
+function lLock({ tap }) {
+  const noti = `<div class="noti"><div class="ic">${ic("message-square")}</div><div style="flex:1">
+      <div class="top"><span>메시지</span><span>지금</span></div>
+      <div class="h">1533-0000</div>
+      <div class="b">[월계함] 햇살빌라 새 제보<br />건물 앞 쓰레기가 넘쳤어요<br />답장 1 처리 예정 · 2 기사 방문 · 3 전화 필요</div>
+    </div></div>`;
+  return `<div class="lock"><div class="clk"><div class="d">9월 25일 목요일</div><div class="t">3:12</div></div>
+    ${tap ? `<div class="tap" style="position:absolute;left:12px;right:12px;top:360px">${noti.replace('class="noti"', 'class="noti" style="position:static"')}</div>` : noti}
+  </div>`;
+}
+
+function lSms({ stage, tap }) {
+  const parts = [];
+  parts.push(`<div class="tline">오늘 오후 2:58</div>`);
+  parts.push(`<div class="bwrap"><div class="bub in">[월계함] 햇살빌라 새 제보
+건물 앞 쓰레기가 넘쳤어요
+
+답장으로 처리하실 수 있어요
+1 처리 예정  2 기사 방문  3 전화 필요
+문장으로 답장하시면 거주자 공지 초안이 돼요
+확인 wolgyeham.kr/r/8KQ2</div><div class="bmeta">1533-0000 · 오후 2:58</div></div>`);
+
+  if (stage >= 2) parts.push(`<div class="bwrap me"><div class="bub out">${NOTICE}</div><div class="bmeta r">오후 3:12에 보냄</div></div>`);
+  if (stage >= 2) parts.push(`<div class="bwrap"><div class="bub in">[월계함] 이대로 거주자에게 올릴까요?
+
+“${NOTICE}”
+
+1 올리기   2 그만두기</div><div class="bmeta">1533-0000 · 오후 3:13</div></div>`);
+  if (stage >= 3) parts.push(`<div class="bwrap me"><div class="bub out">1</div><div class="bmeta r">오후 3:14에 보냄</div></div>`);
+  if (stage >= 3) parts.push(`<div class="bwrap"><div class="bub in">[월계함] 올렸어요. 지금 사는 분들이 볼 수 있어요.
+잘못 올리셨으면 30분 안에 ‘취소’라고 답장해 주세요.
+제보는 처리 완료로 바꿨어요.</div><div class="bmeta">1533-0000 · 오후 3:14</div></div>`);
+
+  const quick = stage === 1
+    ? `<div class="quick"><div class="q">1 처리 예정</div><div class="q">2 기사 방문</div><div class="q">3 전화 필요</div></div>`
+    : "";
+  let box, send;
+  if (stage === 1) {
+    box = `<div class="inputbox on">내일 오전에 기사님이 오세요…<span class="caret"></span></div>`;
+    send = `<div class="sendbtn">${ic("arrow-up")}</div>`;
+  } else if (stage === 2) {
+    box = `<div class="inputbox on">1<span class="caret"></span></div>`;
+    send = `<div class="sendbtn">${ic("arrow-up")}</div>`;
+  } else {
+    box = `<div class="inputbox"><span class="ph">답장 쓰기</span></div>`;
+    send = `<div class="sendbtn off">${ic("arrow-up")}</div>`;
+  }
+  return `<div class="navtop"><div class="t">1533-0000</div><div class="r">정보</div></div>
+    <div class="body-area"><div class="thread">${parts.join("")}</div></div>
+    <div class="compose">${quick}<div class="inputrow">${box}${wrapIf(tap === "send", send)}</div></div>`;
+}
+
+function wrapIf(cond, html) { return cond ? `<div class="tap">${html}</div>` : html; }
+
+/* ---------- 단계 ---------- */
+const STEPS = [
+  {
+    focus: "r", r: () => rHome({ tap: "report" }), l: lIdle,
+    title: "홈이 문자 목록 모양",
+    body: "공지도 안내도 한 줄에 ‘보낸 사람 · 첫 줄 · 날짜’만 둡니다. 처음 들어온 사람이 무엇을 눌러야 하는지 배우지 않아도 됩니다. 본문은 17px, 아래 버튼은 높이 56px입니다.",
+    ba: [["전", "카드 여러 장 + 타일"], ["후", "문자 목록처럼 한 줄씩"]],
+    refs: ["FR-011", "POL-015", "D-14"],
+    tapHint: "집주인에게 알리기",
+  },
+  {
+    focus: "r", r: () => rCompose({ filled: false, tap: "quick" }), l: lIdle,
+    title: "알리기는 문자 쓰기 모양",
+    body: "입력칸 하나와 보내기 하나입니다. 자주 쓰는 말은 따로 고르는 목록이 아니라, 누르면 입력칸에 그대로 들어가는 버튼입니다. 그래서 그대로 보내도 되고 고쳐 써도 됩니다.",
+    ba: [["전", "자주 쓰는 말 목록 → 확인 시트"], ["후", "칩을 누르면 입력칸에 들어감"]],
+    refs: ["FR-019", "POL-015"],
+    tapHint: "자주 쓰는 말 누르기",
+  },
+  {
+    focus: "r", r: () => rCompose({ filled: true, tap: "send" }), l: lIdle,
+    title: "누른 말이 입력칸에 들어옴",
+    body: "여기서 바로 고칠 수 있습니다. 보내기 전에 받는 사람과 공개 범위를 한 번 더 보여 주는 단계는 그대로 둡니다(두 번 누르기).",
+    ba: [["유지", "이름·호수는 집주인에게도 안 보임"], ["유지", "급한 일은 119 안내"]],
+    refs: ["FR-019", "POL-003", "POL-010"],
+    tapHint: "보내기",
+  },
+  {
+    focus: "r", r: () => rThread({ answered: false }), l: lIdle,
+    title: "보낸 내용도 문자처럼 쌓임",
+    body: "내 말은 오른쪽, 집주인 답은 왼쪽입니다. 단계 그림 대신 말풍선이 시간순으로 쌓이니 어디를 읽어야 하는지 설명할 것이 없습니다. 상태 글자(접수됨·확인함·처리 완료)는 색과 함께 그대로 씁니다.",
+    ba: [["전", "접수됨 → 확인함 단계 표시"], ["후", "말풍선 + 상태 글자"]],
+    refs: ["FR-021", "POL-015"],
+    tapHint: "집주인 쪽으로",
+  },
+  {
+    focus: "l", r: () => rThread({ answered: false }), l: () => lLock({ tap: true }),
+    title: "집주인은 앱이 아니라 문자로 받음",
+    body: "월계함 앱 알림이 아니라 평소 쓰는 문자입니다. 집주인은 서비스를 배우거나 앱을 깔 이유가 없어도 제보가 도달합니다. 카카오 알림톡을 켜면 도착 알림은 카톡으로도 오고, 실패하면 같은 내용을 문자로 다시 보냅니다.",
+    ba: [["전", "팀이 카톡으로 대신 전달(사람 손)"], ["후", "등록한 번호로 자동 문자"]],
+    refs: ["FR-028", "POL-011", "D-10", "D-15"],
+    no: "전화번호는 알림을 보낼 곳일 뿐입니다. 관리 권한은 초대와 카카오 로그인으로만 생깁니다.",
+    tapHint: "문자 열기",
+  },
+  {
+    focus: "l", r: () => rThread({ answered: false }), l: () => lSms({ stage: 1, tap: "send" }),
+    title: "문자 한 통에 처리와 공지가 다 들어 있음",
+    body: "1·2·3으로 짧게 답해도 되고, 문장으로 답해도 됩니다. 문장으로 답하면 그 문장이 그대로 공지 초안이 됩니다. 확인 링크를 열면 관리 화면에서 같은 일을 할 수 있고, 둘은 같은 로직입니다.",
+    ba: [["답장", "1·2·3 = 처리 상태만"], ["답장", "문장 = 처리 + 공지 초안"]],
+    refs: ["FR-028", "D-11", "D-13"],
+    tapHint: "문장으로 답장",
+  },
+  {
+    focus: "l", r: () => rThread({ answered: false }), l: () => lSms({ stage: 2, tap: "send" }),
+    title: "올리기 전에 한 번 되읽어 줌",
+    body: "집주인이 보낸 문장을 요약하거나 고치지 않고 그대로 따옴표 안에 넣어 되읽어 줍니다. ‘내일’을 날짜로 바꾸지 않습니다. 날짜·비용·책임을 시스템이 채우는 순간 오해가 생기기 때문입니다. 게시는 내용 답장과 확인 답장, 두 번을 거칩니다.",
+    ba: [["안 함", "요약·재작성·날짜 추정"], ["함", "원문 그대로 + 두 번 확인"]],
+    refs: ["D-11", "POL-014"],
+    no: "AI로 다듬지 않습니다. 요약 모델은 ‘내일’을 날짜로 바꾸려 하고, 그게 이 흐름이 막으려던 오해입니다.",
+    tapHint: "1 올리기",
+  },
+  {
+    focus: "l", r: () => rThread({ answered: false }), l: () => lSms({ stage: 3 }),
+    title: "올린 뒤 되돌리는 방법까지 같은 문자로",
+    body: "문자 답장 하나로 되돌릴 수 없는 일은 하지 않습니다. 게시 직후 취소 방법을 같은 문자로 알리고, 제보는 처리 완료로 바뀝니다. 대기 중인 질문은 1회용이고 24시간이 지나면 만료됩니다.",
+    ba: [["유지", "관리 화면을 한 번도 안 열었음"], ["결과", "공지 게시 + 제보 처리 완료"]],
+    refs: ["POL-014", "D-13"],
+    tapHint: "거주자 쪽으로",
+  },
+  {
+    focus: "r", r: () => rHome({ fresh: true, tap: "notice" }), l: () => lSms({ stage: 3 }),
+    title: "거주자 홈에 새 공지",
+    body: "알림을 켠 사람은 알림으로, 켜지 않은 사람은 같은 링크와 이 화면으로 봅니다. 목록에서는 제목이 아니라 본문 첫 줄이 보입니다. 문자로 올린 공지에는 제목이 없기 때문입니다.",
+    ba: [["전", "제목이 필수"], ["후", "제목 없으면 본문 첫 줄이 제목 자리"]],
+    refs: ["FR-012", "FR-013", "D-12"],
+    tapHint: "공지 열기",
+  },
+  {
+    focus: "r", r: rNotice, l: () => lSms({ stage: 3 }),
+    title: "공지는 집주인이 보낸 문자 그대로",
+    body: "글자까지 같습니다. 적용 기간은 선택이라 비어 있어도 되고, 대신 올린 시각을 보여 줍니다. ‘내일’처럼 기준이 필요한 말은 받은 시각을 함께 보여 주고 시스템이 날짜로 바꾸지 않습니다.",
+    ba: [["전", "공지는 화면에서만 작성"], ["후", "문자 답장 원문이 그대로 본문"]],
+    refs: ["D-11", "D-12", "POL-008"],
+    tapHint: "보낸 사람 화면 보기",
+  },
+  {
+    focus: "r", r: () => rThread({ answered: true }), l: () => lSms({ stage: 3 }),
+    title: "제보한 사람에게도 결과가 돌아옴",
+    body: "집주인이 표시한 상태와 한 줄이 왼쪽 말풍선으로 붙습니다. 해결을 서비스가 보증하는 말로 쓰지 않습니다. 제보 원문은 집주인에게만 가고 공지로 옮겨 쓰지 않습니다.",
+    ba: [["한 바퀴", "제보 → 문자 → 답장 → 공지 → 결과"], ["집주인", "앱을 한 번도 열지 않음"]],
+    refs: ["POL-010", "FR-020", "FR-021"],
+    no: "모양만 문자입니다. 읽음·입력 중 표시를 만들지 않고, 다른 거주자의 말은 어떤 화면에도 나오지 않습니다. 말풍선이 모여도 단톡방이 되지 않습니다.",
+    tapHint: "처음부터",
+  },
+];
+
+let i = 0;
+const $ = (s) => document.querySelector(s);
+
+function render() {
+  const s = STEPS[i];
+  const lHtml = s.l();
+  const lDark = lHtml.includes('class="lock"');
+
+  $("#phR").className = "phone";
+  $("#phL").className = "phone" + (lDark ? " dark" : "");
+  $("#phR").innerHTML = sbar(false) + `<div class="screen">${s.r()}${urlbar()}</div><div class="hind"></div>`;
+  $("#phL").innerHTML = sbar(lDark) + `<div class="screen">${lHtml}</div><div class="hind"></div>`;
+
+  // 집주인 쪽은 기본 문자 앱이라 최신 문자가 아래에 오게 둔다. 거주자 화면은 그대로 위부터 읽는다.
+  const lBody = $("#phL .body-area");
+  if (lBody) lBody.scrollTop = lBody.scrollHeight;
+
+  $("#colR").className = "col" + (s.focus === "r" ? "" : " off");
+  $("#colL").className = "col" + (s.focus === "l" ? "" : " off");
+
+  const t = (s.focus === "r" ? $("#phR") : $("#phL")).querySelector(".tap");
+  const arrow = i === STEPS.length - 1 ? "↺" : "→";
+  if (t) {
+    t.insertAdjacentHTML("beforeend", `<span class="taphint">${s.tapHint} ${arrow}</span>`);
+    t.addEventListener("click", () => go(i === STEPS.length - 1 ? 0 : i + 1));
+  }
+  // 화면 안에 누를 곳이 없는 단계(사람이 바뀌는 자리)에서는 다음 버튼이 그 역할을 한다.
+  const lead = !t && i < STEPS.length - 1;
+  $("#next").textContent = lead ? `${s.tapHint} →` : "다음 →";
+  $("#next").classList.toggle("lead", lead);
+
+  $("#side").innerHTML = `<div class="step">${i + 1} / ${STEPS.length}</div><h2>${s.title}</h2><p>${s.body}</p>
+    <div class="ba">${s.ba.map(([k, v]) => `<div><b>${k}</b> ${v}</div>`).join("")}</div>
+    ${s.no ? `<div class="no">${s.no}</div>` : ""}
+    <div class="refs">${s.refs.map((r) => `<span>${r}</span>`).join("")}</div>`;
+
+  $("#now").textContent = `${i + 1} / ${STEPS.length} · ${s.title}`;
+  $("#dots").innerHTML = STEPS.map((_, k) => `<i class="${k === i ? "on" : k < i ? "done" : ""}" data-k="${k}"></i>`).join("");
+  $("#dots").querySelectorAll("i").forEach((d) => d.addEventListener("click", () => go(+d.dataset.k)));
+  $("#prev").disabled = i === 0;
+  $("#next").disabled = i === STEPS.length - 1;
+  if (window.lucide) lucide.createIcons({ attrs: { "stroke-width": 2 } });
+}
+function urlbar() { return `<div class="urlbar"><span>${ic("lock")} wolgyeham.kr</span></div>`; }
+function go(n) { i = Math.max(0, Math.min(STEPS.length - 1, n)); render(); }
+
+$("#prev").addEventListener("click", () => go(i - 1));
+$("#next").addEventListener("click", () => go(i + 1));
+$("#reset").addEventListener("click", () => go(0));
+addEventListener("keydown", (e) => {
+  if (e.key === "ArrowRight") go(i + 1);
+  if (e.key === "ArrowLeft") go(i - 1);
+});
+render();
+</script>
+</body>
+</html>

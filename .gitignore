@@ -12,3 +12,4 @@ coverage/
 !.env.example
 *.log
 artifacts/local/
+.claude/settings.local.json
